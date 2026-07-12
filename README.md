@@ -1,6 +1,11 @@
 # SISU
 ### System for Intelligent Scanning and Understanding
 
+🇬🇧 English | 🇷🇺 [Русская версия](README_RU.md)
+
+---
+
+An intelligent network discovery and device identification framework.
 > SISU is not just another network scanner.
 > It is an attempt to teach software to understand what actually exists inside a network.
 
