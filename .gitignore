@@ -44,3 +44,5 @@ storage/
 # --------------------------------------------------
 Thumbs.db
 .DS_Store
+# Backup archives
+*.tar.gz
