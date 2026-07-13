@@ -126,4 +126,22 @@ class Migrator:
             )
         """)
 
+        # 10. Event (v1.3.11)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS event (
+                event_id TEXT PRIMARY KEY,
+                device_id TEXT NOT NULL,
+                snapshot_id TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                details TEXT,
+                acknowledged INTEGER DEFAULT 0,
+                FOREIGN KEY (device_id) REFERENCES device(id),
+                FOREIGN KEY (snapshot_id) REFERENCES snapshot(id)
+            )
+        """)
+
         self.conn.commit()
