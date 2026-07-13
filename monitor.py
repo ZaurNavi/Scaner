@@ -156,7 +156,9 @@ def main() -> int:
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 
-                # ИСПРАВЛЕНИЕ: используем result.device_id (реальный ID из БД), а не bundle.snapshot.device_id
+                # === ОТЛАДКА: проверяем, какой device_id мы передаём ===
+                print(f"      [DEBUG] result.device_id = '{result.device_id}'")
+                
                 current_snapshot_dict = {
                     "id": bundle.snapshot.id,
                     "device_id": result.device_id,
