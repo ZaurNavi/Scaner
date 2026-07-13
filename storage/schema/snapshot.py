@@ -6,11 +6,11 @@ from .enums import DeviceType
 
 @dataclass(frozen=True)
 class Snapshot:
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     scan_id: str
     device_id: str
-    timestamp: datetime = field(default_factory=datetime.now)
     ip: str
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime = field(default_factory=datetime.now)
     hostname: str = ""
     os: str = ""
     model: str = ""
