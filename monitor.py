@@ -99,6 +99,10 @@ def main() -> int:
     devices = fingerprint_all(devices, collected_data)
     
     analyze_all(devices)
+    
+    # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
+    save_debug_json(devices, collected_data)
+    
     devices = filter_devices(devices)
     devices = sort_devices(devices)
     save_state(devices)
@@ -107,9 +111,6 @@ def main() -> int:
     print()
     print_table(devices)
     save_report(devices)
-    
-    # Сохранение debug JSON с полными данными всех коллекторов
-    save_debug_json(devices, collected_data)
 
     elapsed = time.time() - start
 
