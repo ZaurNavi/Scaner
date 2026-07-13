@@ -11,6 +11,7 @@ class Source(str, Enum):
     SNMP = "SNMP"
     PING = "PING"
     NETFLOW = "NETFLOW"
+    OUI = "OUI"
     MANUAL = "MANUAL"
     IMPORT = "IMPORT"
     UNKNOWN = "UNKNOWN"
