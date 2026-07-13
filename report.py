@@ -402,6 +402,37 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
 
 
 # ---------------------------------------------------------
+# Рендер Evidence (показывает, ПОЧЕМУ устройство классифицировано так)
+# ---------------------------------------------------------
+
+
+def render_evidence(devices: list[Device], collected_data: dict[str, CollectedData]) -> list[str]:
+    """
+    Возвращает список строк с evidence items для каждого устройства.
+    Показывает, почему устройство получило именно такой confidence.
+    """
+    lines = []
+
+    for d in devices:
+        collected = collected_data.get(d.ip, CollectedData())
+        corr = correlation_engine.correlate(d, collected)
+
+        if not corr.evidence_items:
+            continue
+
+        lines.append(f"  📋 {d.ip} ({d.mac}) — {d.os or 'Unknown'} {d.device_type or ''} [{d.confidence}]")
+        for item in corr.evidence_items:
+            if item.details:
+                lines.append(f"     ✔ {item.description} ({item.details}) [+{item.contribution}]")
+            else:
+                lines.append(f"     ✔ {item.description} [+{item.contribution}]")
+        lines.append(f"     ─── Total: {corr.breakdown.total()}")
+        lines.append("")
+
+    return lines
+
+
+# ---------------------------------------------------------
 # Рендер таблицы (выбор режима)
 # ---------------------------------------------------------
 
@@ -422,9 +453,10 @@ def render_table(devices: list[Device], verbose: bool = False) -> list[str]:
 # ---------------------------------------------------------
 
 
-def print_table(devices: list[Device]) -> None:
+def print_table(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
     """
     Печатает таблицу в консоль.
+    Если VERBOSE и есть collected_data — показывает evidence items.
     """
 
     if App.VERBOSE:
@@ -458,6 +490,15 @@ def print_table(devices: list[Device]) -> None:
     for line in render_table(devices, verbose=App.VERBOSE):
         print(line)
 
+    # Evidence Explorer — показываем ПОЧЕМУ устройство классифицировано так
+    if App.VERBOSE and collected_data:
+        evidence_lines = render_evidence(devices, collected_data)
+        if evidence_lines:
+            print("  🔍 Evidence Explorer:")
+            print()
+            for line in evidence_lines:
+                print(line)
+
     print()
 
 
@@ -466,7 +507,7 @@ def print_table(devices: list[Device]) -> None:
 # ---------------------------------------------------------
 
 
-def save_txt(devices: list[Device]) -> Path:
+def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
     """
     Сохраняет отчёт в TXT.
     """
@@ -507,6 +548,14 @@ def save_txt(devices: list[Device]) -> Path:
 
     lines.extend(render_table(devices, verbose=App.VERBOSE))
     lines.append("")
+
+    # Evidence Explorer
+    if App.VERBOSE and collected_data:
+        evidence_lines = render_evidence(devices, collected_data)
+        if evidence_lines:
+            lines.append("  🔍 Evidence Explorer:")
+            lines.append("")
+            lines.extend(evidence_lines)
 
     file_path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -581,7 +630,7 @@ def save_csv(devices: list[Device]) -> Path:
 # ---------------------------------------------------------
 
 
-def save_json(devices: list[Device]) -> Path:
+def save_json(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
     """
     Сохраняет полный экспорт в JSON.
     """
@@ -591,10 +640,22 @@ def save_json(devices: list[Device]) -> Path:
 
     file_path = report_dir / REPORT_JSON
 
+    devices_data = []
+    for d in devices:
+        device_dict = asdict(d)
+        
+        # Добавляем evidence items
+        if collected_data:
+            collected = collected_data.get(d.ip, CollectedData())
+            corr = correlation_engine.correlate(d, collected)
+            device_dict["evidence_items"] = [e.to_dict() for e in corr.evidence_items]
+        
+        devices_data.append(device_dict)
+
     data = {
         "timestamp": datetime.now().strftime(DATE_FORMAT),
         "statistics": calculate_statistics(devices),
-        "devices": [asdict(d) for d in devices],
+        "devices": devices_data,
     }
 
     file_path.write_text(
@@ -679,11 +740,12 @@ def save_debug_json(
         # Correlation Engine (пересчитываем для debug)
         corr = correlation_engine.correlate(device, collected)
         device_data["correlation"] = {
-                "matched_rules": [r.to_dict() for r in corr.matched_rules],
-                "reasons": corr.reasons,
-                "breakdown": corr.breakdown.to_dict(),
-                "fingerprint_score": corr.fingerprint_score,
-}
+            "matched_rules": [r.to_dict() for r in corr.matched_rules],
+            "reasons": corr.reasons,
+            "breakdown": corr.breakdown.to_dict(),
+            "fingerprint_score": corr.fingerprint_score,
+            "evidence_items": [e.to_dict() for e in corr.evidence_items],
+        }
         data["devices"].append(device_data)
 
     file_path.write_text(
@@ -699,7 +761,7 @@ def save_debug_json(
 # ---------------------------------------------------------
 
 
-def save_report(devices: list[Device]) -> None:
+def save_report(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
     """
     Сохраняет отчёт во включённые форматы.
     """
@@ -707,13 +769,13 @@ def save_report(devices: list[Device]) -> None:
     saved_paths = []
 
     if Export.TXT:
-        saved_paths.append(("TXT", save_txt(devices)))
+        saved_paths.append(("TXT", save_txt(devices, collected_data)))
 
     if Export.CSV:
         saved_paths.append(("CSV", save_csv(devices)))
 
     if Export.JSON:
-        saved_paths.append(("JSON", save_json(devices)))
+        saved_paths.append(("JSON", save_json(devices, collected_data)))
 
     if saved_paths:
         print(f"  📄  Отчёты сохранены:")
