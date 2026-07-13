@@ -31,7 +31,6 @@ class EventRepository:
                 # Гарантируем, что device_id существует в БД (берём из snapshot)
                 actual_device_id = self._get_actual_device_id(event.snapshot_id)
                 if actual_device_id is None:
-                    # Snapshot не найден — пропускаем событие
                     continue
 
                 cursor.execute("""
@@ -40,7 +39,7 @@ class EventRepository:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     event.event_id,
-                    actual_device_id,  # <--- ИСПРАВЛЕНИЕ: используем реальный ID из snapshot
+                    actual_device_id,
                     event.snapshot_id,
                     _dt_to_str(event.timestamp),
                     event.type.value,
