@@ -1,29 +1,50 @@
-#!/usr/bin/env python3
-"""
-Enums для схемы данных.
-Никакой бизнес-логики, только строгие типы.
-"""
-
 from enum import Enum
 
-
 class DeviceStatus(str, Enum):
-    """Статус устройства в системе."""
     ACTIVE = "ACTIVE"
     ARCHIVED = "ARCHIVED"
 
+class DeviceType(str, Enum):
+    UNKNOWN = "UNKNOWN"
+    PHONE = "PHONE"
+    TABLET = "TABLET"
+    LAPTOP = "LAPTOP"
+    DESKTOP = "DESKTOP"
+    PRINTER = "PRINTER"
+    CAMERA = "CAMERA"
+    ROUTER = "ROUTER"
+    SWITCH = "SWITCH"
+    ACCESS_POINT = "ACCESS_POINT"
+    TV = "TV"
+    IOT = "IOT"
+    SERVER = "SERVER"
 
 class ObservationType(str, Enum):
-    """Тип значения в наблюдении (для корректной сериализации/парсинга)."""
     STRING = "STRING"
     INTEGER = "INTEGER"
     BOOLEAN = "BOOLEAN"
     JSON = "JSON"
 
-
 class CollectorStatus(str, Enum):
-    """Статус выполнения коллектора."""
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     TIMEOUT = "TIMEOUT"
     SKIPPED = "SKIPPED"
+
+class ScanStatus(str, Enum):
+    SUCCESS = "SUCCESS"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+
+class CapabilityType(str, Enum):
+    HTTP = "HTTP"
+    HTTPS = "HTTPS"
+    SSH = "SSH"
+    TELNET = "TELNET"
+    SNMP = "SNMP"
+    SSDP = "SSDP"
+    MDNS = "MDNS"
+    ICMP = "ICMP"
+    WEB = "WEB"
+    FTP = "FTP"
+    SMB = "SMB"
