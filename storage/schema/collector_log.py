@@ -1,27 +1,18 @@
-#!/usr/bin/env python3
-"""
-Модель CollectorLog.
-История выполнения коллекторов для мониторинга здоровья системы.
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import uuid
-
 from .enums import CollectorStatus
-
 
 @dataclass(frozen=True)
 class CollectorLog:
-    """
-    Лог выполнения одного коллектора для одного устройства.
-    """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    collector: str
-    mac: str  # Используем MAC, так как device_id может быть еще не известен на этапе сбора
+    scan_id: str
+    collector_name: str
     started_at: datetime = field(default_factory=datetime.now)
-    ended_at: datetime | None = None
-    elapsed_ms: float = 0.0
+    finished_at: datetime | None = None
+    duration_ms: float = 0.0
+    objects_processed: int = 0
     status: CollectorStatus = CollectorStatus.SUCCESS
+    warnings: int = 0
     error_message: str = ""
