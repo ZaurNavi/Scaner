@@ -50,3 +50,5 @@ Thumbs.db
 .DS_Store
 # Backup archives
 *.tar.gz
+storage/archivist/sisu.db
+test_*.db
