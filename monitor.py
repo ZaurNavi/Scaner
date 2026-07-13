@@ -45,7 +45,6 @@ from storage.schema import Scan, ScanStatus
 
 
 def print_header() -> None:
-
     print()
     print("=" * 60)
     print(f"  {App.NAME}  v{App.VERSION}")
@@ -101,9 +100,7 @@ def init_archivist():
 
 
 def main() -> int:
-
     start = time.time()
-
     print_header()
 
     # 0. Инициализация Архивиста
@@ -111,7 +108,6 @@ def main() -> int:
 
     # 1. SNMP
     print("  [1/4]  Получение ARP-таблицы через SNMP...")
-
     try:
         arp = get_arp_table()
     except Exception as exc:
@@ -121,7 +117,6 @@ def main() -> int:
         return 1
 
     print(f"         Найдено устройств: {len(arp)}")
-
     if not arp:
         print()
         print("  ❌  Получена пустая ARP-таблица.")
@@ -130,7 +125,6 @@ def main() -> int:
 
     # 2. NetFlow
     print("  [2/4]  Агрегация NetFlow...")
-
     try:
         netflow = aggregate_netflow()
     except Exception as exc:
@@ -143,7 +137,6 @@ def main() -> int:
 
     # 3. Сборка и обогащение
     print("  [3/4]  Формирование отчёта...")
-
     devices = build_devices(arp, netflow)
     enrich(devices)
 
@@ -153,25 +146,58 @@ def main() -> int:
 
     # Fingerprint с использованием собранных данных
     devices = fingerprint_all(devices, collected_data)
-
     analyze_all(devices)
 
     # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
 
-    # === v1.3.10: Архивация (перед фильтрацией, чтобы сохранить всё) ===
+    # === v1.3.10 & v1.3.11: Архивация и Event Engine ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
+        
+        # Инициализация Event Engine
+        from events import EventEngine, EventRepository
+        event_repo = EventRepository(db)
+        event_engine = EventEngine(event_repo)
+        
+        all_events = []
+        
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
             bundle = build_snapshot_bundle(device, scan, collected)
             success = archivist.save(bundle)
+            
             if success:
                 print(f"      💾 Saved bundle: {device.ip}")
+                
+                # === v1.3.11: Анализ событий ===
+                current_snapshot_dict = {
+                    "id": bundle.snapshot.id,
+                    "device_id": bundle.snapshot.device_id,
+                    "ip": bundle.snapshot.ip,
+                    "hostname": bundle.snapshot.hostname,
+                    "device_type": bundle.snapshot.device_type.value,
+                }
+                events = event_engine.process_and_save(current_snapshot_dict)
+                all_events.extend(events)
 
         print()
         archivist.print_summary()
+        
+        # Вывод событий
+        if all_events:
+            print()
+            print("  📢 События:")
+            for event in all_events:
+                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "ALERT": "🚨"}.get(event.severity.value, "•")
+                print(f"      {severity_icon} [{event.severity.value}] {event.title}")
+                print(f"         {event.description}")
+                if event.details:
+                    print(f"         {event.details}")
+        else:
+            print()
+            print("  📢 События: Нет новых событий (состояние устройств не изменилось)")
 
     devices = filter_devices(devices)
     devices = sort_devices(devices)
@@ -187,7 +213,6 @@ def main() -> int:
         db.close()
 
     elapsed = time.time() - start
-
     print(f"  ⏱   Выполнено за {elapsed:.2f} сек.")
     print()
 
