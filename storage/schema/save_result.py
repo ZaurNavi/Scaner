@@ -8,6 +8,7 @@ class SaveResult:
     Результат сохранения SnapshotBundle.
     Сообщает, что именно произошло в БД.
     """
+    device_id: str = ""  # Реальный ID устройства в БД (критично для Event Engine)
     devices_created: int = 0
     devices_updated: int = 0
     snapshots_saved: int = 0
