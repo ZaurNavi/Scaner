@@ -235,5 +235,37 @@ class Repository:
                 model=row[7] or "",
                 device_type=row[8],  # Строка из БД
                 confidence=row[9] or 0,
+                    def get_last_snapshot(self, device_id: str) -> dict | None:
+        """
+        Возвращает последний Snapshot устройства (до текущего).
+        Используется Event Engine для сравнения состояний.
+        
+        Возвращает dict или None, если устройства нет в БД.
+        """
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, scan_id, device_id, timestamp, ip, hostname, os, model, device_type, confidence
+            FROM snapshot
+            WHERE device_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 1
+        """, (device_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return {
+            "id": row[0],
+            "scan_id": row[1],
+            "device_id": row[2],
+            "timestamp": row[3],
+            "ip": row[4],
+            "hostname": row[5] or "",
+            "os": row[6] or "",
+            "model": row[7] or "",
+            "device_type": row[8] or "UNKNOWN",
+            "confidence": row[9] or 0,
+            "vendor": "",  # Vendor хранится в Identity, пока возвращаем пусто
+        }
             ))
         return snapshots
