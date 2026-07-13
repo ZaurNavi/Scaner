@@ -11,8 +11,9 @@ from .linux import LINUX_RULES
 from .apple import APPLE_RULES
 from .iot import IOT_RULES
 from .http_devices import HTTP_DEVICE_RULES
-from .negative import NEGATIVE_RULES
 from .ssdp_devices import SSDP_DEVICE_RULES
+from .snmp_devices import SNMP_DEVICE_RULES
+from .negative import NEGATIVE_RULES
 
 # Все правила в одном списке, отсортированы по priority
 ALL_RULES = (
@@ -26,6 +27,7 @@ ALL_RULES = (
     IOT_RULES +
     HTTP_DEVICE_RULES +
     SSDP_DEVICE_RULES +
+    SNMP_DEVICE_RULES +
     NEGATIVE_RULES  # Negative rules — самые низкие по приоритету
 )
 
