@@ -43,6 +43,15 @@ class Evidence:
     ssdp_model_number: str = ""
     ssdp_serial_number: str = ""
 
+    # SNMP данные (сырые факты — интерпретация в правилах)
+    snmp_responded: bool = False
+    snmp_community: str = ""
+    snmp_sys_descr: str = ""
+    snmp_sys_object_id: str = ""
+    snmp_sys_up_time: int = 0
+    snmp_sys_name: str = ""
+    snmp_sys_services: int = 0
+
     # mDNS
     mdns: bool = False
     mdns_hostname: str = ""
@@ -116,6 +125,19 @@ class Evidence:
                 e.ssdp_model_number = raw.get("model_number", "")
                 e.ssdp_serial_number = raw.get("serial_number", "")
 
+        # SNMP (сырые данные — интерпретация в правилах)
+        snmp_result = collected.sources.get("snmp")
+        if snmp_result:
+            raw = snmp_result.raw_data or {}
+            e.snmp_responded = raw.get("responded", False)
+            if e.snmp_responded:
+                e.snmp_community = raw.get("community", "")
+                e.snmp_sys_descr = raw.get("sysDescr", "")
+                e.snmp_sys_object_id = raw.get("sysObjectID", "")
+                e.snmp_sys_up_time = raw.get("sysUpTime", 0)
+                e.snmp_sys_name = raw.get("sysName", "")
+                e.snmp_sys_services = raw.get("sysServices", 0)
+
         # mDNS
         if collected.mdns.hostname or collected.mdns.model or collected.mdns.device_type:
             e.mdns = True
@@ -145,3 +167,7 @@ class Evidence:
     def has_ssdp(self) -> bool:
         """Проверяет, ответило ли устройство на SSDP."""
         return self.ssdp_responded
+
+    def has_snmp(self) -> bool:
+        """Проверяет, ответило ли устройство на SNMP."""
+        return self.snmp_responded
