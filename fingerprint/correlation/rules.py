@@ -1,198 +1,114 @@
 #!/usr/bin/env python3
 """
-Правила корреляции — определяют тип устройства по комбинации признаков.
+CorrelationResult — результат работы Correlation Engine.
+Включает ConfidenceBreakdown для объяснения решений.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from .capabilities import DeviceCapabilities
+from dataclasses import dataclass, field
+
+from .evidence_item import EvidenceItem
 
 
 @dataclass
-class CorrelationRule:
+class ConfidenceBreakdown:
     """
-    Правило корреляции.
+    Декомпозиция confidence по источникам.
+    Позволяет объяснить, почему устройство определено именно так.
+    """
+    vendor: int = 0
+    ttl: int = 0
+    tcp: int = 0
+    http: int = 0
+    mdns: int = 0
+    dns: int = 0
+    correlation: int = 0
+    hostname: int = 0
+    history: int = 0
+
+    def total(self) -> int:
+        """Суммарный confidence."""
+        return min(
+            self.vendor + self.ttl + self.tcp + self.http +
+            self.mdns + self.dns + self.correlation +
+            self.hostname + self.history,
+            100
+        )
+
+    def to_dict(self) -> dict:
+        """Для экспорта в JSON."""
+        return {
+            "vendor": self.vendor,
+            "ttl": self.ttl,
+            "tcp": self.tcp,
+            "http": self.http,
+            "mdns": self.mdns,
+            "dns": self.dns,
+            "correlation": self.correlation,
+            "hostname": self.hostname,
+            "history": self.history,
+            "total": self.total(),
+        }
+
+
+@dataclass
+class MatchedRule:
+    """
+    Информация о сработавшем правиле.
+    Хранится в debug JSON для объяснения решений.
     """
     name: str
-    condition: callable  # (device, capabilities, collected) -> bool
-    result: dict  # {os, model, device_type, confidence, reason}
-    priority: int = 50  # чем выше, тем важнее
+    confidence: int
+    reason: str
+    priority: int
+
+    def to_dict(self) -> dict:
+        """Для экспорта в JSON."""
+        return {
+            "name": self.name,
+            "confidence": self.confidence,
+            "reason": self.reason,
+            "priority": self.priority,
+        }
 
 
-# Базовые правила
-RULES: list[CorrelationRule] = [
-    
-    # MikroTik RouterOS
-    CorrelationRule(
-        name="MikroTik RouterOS",
-        condition=lambda d, c, col: (
-            c.router and 
-            (8291 in col.sources.get("tcp", {}).ports or 
-             8728 in col.sources.get("tcp", {}).ports)
-        ),
-        result={
-            "os": "RouterOS",
-            "model": "",
-            "device_type": "Router",
-            "vendor": "MikroTik",
-            "confidence": 90,
-            "reason": "MikroTik ports detected (8291/8728)"
-        },
-        priority=90
-    ),
-    
-    # IP Camera
-    CorrelationRule(
-        name="IP Camera",
-        condition=lambda d, c, col: (
-            c.camera and 
-            (554 in col.sources.get("tcp", {}).ports or 
-             8000 in col.sources.get("tcp", {}).ports)
-        ),
-        result={
-            "os": "Embedded Linux",
-            "model": "",
-            "device_type": "IP Camera",
-            "vendor": "",
-            "confidence": 85,
-            "reason": "RTSP/HTTP ports detected (554/8000)"
-        },
-        priority=85
-    ),
-    
-    # Printer
-    CorrelationRule(
-        name="Network Printer",
-        condition=lambda d, c, col: (
-            c.printer and 
-            (9100 in col.sources.get("tcp", {}).ports or 
-             631 in col.sources.get("tcp", {}).ports)
-        ),
-        result={
-            "os": "Embedded",
-            "model": "",
-            "device_type": "Printer",
-            "vendor": "",
-            "confidence": 85,
-            "reason": "Printer ports detected (9100/631)"
-        },
-        priority=85
-    ),
-    
-    # Android phone (silent)
-    CorrelationRule(
-        name="Android Phone (Silent)",
-        condition=lambda d, c, col: (
-            not c.icmp and 
-            not c.tcp and 
-            d.vendor and 
-            "xiaomi" in d.vendor.lower()
-        ),
-        result={
-            "os": "Android",
-            "model": "",
-            "device_type": "Smartphone",
-            "vendor": d.vendor,
-            "confidence": 70,
-            "reason": "Xiaomi vendor + no ICMP/TCP (firewall)"
-        },
-        priority=70
-    ),
-    
-    # iOS device (silent)
-    CorrelationRule(
-        name="iOS Device (Silent)",
-        condition=lambda d, c, col: (
-            not c.icmp and 
-            not c.tcp and 
-            d.vendor and 
-            "apple" in d.vendor.lower()
-        ),
-        result={
-            "os": "iOS",
-            "model": "",
-            "device_type": "Smartphone",
-            "vendor": d.vendor,
-            "confidence": 70,
-            "reason": "Apple vendor + no ICMP/TCP (firewall)"
-        },
-        priority=70
-    ),
-    
-    # Linux device (TTL only)
-    CorrelationRule(
-        name="Linux Device",
-        condition=lambda d, c, col: (
-            c.icmp and 
-            col.sources.get("ttl", {}).os == "Linux"
-        ),
-        result={
-            "os": "Linux",
-            "model": "",
-            "device_type": "Network Device",
-            "vendor": "",
-            "confidence": 60,
-            "reason": "TTL=64 (Linux)"
-        },
-        priority=60
-    ),
-    
-    # Windows device (TTL only)
-    CorrelationRule(
-        name="Windows Device",
-        condition=lambda d, c, col: (
-            c.icmp and 
-            col.sources.get("ttl", {}).os == "Windows"
-        ),
-        result={
-            "os": "Windows",
-            "model": "",
-            "device_type": "PC/Server",
-            "vendor": "",
-            "confidence": 60,
-            "reason": "TTL=128 (Windows)"
-        },
-        priority=60
-    ),
-    
-    # Silent IoT device
-    CorrelationRule(
-        name="Silent IoT Device",
-        condition=lambda d, c, col: (
-            not c.icmp and 
-            not c.tcp and 
-            d.flows > 0 and 
-            d.megabytes < 10
-        ),
-        result={
-            "os": "Unknown",
-            "model": "",
-            "device_type": "IoT Device",
-            "vendor": d.vendor if d.vendor != "Unknown" else "",
-            "confidence": 40,
-            "reason": "Low traffic + no ICMP/TCP (sleeping IoT)"
-        },
-        priority=40
-    ),
-]
-
-
-def apply_rules(device, capabilities: DeviceCapabilities, collected) -> dict | None:
+@dataclass
+class CorrelationResult:
     """
-    Применяет все правила и возвращает лучшее совпадение.
+    Результат работы Correlation Engine.
+    Не мутирует Device — analysis.py сам решает, что применить.
     """
-    matches = []
-    
-    for rule in RULES:
-        try:
-            if rule.condition(device, capabilities, collected):
-                matches.append(rule)
-        except Exception:
-            continue
-    
-    if not matches:
-        return None
-    
-    # Выбираем правило с наивысшим priority
-    best = max(matches, key=lambda r: r.priority)
-    return best.result
+
+    os: str = ""
+    model: str = ""
+    device_type: str = ""
+    vendor: str = ""
+    confidence: int = 0
+
+    # Теперь это список MatchedRule, а не просто строк
+    matched_rules: list[MatchedRule] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
+
+    # Детализация confidence
+    breakdown: ConfidenceBreakdown = field(default_factory=ConfidenceBreakdown)
+
+    # Fingerprint Score — суммарная оценка
+    fingerprint_score: int = 0
+
+    # Evidence Items — конкретные факты с вкладом в confidence
+    evidence_items: list[EvidenceItem] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        """Для экспорта в JSON."""
+        return {
+            "os": self.os,
+            "model": self.model,
+            "device_type": self.device_type,
+            "vendor": self.vendor,
+            "confidence": self.confidence,
+            "fingerprint_score": self.fingerprint_score,
+            "matched_rules": [r.to_dict() for r in self.matched_rules],
+            "reasons": self.reasons,
+            "breakdown": self.breakdown.to_dict(),
+            "evidence_items": [e.to_dict() for e in self.evidence_items],
+        }
