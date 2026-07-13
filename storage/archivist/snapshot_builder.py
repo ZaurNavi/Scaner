@@ -1,37 +1,39 @@
 from __future__ import annotations
 from datetime import datetime
-import uuid
+from typing import Dict
+
 from models import Device
-from storage.schema import (
-    SnapshotBundle, Scan, Device as DomainDevice, Snapshot, 
-    Observation, Evidence, CollectorLog,
-    DeviceStatus, ScanStatus, DeviceType, Source, 
-    ObservationType, CollectorStatus
-)
 from fingerprint.collectors.base import CollectedData
 from fingerprint.correlation import engine as correlation_engine
 
+from storage.schema import (
+    SnapshotBundle, Scan, Device as DomainDevice, Snapshot,
+    Observation, Evidence, CollectorLog,
+    DeviceStatus, DeviceType, Source, ObservationType, CollectorStatus
+)
+
+
 def build_snapshot_bundle(
     device: Device,
-    scan_id: str,
-    collected_data: CollectedData,
-    scan_started_at: datetime
+    scan: Scan,
+    collected: CollectedData,
 ) -> SnapshotBundle:
     """
     Строит SnapshotBundle из данных устройства и собранных фактов.
+    Один Bundle = одно устройство = одна транзакция.
     """
-    
-    # 1. Создаем Domain Device (паспорт)
+
+    # 1. Domain Device (паспорт)
     domain_device = DomainDevice(
         mac=device.mac,
-        first_seen=datetime.now(),  # TODO: брать из БД, если устройство уже есть
+        first_seen=datetime.now(),
         last_seen=datetime.now(),
-        status=DeviceStatus.ACTIVE
+        status=DeviceStatus.ACTIVE,
     )
-    
-    # 2. Создаем Snapshot (снимок состояния)
+
+    # 2. Snapshot (снимок состояния)
     snapshot = Snapshot(
-        scan_id=scan_id,
+        scan_id=scan.id,
         device_id=domain_device.id,
         timestamp=datetime.now(),
         ip=device.ip,
@@ -39,42 +41,45 @@ def build_snapshot_bundle(
         os=device.os or "",
         model=device.model or "",
         device_type=_map_device_type(device.device_type),
-        confidence=device.confidence
+        confidence=device.confidence,
     )
-    
-    # 3. Собираем Observations из collected_data
-    observations = _build_observations(snapshot.id, collected_data)
-    
-    # 4. Собираем Evidence из correlation engine
-    evidence = _build_evidence(snapshot.id, device, collected_data)
-    
-    # 5. Создаем CollectorLog (опционально)
+
+    # 3. Observations из collected_data
+    observations = _build_observations(snapshot.id, collected)
+
+    # 4. Evidence из correlation engine
+    evidence = _build_evidence(snapshot.id, device, collected)
+
+    # 5. CollectorLog
+    total_elapsed = sum(src.elapsed_ms for src in collected.sources.values())
     collector_log = CollectorLog(
-        scan_id=scan_id,
+        scan_id=scan.id,
         collector_name="fingerprint_engine",
-        started_at=scan_started_at,
+        started_at=scan.started_at,
         finished_at=datetime.now(),
-        duration_ms=sum(src.elapsed_ms for src in collected_data.sources.values()),
-        objects_processed=len(collected_data.sources),
+        duration_ms=total_elapsed,
+        objects_processed=len(collected.sources),
         status=CollectorStatus.SUCCESS,
         warnings=0,
-        error_message=""
+        error_message="",
     )
-    
+
     # 6. Собираем Bundle
-    bundle = SnapshotBundle(
-        scan_id=scan_id,
+    return SnapshotBundle(
+        scan_id=scan.id,
         snapshot=snapshot,
+        scan=scan,
         device=domain_device,
         observations=tuple(observations),
         evidence=tuple(evidence),
-        collector_log=collector_log
+        collector_log=collector_log,
     )
-    
-    return bundle
+
 
 def _map_device_type(device_type: str) -> DeviceType:
     """Маппит строку device_type в Enum DeviceType."""
+    if not device_type:
+        return DeviceType.UNKNOWN
     mapping = {
         "router": DeviceType.ROUTER,
         "switch": DeviceType.SWITCH,
@@ -89,13 +94,15 @@ def _map_device_type(device_type: str) -> DeviceType:
         "tv": DeviceType.TV,
         "iot": DeviceType.IOT,
         "server": DeviceType.SERVER,
+        "network device": DeviceType.ROUTER,
     }
     return mapping.get(device_type.lower(), DeviceType.UNKNOWN)
+
 
 def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Observation]:
     """Собирает Observations из всех источников."""
     observations = []
-    
+
     # TTL
     if "ttl" in collected.sources:
         ttl_result = collected.sources["ttl"]
@@ -106,9 +113,9 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
                 key="ttl",
                 value=str(ttl_result.ttl),
                 obs_type=ObservationType.INTEGER,
-                confidence=ttl_result.confidence
+                confidence=ttl_result.confidence,
             ))
-    
+
     # TCP ports
     if "tcp" in collected.sources:
         tcp_result = collected.sources["tcp"]
@@ -119,9 +126,9 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
                 key="open_ports",
                 value=str(list(tcp_result.services.keys())),
                 obs_type=ObservationType.JSON,
-                confidence=tcp_result.confidence
+                confidence=tcp_result.confidence,
             ))
-    
+
     # HTTP
     if "http" in collected.sources:
         http_result = collected.sources["http"]
@@ -134,9 +141,9 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
                         key=f"http.server.port_{port}",
                         value=data["server"],
                         obs_type=ObservationType.STRING,
-                        confidence=http_result.confidence
+                        confidence=http_result.confidence,
                     ))
-    
+
     # mDNS
     if collected.mdns.hostname:
         observations.append(Observation(
@@ -145,9 +152,9 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
             key="hostname",
             value=collected.mdns.hostname,
             obs_type=ObservationType.STRING,
-            confidence=35
+            confidence=35,
         ))
-    
+
     # DNS hostname
     if collected.hostname:
         observations.append(Observation(
@@ -156,15 +163,16 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
             key="hostname",
             value=collected.hostname,
             obs_type=ObservationType.STRING,
-            confidence=10
+            confidence=10,
         ))
-    
+
     return observations
+
 
 def _build_evidence(snapshot_id: str, device: Device, collected: CollectedData) -> list[Evidence]:
     """Собирает Evidence из correlation engine."""
     corr_result = correlation_engine.correlate(device, collected)
-    
+
     evidence_list = []
     for item in corr_result.evidence_items:
         evidence_list.append(Evidence(
@@ -172,10 +180,11 @@ def _build_evidence(snapshot_id: str, device: Device, collected: CollectedData) 
             description=item.description,
             contribution=item.contribution,
             source=_map_source(item.source),
-            details=item.details or ""
+            details=item.details or "",
         ))
-    
+
     return evidence_list
+
 
 def _map_source(source_str: str) -> Source:
     """Маппит строку source в Enum Source."""
@@ -186,10 +195,11 @@ def _map_source(source_str: str) -> Source:
         "tcp": Source.TCP,
         "http": Source.HTTP,
         "mdns": Source.MDNS,
+        "ssdp": Source.SSDP,
+        "snmp": Source.SNMP,
+        "arp": Source.ARP,
+        "netflow": Source.NETFLOW,
     }
-    
-    # Если source начинается с "rule:", это правило корреляции
     if source_str.startswith("rule:"):
-        return Source.UNKNOWN  # TODO: добавить Source.RULE в Enum
-    
+        return Source.UNKNOWN
     return mapping.get(source_str.lower(), Source.UNKNOWN)
