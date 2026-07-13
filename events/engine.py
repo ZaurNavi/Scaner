@@ -1,53 +1,46 @@
 from __future__ import annotations
-from typing import List
+import time
+from typing import Optional
 
-from events.models import Event
-from events.repository import EventRepository
-from events.rules import NewDeviceRule, IpChangedRule, HostnameChangedRule, VendorChangedRule
+from .comparator import SnapshotComparator
+from .result import EventResult
+from .event import Event
 
 
 class EventEngine:
     """
-    Event Engine — модуль, который анализирует историю и генерирует события.
-    Работает только с БД, не с сетью.
+    Event Engine — чистый вычислитель событий.
+    
+    НЕ хранит историю.
+    НЕ пишет в базу.
+    НЕ отправляет уведомления.
+    
+    Только вычисляет: "Что изменилось между предыдущим и текущим состоянием?"
     """
 
-    def __init__(self, event_repository: EventRepository):
-        self.event_repo = event_repository
-        self.rules = [
-            NewDeviceRule(),
-            IpChangedRule(),
-            HostnameChangedRule(),
-            VendorChangedRule(),
-        ]
-
-    def analyze_snapshot(self, current_snapshot: dict) -> List[Event]:
+    def __init__(self, repository):
         """
-        Анализирует текущий Snapshot, сравнивая с предыдущим.
-        Возвращает список сгенерированных событий.
+        repository: объект с методом get_last_snapshot(device_id) -> dict | None
         """
-        device_id = current_snapshot.get("device_id")
-        snapshot_id = current_snapshot.get("id")
+        self.repository = repository
+        self.comparator = SnapshotComparator()
 
-        if not device_id or not snapshot_id:
-            return []
-
-        # Получаем предыдущий Snapshot для этого устройства
-        previous_snapshot = self.event_repo.get_previous_snapshot(device_id, snapshot_id)
-
-        # Запускаем все правила
-        events = []
-        for rule in self.rules:
-            rule_events = rule.detect(previous_snapshot, current_snapshot)
-            events.extend(rule_events)
-
-        return events
-
-    def process_and_save(self, current_snapshot: dict) -> List[Event]:
+    def analyze(self, device_id: str, new_snapshot: dict) -> EventResult:
         """
-        Анализирует Snapshot и сохраняет все события в БД.
+        Вычисляет события для устройства.
+        
+        1. Запрашивает предыдущий Snapshot через Repository
+        2. Запускает Comparator
+        3. Возвращает EventResult
         """
-        events = self.analyze_snapshot(current_snapshot)
-        if events:
-            self.event_repo.save_events(events)
-        return events
+        start_time = time.time()
+
+        # Получаем предыдущий Snapshot
+        old_snapshot = self.repository.get_last_snapshot(device_id)
+
+        # Запускаем Comparator
+        events = self.comparator.compare(old_snapshot, new_snapshot)
+
+        elapsed_ms = (time.time() - start_time) * 1000
+
+        return EventResult(events=events, elapsed_ms=elapsed_ms)
