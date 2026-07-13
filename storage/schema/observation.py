@@ -6,11 +6,11 @@ from .source import Source
 
 @dataclass(frozen=True)
 class Observation:
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     snapshot_id: str
     source: Source
     key: str
-    value: str  # Всегда строка, интерпретируется через obs_type
+    value: str
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     obs_type: ObservationType = ObservationType.STRING
     unit: str | None = None
     confidence: int = 0
