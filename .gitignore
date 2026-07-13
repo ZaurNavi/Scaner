@@ -25,7 +25,11 @@ cache/
 # --------------------------------------------------
 exports/
 reports/
-storage/
+storage/*.db
+storage/*.sqlite
+storage/history/
+storage/cache/
+storage/tmp/
 
 # --------------------------------------------------
 # Archives
