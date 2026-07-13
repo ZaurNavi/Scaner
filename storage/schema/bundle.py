@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Tuple, Optional
+from .scan import Scan
 from .device import Device
 from .snapshot import Snapshot
 from .observation import Observation
@@ -12,18 +13,14 @@ from .collector_log import CollectorLog
 class SnapshotBundle:
     """
     Атомарный пакет данных для сохранения за один проход.
-    Гарантирует, что все связанные сущности одного сканирования 
-    будут сохранены в одной транзакции.
     """
-    scan_id: str
     snapshot: Snapshot
+    scan_id: str  # Оставляем для обратной совместимости, но теперь есть и scan
     
-    # Опционально: если устройство новое, передаем его. 
+    scan: Optional[Scan] = None
     device: Optional[Device] = None
     
-    # Кортежи вместо списков для сохранения frozen=True
     observations: Tuple[Observation, ...] = field(default_factory=tuple)
     evidence: Tuple[Evidence, ...] = field(default_factory=tuple)
     capabilities: Tuple[Capability, ...] = field(default_factory=tuple)
-    
     collector_log: Optional[CollectorLog] = None
