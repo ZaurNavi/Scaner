@@ -5,7 +5,7 @@ from .enums import CapabilityType
 
 @dataclass(frozen=True)
 class Capability:
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     snapshot_id: str
     capability: CapabilityType
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     confidence: int = 0
