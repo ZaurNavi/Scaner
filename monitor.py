@@ -43,6 +43,9 @@ from storage.archivist import (
 )
 from storage.schema import Scan, ScanStatus
 
+# Event Engine v1.4.0 (чистый вычислитель)
+from events import EventEngine
+
 
 def print_header() -> None:
     print()
@@ -151,17 +154,16 @@ def main() -> int:
     # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
 
-    # === v1.3.12: Archivist Integration ===
+    # === v1.4.0: Archivist + Event Engine (чистый вычислитель) ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
         
-        # Инициализация Event Engine
-        from events import EventEngine, EventRepository
-        event_repo = EventRepository(db)
-        event_engine = EventEngine(event_repo)
+        # Инициализация Event Engine v1.4.0 (чистый вычислитель, НЕ пишет в БД)
+        event_engine = EventEngine(Repository(db))
         
         all_events = []
+        total_event_elapsed_ms = 0.0
         
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
@@ -173,35 +175,38 @@ def main() -> int:
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 
-                # === v1.3.11: Анализ событий ===
+                # === v1.4.0: Анализ событий (БЕЗ записи в БД) ===
                 current_snapshot_dict = {
                     "id": bundle.snapshot.id,
                     "device_id": bundle.snapshot.device_id,
                     "ip": bundle.snapshot.ip,
                     "hostname": bundle.snapshot.hostname,
                     "device_type": bundle.snapshot.device_type.value,
+                    "vendor": device.vendor or "",
                 }
-                events = event_engine.process_and_save(current_snapshot_dict)
-                all_events.extend(events)
+                event_result = event_engine.analyze(bundle.snapshot.device_id, current_snapshot_dict)
+                all_events.extend(event_result.events)
+                total_event_elapsed_ms += event_result.elapsed_ms
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
         print()
         archivist.print_summary()
         
-        # Вывод событий
+        # Вывод событий (v1.4.0)
         if all_events:
             print()
-            print("  📢 События:")
+            print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms):")
             for event in all_events:
-                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "ALERT": "🚨"}.get(event.severity.value, "•")
+                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "CRITICAL": "🚨"}.get(event.severity.value, "•")
                 print(f"      {severity_icon} [{event.severity.value}] {event.title}")
-                print(f"         {event.description}")
-                if event.details:
-                    print(f"         {event.details}")
+                if event.old_value and event.new_value:
+                    print(f"         {event.old_value} → {event.new_value}")
+                else:
+                    print(f"         {event.description}")
         else:
             print()
-            print("  📢 События: Нет новых событий (состояние устройств не изменилось)")
+            print(f"  📢 Events: Нет изменений (состояние устройств не изменилось, {total_event_elapsed_ms:.1f} ms)")
 
     devices = filter_devices(devices)
     devices = sort_devices(devices)
