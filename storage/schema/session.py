@@ -6,9 +6,9 @@ from .source import Source
 
 @dataclass(frozen=True)
 class Session:
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     device_id: str
     source: Source
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     start_time: datetime = field(default_factory=datetime.now)
     end_time: datetime | None = None
     duration: float = 0.0
