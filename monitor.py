@@ -109,8 +109,8 @@ def main() -> int:
 
     # 4. Вывод и сохранение
     print()
-    print_table(devices)
-    save_report(devices)
+    print_table(devices, collected_data)
+    save_report(devices, collected_data)
 
     elapsed = time.time() - start
 
