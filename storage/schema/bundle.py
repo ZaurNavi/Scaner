@@ -11,15 +11,11 @@ from .collector_log import CollectorLog
 
 @dataclass(frozen=True)
 class SnapshotBundle:
-    """
-    Атомарный пакет данных для сохранения за один проход.
-    """
+    """Атомарный пакет данных для сохранения за один проход."""
     snapshot: Snapshot
-    scan_id: str  # Оставляем для обратной совместимости, но теперь есть и scan
-    
+    scan_id: str
     scan: Optional[Scan] = None
     device: Optional[Device] = None
-    
     observations: Tuple[Observation, ...] = field(default_factory=tuple)
     evidence: Tuple[Evidence, ...] = field(default_factory=tuple)
     capabilities: Tuple[Capability, ...] = field(default_factory=tuple)
