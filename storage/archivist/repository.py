@@ -17,7 +17,6 @@ class Repository:
 
     def save_bundle(self, bundle: SnapshotBundle) -> SaveResult:
         start_time = time.time()
-        result = SaveResult()
         
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -42,30 +41,26 @@ class Repository:
                 ))
 
             # 2. Device
+            actual_device_id = ""
             if bundle.device:
                 cursor.execute("SELECT id FROM device WHERE mac = ?", (bundle.device.mac,))
                 existing = cursor.fetchone()
                 
                 if existing:
+                    actual_device_id = existing[0]
                     cursor.execute("""
                         UPDATE device SET last_seen = ?, status = ? WHERE id = ?
                     """, (
                         _dt_to_str(bundle.device.last_seen),
                         bundle.device.status.value,
-                        existing[0]
+                        actual_device_id
                     ))
                     result = SaveResult(
+                        device_id=actual_device_id,
                         devices_updated=1,
-                        snapshots_saved=result.snapshots_saved,
-                        observations_saved=result.observations_saved,
-                        evidence_saved=result.evidence_saved,
-                        capabilities_saved=result.capabilities_saved,
-                        sessions_updated=result.sessions_updated,
-                        elapsed_ms=result.elapsed_ms,
-                        success=result.success,
-                        error_message=result.error_message,
+                        elapsed_ms=(time.time() - start_time) * 1000,
+                        success=True
                     )
-                    actual_device_id = existing[0]
                 else:
                     actual_device_id = bundle.device.id
                     cursor.execute("""
@@ -79,20 +74,20 @@ class Repository:
                         bundle.device.status.value
                     ))
                     result = SaveResult(
+                        device_id=actual_device_id,
                         devices_created=1,
-                        snapshots_saved=result.snapshots_saved,
-                        observations_saved=result.observations_saved,
-                        evidence_saved=result.evidence_saved,
-                        capabilities_saved=result.capabilities_saved,
-                        sessions_updated=result.sessions_updated,
-                        elapsed_ms=result.elapsed_ms,
-                        success=result.success,
-                        error_message=result.error_message,
+                        elapsed_ms=(time.time() - start_time) * 1000,
+                        success=True
                     )
             else:
-                actual_device_id = bundle.snapshot.device_id if bundle.snapshot else None
+                actual_device_id = bundle.snapshot.device_id if bundle.snapshot else ""
+                result = SaveResult(device_id=actual_device_id, elapsed_ms=(time.time() - start_time) * 1000, success=True)
 
             # 3. Snapshot
+            obs_count = 0
+            ev_count = 0
+            cap_count = 0
+            
             if bundle.snapshot:
                 cursor.execute("""
                     INSERT INTO snapshot 
@@ -111,76 +106,54 @@ class Repository:
                     bundle.snapshot.confidence
                 ))
                 result = SaveResult(
+                    device_id=result.device_id,
                     devices_created=result.devices_created,
                     devices_updated=result.devices_updated,
                     snapshots_saved=1,
-                    observations_saved=result.observations_saved,
-                    evidence_saved=result.evidence_saved,
-                    capabilities_saved=result.capabilities_saved,
-                    sessions_updated=result.sessions_updated,
                     elapsed_ms=result.elapsed_ms,
-                    success=result.success,
-                    error_message=result.error_message,
+                    success=True
                 )
 
             # 4. Observations
             for obs in bundle.observations:
                 cursor.execute("""
-                    INSERT INTO observation 
-                    (id, snapshot_id, source, key, value, obs_type, unit, confidence)
+                    INSERT INTO observation (id, snapshot_id, source, key, value, obs_type, unit, confidence)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    obs.id, obs.snapshot_id, obs.source.value, obs.key, obs.value,
-                    obs.obs_type.value, obs.unit, obs.confidence
-                ))
+                """, (obs.id, obs.snapshot_id, obs.source.value, obs.key, obs.value, obs.obs_type.value, obs.unit, obs.confidence))
             obs_count = len(bundle.observations)
 
             # 5. Evidence
             for ev in bundle.evidence:
                 cursor.execute("""
-                    INSERT INTO evidence 
-                    (id, snapshot_id, description, contribution, source, details)
+                    INSERT INTO evidence (id, snapshot_id, description, contribution, source, details)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    ev.id, ev.snapshot_id, ev.description, ev.contribution,
-                    ev.source.value, ev.details
-                ))
+                """, (ev.id, ev.snapshot_id, ev.description, ev.contribution, ev.source.value, ev.details))
             ev_count = len(bundle.evidence)
 
             # 6. Capabilities
             for cap in bundle.capabilities:
                 cursor.execute("""
-                    INSERT INTO capability 
-                    (id, snapshot_id, capability, confidence)
+                    INSERT INTO capability (id, snapshot_id, capability, confidence)
                     VALUES (?, ?, ?, ?)
-                """, (
-                    cap.id, cap.snapshot_id, cap.capability.value, cap.confidence
-                ))
+                """, (cap.id, cap.snapshot_id, cap.capability.value, cap.confidence))
             cap_count = len(bundle.capabilities)
 
             # 7. CollectorLog
             if bundle.collector_log:
                 cursor.execute("""
-                    INSERT INTO collector_log 
-                    (id, scan_id, collector_name, started_at, finished_at, duration_ms, 
-                     objects_processed, status, warnings, error_message)
+                    INSERT INTO collector_log (id, scan_id, collector_name, started_at, finished_at, duration_ms, objects_processed, status, warnings, error_message)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    bundle.collector_log.id, bundle.collector_log.scan_id,
-                    bundle.collector_log.collector_name,
-                    _dt_to_str(bundle.collector_log.started_at),
-                    _dt_to_str(bundle.collector_log.finished_at),
-                    bundle.collector_log.duration_ms,
-                    bundle.collector_log.objects_processed,
-                    bundle.collector_log.status.value,
-                    bundle.collector_log.warnings,
-                    bundle.collector_log.error_message
+                    bundle.collector_log.id, bundle.collector_log.scan_id, bundle.collector_log.collector_name,
+                    _dt_to_str(bundle.collector_log.started_at), _dt_to_str(bundle.collector_log.finished_at),
+                    bundle.collector_log.duration_ms, bundle.collector_log.objects_processed,
+                    bundle.collector_log.status.value, bundle.collector_log.warnings, bundle.collector_log.error_message
                 ))
 
             conn.commit()
             
-            elapsed_ms = (time.time() - start_time) * 1000
             return SaveResult(
+                device_id=result.device_id,
                 devices_created=result.devices_created,
                 devices_updated=result.devices_updated,
                 snapshots_saved=result.snapshots_saved,
@@ -188,24 +161,20 @@ class Repository:
                 evidence_saved=ev_count,
                 capabilities_saved=cap_count,
                 sessions_updated=0,
-                elapsed_ms=elapsed_ms,
+                elapsed_ms=(time.time() - start_time) * 1000,
                 success=True,
                 error_message="",
             )
 
         except Exception as e:
             conn.rollback()
-            elapsed_ms = (time.time() - start_time) * 1000
             return SaveResult(
                 success=False,
                 error_message=str(e),
-                elapsed_ms=elapsed_ms,
+                elapsed_ms=(time.time() - start_time) * 1000,
             )
 
     def get_last_snapshot(self, device_id: str) -> dict | None:
-        """
-        Возвращает последний Snapshot устройства для сравнения состояний.
-        """
         conn = self.db.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
