@@ -151,7 +151,7 @@ def main() -> int:
     # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
 
-        # === v1.3.12: Archivist Integration ===
+    # === v1.3.12: Archivist Integration ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -187,21 +187,6 @@ def main() -> int:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
         print()
-        archivist.print_summary()
-        
-        # Вывод событий
-        if all_events:
-            print()
-            print("  📢 События:")
-            for event in all_events:
-                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "ALERT": "🚨"}.get(event.severity.value, "•")
-                print(f"      {severity_icon} [{event.severity.value}] {event.title}")
-                print(f"         {event.description}")
-                if event.details:
-                    print(f"         {event.details}")
-        else:
-            print()
-            print("  📢 События: Нет новых событий (состояние устройств не изменилось)")
         archivist.print_summary()
         
         # Вывод событий
