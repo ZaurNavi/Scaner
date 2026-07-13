@@ -2,9 +2,9 @@ from __future__ import annotations
 import sqlite3
 import time
 from datetime import datetime
-from typing import List, Tuple
+from typing import List
 from .database import DatabaseManager
-from storage.schema import SnapshotBundle, SaveResult, Snapshot
+from storage.schema import SnapshotBundle, SaveResult
 
 
 def _dt_to_str(dt: datetime | None) -> str | None:
@@ -16,9 +16,6 @@ class Repository:
         self.db = db_manager
 
     def save_bundle(self, bundle: SnapshotBundle) -> SaveResult:
-        """
-        Сохраняет SnapshotBundle и возвращает SaveResult с детальной статистикой.
-        """
         start_time = time.time()
         result = SaveResult()
         
@@ -28,7 +25,7 @@ class Repository:
         try:
             cursor.execute("BEGIN IMMEDIATE")
 
-            # 1. Scan (INSERT OR IGNORE)
+            # 1. Scan
             if bundle.scan:
                 cursor.execute("""
                     INSERT OR IGNORE INTO scan 
@@ -44,13 +41,12 @@ class Repository:
                     bundle.scan.status.value
                 ))
 
-            # 2. Device (UPSERT — создаём или обновляем last_seen)
+            # 2. Device
             if bundle.device:
                 cursor.execute("SELECT id FROM device WHERE mac = ?", (bundle.device.mac,))
                 existing = cursor.fetchone()
                 
                 if existing:
-                    # Устройство уже есть — обновляем last_seen
                     cursor.execute("""
                         UPDATE device SET last_seen = ?, status = ? WHERE id = ?
                     """, (
@@ -71,7 +67,6 @@ class Repository:
                     )
                     actual_device_id = existing[0]
                 else:
-                    # Устройство новое — создаём
                     actual_device_id = bundle.device.id
                     cursor.execute("""
                         INSERT INTO device (id, mac, first_seen, last_seen, status)
@@ -184,7 +179,6 @@ class Repository:
 
             conn.commit()
             
-            # Финальный SaveResult с полной статистикой
             elapsed_ms = (time.time() - start_time) * 1000
             return SaveResult(
                 devices_created=result.devices_created,
@@ -193,7 +187,7 @@ class Repository:
                 observations_saved=obs_count,
                 evidence_saved=ev_count,
                 capabilities_saved=cap_count,
-                sessions_updated=0,  # Пока не используем
+                sessions_updated=0,
                 elapsed_ms=elapsed_ms,
                 success=True,
                 error_message="",
@@ -208,39 +202,9 @@ class Repository:
                 elapsed_ms=elapsed_ms,
             )
 
-    def load_latest_snapshots(self, scan_id: str) -> List[Snapshot]:
+    def get_last_snapshot(self, device_id: str) -> dict | None:
         """
-        Загружает все snapshots для конкретного scan_id.
-        Это основа для будущего Report, который будет читать из БД.
-        """
-        conn = self.db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, scan_id, device_id, timestamp, ip, hostname, os, model, device_type, confidence
-            FROM snapshot
-            WHERE scan_id = ?
-            ORDER BY ip
-        """, (scan_id,))
-        
-        snapshots = []
-        for row in cursor.fetchall():
-            snapshots.append(Snapshot(
-                id=row[0],
-                scan_id=row[1],
-                device_id=row[2],
-                timestamp=datetime.fromisoformat(row[3]),
-                ip=row[4],
-                hostname=row[5] or "",
-                os=row[6] or "",
-                model=row[7] or "",
-                device_type=row[8],  # Строка из БД
-                confidence=row[9] or 0,
-                    def get_last_snapshot(self, device_id: str) -> dict | None:
-        """
-        Возвращает последний Snapshot устройства (до текущего).
-        Используется Event Engine для сравнения состояний.
-        
-        Возвращает dict или None, если устройства нет в БД.
+        Возвращает последний Snapshot устройства для сравнения состояний.
         """
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -265,7 +229,5 @@ class Repository:
             "model": row[7] or "",
             "device_type": row[8] or "UNKNOWN",
             "confidence": row[9] or 0,
-            "vendor": "",  # Vendor хранится в Identity, пока возвращаем пусто
+            "vendor": "",
         }
-            ))
-        return snapshots
