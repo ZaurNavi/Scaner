@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import sys
 import time
+import uuid
 from datetime import datetime
+from pathlib import Path
 
 from config import App, Cisco, Network, Paths
 from constants import DATE_FORMAT
@@ -27,9 +29,19 @@ from report import (
     save_debug_json,
 )
 from fingerprint.analysis import fingerprint_all
-from fingerprint.collectors.base import collect_all
+from fingerprint.collectors.base import collect_all, CollectedData
 from storage.history import enrich
 from storage.device_db import save_state
+
+# Архивист (v1.3.10)
+from storage.archivist import (
+    DatabaseManager,
+    Migrator,
+    Repository,
+    Archivist,
+    build_snapshot_bundle,
+)
+from storage.schema import Scan, ScanStatus
 
 
 def print_header() -> None:
@@ -47,11 +59,55 @@ def print_header() -> None:
     print("-" * 60)
 
 
+def init_archivist():
+    """
+    Инициализирует Архивиста.
+    Возвращает (archivist, db, scan) или (None, None, None) при ошибке.
+    Мониторинг не должен падать, если Архивист недоступен.
+    """
+    try:
+        print("  [ARCHIVIST] Initializing storage...")
+        db_path = Path("storage/archivist/sisu.db")
+        db = DatabaseManager(db_path)
+        Migrator(db.get_connection()).migrate()
+        print("  [ARCHIVIST] ✅ Migration OK")
+
+        repo = Repository(db)
+        archivist = Archivist(repo)
+        print("  [ARCHIVIST] ✅ Archivist initialized")
+
+        # Создаем Scan — корневую сущность для этого запуска
+        scan = Scan(
+            id=str(uuid.uuid4()),
+            started_at=datetime.now(),
+            collector_version=App.VERSION,
+            status=ScanStatus.SUCCESS,
+        )
+
+        # Сохраняем Scan сразу (INSERT OR IGNORE — если уже есть, не упадёт)
+        from storage.schema import SnapshotBundle
+        empty_bundle = SnapshotBundle(scan_id=scan.id, snapshot=None, scan=scan)
+        try:
+            repo.save_bundle(empty_bundle)
+        except Exception:
+            pass  # Snapshot обязателен, но Scan уже сохранён
+
+        return archivist, db, scan
+
+    except Exception as exc:
+        print(f"  [ARCHIVIST] ❌ Initialization failed: {exc}")
+        print("  [ARCHIVIST] ⚠️  Continuing without archivist...")
+        return None, None, None
+
+
 def main() -> int:
 
     start = time.time()
 
     print_header()
+
+    # 0. Инициализация Архивиста
+    archivist, db, scan = init_archivist()
 
     # 1. SNMP
     print("  [1/4]  Получение ARP-таблицы через SNMP...")
@@ -90,19 +146,33 @@ def main() -> int:
 
     devices = build_devices(arp, netflow)
     enrich(devices)
-    
+
     # Сбор данных из всех коллекторов
     ips = [d.ip for d in devices]
     collected_data = collect_all(ips, devices)
-    
+
     # Fingerprint с использованием собранных данных
     devices = fingerprint_all(devices, collected_data)
-    
+
     analyze_all(devices)
-    
+
     # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
-    
+
+    # === v1.3.10: Архивация (перед фильтрацией, чтобы сохранить всё) ===
+    if archivist and scan:
+        print()
+        print("  [ARCHIVIST] Saving bundles...")
+        for device in devices:
+            collected = collected_data.get(device.ip, CollectedData())
+            bundle = build_snapshot_bundle(device, scan, collected)
+            success = archivist.save(bundle)
+            if success:
+                print(f"      💾 Saved bundle: {device.ip}")
+
+        print()
+        archivist.print_summary()
+
     devices = filter_devices(devices)
     devices = sort_devices(devices)
     save_state(devices)
@@ -111,6 +181,10 @@ def main() -> int:
     print()
     print_table(devices, collected_data)
     save_report(devices, collected_data)
+
+    # Закрываем БД
+    if db:
+        db.close()
 
     elapsed = time.time() - start
 
