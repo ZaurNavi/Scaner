@@ -18,6 +18,7 @@ from .evidence import Evidence
 from .capability import Capability
 from .session import Session
 from .collector_log import CollectorLog
+from .bundle import SnapshotBundle  # <-- ДОБАВЛЕНО
 
 __all__ = [
     "DOMAIN_MODEL_VERSION",
@@ -33,4 +34,5 @@ __all__ = [
     "Capability",
     "Session",
     "CollectorLog",
+    "SnapshotBundle",  # <-- ДОБАВЛЕНО
 ]
