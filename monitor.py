@@ -151,7 +151,7 @@ def main() -> int:
     # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
 
-    # === v1.3.10 & v1.3.11: Архивация и Event Engine ===
+        # === v1.3.12: Archivist Integration ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -166,10 +166,12 @@ def main() -> int:
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
             bundle = build_snapshot_bundle(device, scan, collected)
-            success = archivist.save(bundle)
             
-            if success:
-                print(f"      💾 Saved bundle: {device.ip}")
+            # Сохраняем и получаем SaveResult
+            result = archivist.save(bundle)
+            
+            if result.success:
+                print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 
                 # === v1.3.11: Анализ событий ===
                 current_snapshot_dict = {
@@ -181,8 +183,25 @@ def main() -> int:
                 }
                 events = event_engine.process_and_save(current_snapshot_dict)
                 all_events.extend(events)
+            else:
+                print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
         print()
+        archivist.print_summary()
+        
+        # Вывод событий
+        if all_events:
+            print()
+            print("  📢 События:")
+            for event in all_events:
+                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "ALERT": "🚨"}.get(event.severity.value, "•")
+                print(f"      {severity_icon} [{event.severity.value}] {event.title}")
+                print(f"         {event.description}")
+                if event.details:
+                    print(f"         {event.details}")
+        else:
+            print()
+            print("  📢 События: Нет новых событий (состояние устройств не изменилось)")
         archivist.print_summary()
         
         # Вывод событий
