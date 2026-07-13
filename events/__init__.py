@@ -1,9 +1,8 @@
 """
-Event Engine v1.4.0
+Event Engine v1.4.0 + Persistence Layer v1.4.1
 
-Чистый вычислитель событий.
-НЕ пишет в БД, НЕ отправляет уведомления.
-Только отвечает на вопрос: "Что изменилось?"
+Event Engine — чистый вычислитель событий.
+Event Persister — слой сохранения событий.
 """
 
 from .event import Event
@@ -11,6 +10,8 @@ from .event_type import EventType, Severity
 from .result import EventResult
 from .comparator import SnapshotComparator
 from .engine import EventEngine
+from .repository import EventRepository
+from .persister import EventPersister, PersistResult
 
 __all__ = [
     "Event",
@@ -19,4 +20,7 @@ __all__ = [
     "EventResult",
     "SnapshotComparator",
     "EventEngine",
+    "EventRepository",
+    "EventPersister",
+    "PersistResult",
 ]
