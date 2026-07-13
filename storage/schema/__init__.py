@@ -12,6 +12,7 @@ from .capability import Capability
 from .session import Session
 from .collector_log import CollectorLog
 from .bundle import SnapshotBundle
+from .save_result import SaveResult
 
 __all__ = [
     "DOMAIN_MODEL_VERSION", "DeviceStatus", "DeviceType", "ObservationType", 
