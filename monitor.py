@@ -33,7 +33,6 @@ from fingerprint.collectors.base import collect_all, CollectedData
 from storage.history import enrich
 from storage.device_db import save_state
 
-# Архивист (v1.3.10)
 from storage.archivist import (
     DatabaseManager,
     Migrator,
@@ -42,8 +41,6 @@ from storage.archivist import (
     build_snapshot_bundle,
 )
 from storage.schema import Scan, ScanStatus
-
-# Event Engine v1.4.0 (чистый вычислитель)
 from events import EventEngine
 
 
@@ -62,11 +59,6 @@ def print_header() -> None:
 
 
 def init_archivist():
-    """
-    Инициализирует Архивиста.
-    Возвращает (archivist, db, scan) или (None, None, None) при ошибке.
-    Мониторинг не должен падать, если Архивист недоступен.
-    """
     try:
         print("  [ARCHIVIST] Initializing storage...")
         db_path = Path("storage/archivist/sisu.db")
@@ -78,7 +70,6 @@ def init_archivist():
         archivist = Archivist(repo)
         print("  [ARCHIVIST] ✅ Archivist initialized")
 
-        # Создаем Scan — корневую сущность для этого запуска
         scan = Scan(
             id=str(uuid.uuid4()),
             started_at=datetime.now(),
@@ -86,13 +77,12 @@ def init_archivist():
             status=ScanStatus.SUCCESS,
         )
 
-        # Сохраняем Scan сразу (INSERT OR IGNORE — если уже есть, не упадёт)
         from storage.schema import SnapshotBundle
         empty_bundle = SnapshotBundle(scan_id=scan.id, snapshot=None, scan=scan)
         try:
             repo.save_bundle(empty_bundle)
         except Exception:
-            pass  # Snapshot обязателен, но Scan уже сохранён
+            pass
 
         return archivist, db, scan
 
@@ -106,10 +96,8 @@ def main() -> int:
     start = time.time()
     print_header()
 
-    # 0. Инициализация Архивиста
     archivist, db, scan = init_archivist()
 
-    # 1. SNMP
     print("  [1/4]  Получение ARP-таблицы через SNMP...")
     try:
         arp = get_arp_table()
@@ -126,7 +114,6 @@ def main() -> int:
         print()
         return 1
 
-    # 2. NetFlow
     print("  [2/4]  Агрегация NetFlow...")
     try:
         netflow = aggregate_netflow()
@@ -138,28 +125,23 @@ def main() -> int:
 
     print(f"         Активных IP: {len(netflow)}")
 
-    # 3. Сборка и обогащение
     print("  [3/4]  Формирование отчёта...")
     devices = build_devices(arp, netflow)
     enrich(devices)
 
-    # Сбор данных из всех коллекторов
     ips = [d.ip for d in devices]
     collected_data = collect_all(ips, devices)
 
-    # Fingerprint с использованием собранных данных
     devices = fingerprint_all(devices, collected_data)
     analyze_all(devices)
 
-    # Сохранение debug JSON для ВСЕХ устройств (до фильтрации)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0: Archivist + Event Engine (чистый вычислитель) ===
+    # === v1.4.0: Archivist + Event Engine ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
         
-        # Инициализация Event Engine v1.4.0 (чистый вычислитель, НЕ пишет в БД)
         event_engine = EventEngine(Repository(db))
         
         all_events = []
@@ -169,22 +151,21 @@ def main() -> int:
             collected = collected_data.get(device.ip, CollectedData())
             bundle = build_snapshot_bundle(device, scan, collected)
             
-            # Сохраняем и получаем SaveResult
             result = archivist.save(bundle)
             
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 
-                # === v1.4.0: Анализ событий (БЕЗ записи в БД) ===
+                # ИСПРАВЛЕНИЕ: используем result.device_id (реальный ID из БД), а не bundle.snapshot.device_id
                 current_snapshot_dict = {
                     "id": bundle.snapshot.id,
-                    "device_id": bundle.snapshot.device_id,
+                    "device_id": result.device_id,
                     "ip": bundle.snapshot.ip,
                     "hostname": bundle.snapshot.hostname,
                     "device_type": bundle.snapshot.device_type.value,
                     "vendor": device.vendor or "",
                 }
-                event_result = event_engine.analyze(bundle.snapshot.device_id, current_snapshot_dict)
+                event_result = event_engine.analyze(result.device_id, current_snapshot_dict)
                 all_events.extend(event_result.events)
                 total_event_elapsed_ms += event_result.elapsed_ms
             else:
@@ -193,7 +174,6 @@ def main() -> int:
         print()
         archivist.print_summary()
         
-        # Вывод событий (v1.4.0)
         if all_events:
             print()
             print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms):")
@@ -212,12 +192,10 @@ def main() -> int:
     devices = sort_devices(devices)
     save_state(devices)
 
-    # 4. Вывод и сохранение
     print()
     print_table(devices, collected_data)
     save_report(devices, collected_data)
 
-    # Закрываем БД
     if db:
         db.close()
 
