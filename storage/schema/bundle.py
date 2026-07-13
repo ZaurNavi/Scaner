@@ -19,7 +19,6 @@ class SnapshotBundle:
     snapshot: Snapshot
     
     # Опционально: если устройство новое, передаем его. 
-    # Если уже есть в БД, Archivist проигнорирует или обновит last_seen.
     device: Optional[Device] = None
     
     # Кортежи вместо списков для сохранения frozen=True
