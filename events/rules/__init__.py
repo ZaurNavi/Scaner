@@ -1,13 +1,13 @@
-from .base import BaseRule
-from .new_device import NewDeviceRule
+from .first_seen import FirstSeenRule
 from .ip_changed import IpChangedRule
 from .hostname_changed import HostnameChangedRule
-from .vendor_changed import VendorChangedRule
+from .vendor_discovered import VendorDiscoveredRule
+from .device_classified import DeviceClassifiedRule
 
 __all__ = [
-    "BaseRule",
-    "NewDeviceRule",
+    "FirstSeenRule",
     "IpChangedRule",
     "HostnameChangedRule",
-    "VendorChangedRule",
+    "VendorDiscoveredRule",
+    "DeviceClassifiedRule",
 ]
