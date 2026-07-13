@@ -137,15 +137,22 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0: Archivist + Event Engine ===
+        # === v1.4.0 + v1.4.1: Archivist + Event Engine + Event Persister ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
         
+        # Инициализация Event Engine (чистый вычислитель)
         event_engine = EventEngine(Repository(db))
+        
+        # Инициализация Event Persister (слой сохранения)
+        from events import EventRepository, EventPersister
+        event_repo = EventRepository(db)
+        event_persister = EventPersister(event_repo)
         
         all_events = []
         total_event_elapsed_ms = 0.0
+        total_persisted = 0
         
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
@@ -155,10 +162,9 @@ def main() -> int:
             
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
-                
-                # === ОТЛАДКА: проверяем, какой device_id мы передаём ===
                 print(f"      [DEBUG] result.device_id = '{result.device_id}'")
                 
+                # === v1.4.0: Анализ событий (БЕЗ записи в БД) ===
                 current_snapshot_dict = {
                     "id": bundle.snapshot.id,
                     "device_id": result.device_id,
@@ -170,15 +176,32 @@ def main() -> int:
                 event_result = event_engine.analyze(result.device_id, current_snapshot_dict)
                 all_events.extend(event_result.events)
                 total_event_elapsed_ms += event_result.elapsed_ms
+                
+                # === v1.4.1: Сохранение событий в БД ===
+                if event_result.events:
+                    persist_result = event_persister.persist(event_result.events)
+                    if persist_result.success:
+                        total_persisted += persist_result.saved
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
         print()
         archivist.print_summary()
         
+        # Вывод событий
         if all_events:
             print()
-            print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms):")
+            print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms, persisted: {total_persisted}):")
+            for event in all_events:
+                severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "CRITICAL": "🚨"}.get(event.severity.value, "•")
+                print(f"      {severity_icon} [{event.severity.value}] {event.title}")
+                if event.old_value and event.new_value:
+                    print(f"         {event.old_value} → {event.new_value}")
+                else:
+                    print(f"         {event.description}")
+        else:
+            print()
+            print(f"  📢 Events: Нет изменений (состояние устройств не изменилось, {total_event_elapsed_ms:.1f} ms)")
             for event in all_events:
                 severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "CRITICAL": "🚨"}.get(event.severity.value, "•")
                 print(f"      {severity_icon} [{event.severity.value}] {event.title}")
