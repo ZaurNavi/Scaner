@@ -273,6 +273,9 @@ class Telegram:
     @classmethod
     def is_configured(cls) -> bool:
 
+        """Проверяет, настроен ли Telegram-бот."""
+        return bool(cls.BOT_TOKEN and cls.CHAT_ID)
+
 
 class Omada:
     """
@@ -286,5 +289,3 @@ class Omada:
     VERIFY_SSL = os.getenv("OMADA_VERIFY_SSL", "False").lower() == "true"
     TIMEOUT = int(os.getenv("OMADA_TIMEOUT", "15"))
     CACHE_TTL = 60  # Жесткий TTL 60 секунд для контроллеров
-        """Проверяет, настроен ли Telegram-бот."""
-        return bool(cls.BOT_TOKEN and cls.CHAT_ID)
