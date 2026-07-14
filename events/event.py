@@ -23,3 +23,4 @@ class Event:
     timestamp: datetime = field(default_factory=datetime.now)
     event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     metadata: Dict[str, Any] = field(default_factory=dict)
+    acknowledged: bool = False  # <-- ДОБАВЛЕНО ЭТО ПОЛЕ
