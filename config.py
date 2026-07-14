@@ -176,3 +176,5 @@ class Fingerprint:
     SNMP_OID_SYS_UP_TIME = "1.3.6.1.2.1.1.3.0"
     SNMP_OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
     SNMP_OID_SYS_SERVICES = "1.3.6.1.2.1.1.7.0"
+    SNMP_OID_SYS_LOCATION = "1.3.6.1.2.1.1.6.0"  # <-- ДОБАВЛЕНО
+    SNMP_OID_SYS_CONTACT = "1.3.6.1.2.1.1.4.0"   # <-- ДОБАВЛЕНО
