@@ -15,11 +15,8 @@ class HostnameChangedRule:
         old_hostname = old_snapshot.get("hostname") or ""
         new_hostname = new_snapshot.get("hostname") or ""
 
-        # Пропускаем, если оба пустые или одинаковые
-        if old_hostname == new_hostname:
+        if old_hostname == new_hostname or not new_hostname:
             return None
-        if not new_hostname:
-            return None  # Не считаем сменой, если новое имя пустое
 
         return Event(
             type=EventType.HOSTNAME_CHANGED,
@@ -27,6 +24,7 @@ class HostnameChangedRule:
             title="Hostname изменился",
             description="Устройство сменило имя",
             device_id=new_snapshot.get("device_id", ""),
+            snapshot_id=new_snapshot.get("id", ""),  # <-- ДОБАВЛЕНО
             old_value=old_hostname,
             new_value=new_hostname,
         )
