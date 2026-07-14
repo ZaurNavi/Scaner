@@ -2,7 +2,6 @@
 Активные коллекторы fingerprint.
 """
 
-from .dhcp_cisco import DHCPCiscoCollector
 from .base import ActiveCollector, FingerprintResult
 from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
@@ -17,13 +16,14 @@ from .ssh import SSHCollector
 from .smb import SMBCollector
 from .banners import BannersCollector
 from .https_cert import HTTPSCertCollector
-from .ntp import NTPCollector             # <-- ДОБАВЛЕНО
-from .lldp_cdp import LLDP_CDPCollector   # <-- ДОБАВЛЕНО
+from .ntp import NTPCollector
+from .lldp_cdp import LLDP_CDPCollector
+from .dhcp_cisco import DHCPCiscoCollector
+from .favicon import FaviconCollector  # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
 __all__ = [
-    "DHCPCiscoCollector",
     "ActiveCollector",
     "FingerprintResult",
     "ScapyFPCollector",
@@ -39,8 +39,10 @@ __all__ = [
     "SMBCollector",
     "BannersCollector",
     "HTTPSCertCollector",
-    "NTPCollector",        # <-- ДОБАВЛЕНО
-    "LLDP_CDPCollector",   # <-- ДОБАВЛЕНО
+    "NTPCollector",
+    "LLDP_CDPCollector",
+    "DHCPCiscoCollector",
+    "FaviconCollector",  # <-- ДОБАВЛЕНО
     "CORE_PORTS",
     "OPTIONAL_PORTS",
     "ALL_PORTS",
