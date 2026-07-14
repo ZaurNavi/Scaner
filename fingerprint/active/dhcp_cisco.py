@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
-DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через системный SSH-клиент.
-Использует subprocess с флагами для совместимости со старыми алгоритмами Cisco IOS.
+DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через Netmiko.
+Netmiko автоматически обрабатывает устаревшие алгоритмы SSH для старых Cisco IOS.
 """
 
 from __future__ import annotations
 
 import re
-import subprocess
 import time
 from dataclasses import asdict
 from typing import Dict
+
+try:
+    from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticationException
+except ImportError:
+    print("      [ERROR] Netmiko не установлен. Выполните: pip install netmiko")
+    raise
 
 from config import CiscoDHCP
 from models import Device
@@ -21,7 +26,7 @@ from storage.active_cache import get as cache_get, set as cache_set
 
 class DHCPCiscoCollector(ActiveCollector):
     """
-    Коллектор, который получает DHCP-leases с Cisco 3845 через системный SSH.
+    Коллектор, который получает DHCP-leases с Cisco 3845 через Netmiko.
     """
 
     PRIORITY = 30
@@ -37,7 +42,11 @@ class DHCPCiscoCollector(ActiveCollector):
 
         cached = cache_get(device.ip, "dhcp_cisco")
         if cached:
-            return FingerprintResult(**cached, source="dhcp_cisco", elapsed_ms=0.0)
+            # Исправление TypeError: безопасно обновляем поля из кэша
+            cached_dict = dict(cached)
+            cached_dict["source"] = "dhcp_cisco"
+            cached_dict["elapsed_ms"] = 0.0
+            return FingerprintResult(**cached_dict)
 
         if not self.is_available(device):
             return FingerprintResult(
@@ -77,60 +86,44 @@ class DHCPCiscoCollector(ActiveCollector):
             return self._leases_cache
 
         try:
-            # Формируем команду SSH с принудительным включением старых алгоритмов для Cisco IOS
-            ssh_cmd = [
-                "ssh",
-                "-o", "StrictHostKeyChecking=no",
-                "-o", "UserKnownHostsFile=/dev/null",
-                "-o", f"ConnectTimeout={self.timeout}",
-                "-o", "KexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1",
-                "-o", "HostKeyAlgorithms=+ssh-rsa,ssh-dss",
-                "-o", "Ciphers=+aes128-cbc,3des-cbc,aes256-cbc",
-            ]
+            # Настройка устройства для Netmiko
+            connect_params = {
+                "device_type": "cisco_ios",
+                "host": CiscoDHCP.IP,
+                "port": CiscoDHCP.PORT,
+                "username": CiscoDHCP.USERNAME,
+                "timeout": self.timeout,
+                "global_delay_factor": 1,
+            }
             
             if CiscoDHCP.SSH_KEY_PATH:
-                ssh_cmd.extend(["-i", CiscoDHCP.SSH_KEY_PATH])
-                
-            target = f"{CiscoDHCP.USERNAME}@{CiscoDHCP.IP}"
-            
-            # Команды для Cisco
-            cisco_commands = "terminal length 0\nshow ip dhcp binding\nexit\n"
-            
-            # Если есть пароль, используем sshpass
-            if CiscoDHCP.PASSWORD:
-                # Проверяем наличие sshpass
-                try:
-                    subprocess.run(["sshpass", "-V"], capture_output=True, check=True)
-                    ssh_cmd = ["sshpass", "-p", CiscoDHCP.PASSWORD] + ssh_cmd
-                except FileNotFoundError:
-                    print("      [ERROR] Утилита 'sshpass' не найдена. Установите её: sudo apt install sshpass")
-                    print("      [INFO] Или настройте аутентификацию по SSH-ключу (SSH_KEY_PATH в .env)")
-                    return {}
-            
-            ssh_cmd.append(target)
-            
-            # Выполняем команду
-            process = subprocess.Popen(
-                ssh_cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            
-            stdout, stderr = process.communicate(input=cisco_commands, timeout=CiscoDHCP.TIMEOUT)
-            
-            if process.returncode != 0:
-                print(f"      [ERROR] DHCP Cisco Collector failed (code {process.returncode}): {stderr.strip()}")
+                connect_params["use_keys"] = True
+                connect_params["key_file"] = CiscoDHCP.SSH_KEY_PATH
+            elif CiscoDHCP.PASSWORD:
+                connect_params["password"] = CiscoDHCP.PASSWORD
+            else:
                 return {}
-                
-            # Парсим вывод
-            self._leases_cache = self._parse_dhcp_binding(stdout)
-            self._cache_timestamp = current_time
-            return self._leases_cache
+            
+            # Если нужен enable пароль
+            if CiscoDHCP.ENABLE_PASSWORD:
+                connect_params["secret"] = CiscoDHCP.ENABLE_PASSWORD
 
-        except subprocess.TimeoutExpired:
-            print("      [ERROR] DHCP Cisco Collector failed: timeout")
+            # Подключение через Netmiko (он сам разберется с legacy алгоритмами Cisco)
+            with ConnectHandler(**connect_params) as net_connect:
+                # Если нужен enable, входим в него
+                if CiscoDHCP.ENABLE_PASSWORD:
+                    net_connect.enable()
+                
+                # Выполняем команду
+                output = net_connect.send_command("show ip dhcp binding", read_timeout=self.timeout)
+                
+                # Парсим вывод
+                self._leases_cache = self._parse_dhcp_binding(output)
+                self._cache_timestamp = current_time
+                return self._leases_cache
+
+        except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
+            print(f"      [ERROR] DHCP Cisco Collector failed (Auth/Timeout): {e}")
             return {}
         except Exception as e:
             print(f"      [ERROR] DHCP Cisco Collector failed: {e}")
