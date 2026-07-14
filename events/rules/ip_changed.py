@@ -24,6 +24,7 @@ class IpChangedRule:
             title="IP изменился",
             description="Устройство сменило IP-адрес",
             device_id=new_snapshot.get("device_id", ""),
+            snapshot_id=new_snapshot.get("id", ""),  # <-- ДОБАВЛЕНО
             old_value=old_ip,
             new_value=new_ip,
         )
