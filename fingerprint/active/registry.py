@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
-from .scapy_fp import ScapyFPCollector  # <-- ДОБАВЛЕНО
 from .base import ActiveCollector
+from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
 from .tcp import TCPCollector
 from .ssdp import SSDPCollector
@@ -17,10 +17,10 @@ from .netbios import NetBIOSCollector
 from .wsd import WSDCollector
 from .ssh import SSHCollector
 from .smb import SMBCollector
-from .https_cert import HTTPSCertCollector  # <-- ДОБАВЛЕНО
+from .https_cert import HTTPSCertCollector
+from .banners import BannersCollector  # <-- ДОБАВЛЕНО
 
 
-# Единый реестр всех активных коллекторов
 COLLECTORS: list[ActiveCollector] = [
     ScapyFPCollector(),
     TTLCollector(),
@@ -30,10 +30,11 @@ COLLECTORS: list[ActiveCollector] = [
     WSDCollector(),
     SSHCollector(),
     SMBCollector(),
+    BannersCollector(),    # <-- ДОБАВЛЕНО (проверяет FTP, Telnet, RTSP, SIP)
     TCPCollector(),
     SSDPCollector(),
     HTTPCollector(),
-    HTTPSCertCollector(),  # <-- ДОБАВЛЕНО (после HTTP, т.к. использует TCP context)
+    HTTPSCertCollector(),
 ]
 
 
