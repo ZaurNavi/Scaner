@@ -17,20 +17,24 @@ from .netbios import NetBIOSCollector
 from .wsd import WSDCollector
 from .ssh import SSHCollector
 from .smb import SMBCollector
+from .banners import BannersCollector
 from .https_cert import HTTPSCertCollector
-from .banners import BannersCollector  # <-- ДОБАВЛЕНО
+from .ntp import NTPCollector             # <-- ДОБАВЛЕНО
+from .lldp_cdp import LLDP_CDPCollector   # <-- ДОБАВЛЕНО
 
 
 COLLECTORS: list[ActiveCollector] = [
     ScapyFPCollector(),
     TTLCollector(),
+    LLDP_CDPCollector(),    # <-- ДОБАВЛЕНО (высокий приоритет для сетевых устройств)
     SNMPCollector(),
     SwitchPortCollector(),
     NetBIOSCollector(),
     WSDCollector(),
     SSHCollector(),
     SMBCollector(),
-    BannersCollector(),    # <-- ДОБАВЛЕНО (проверяет FTP, Telnet, RTSP, SIP)
+    BannersCollector(),
+    NTPCollector(),         # <-- ДОБАВЛЕНО
     TCPCollector(),
     SSDPCollector(),
     HTTPCollector(),
