@@ -3,7 +3,7 @@
 SNMP Collector — сбор данных через SNMP v2c.
 
 Архитектура (Generic Collector):
-- Только собирает сырые данные (sysDescr, sysObjectID, sysUpTime, sysName, sysServices)
+- Только собирает сырые данные (sysDescr, sysObjectID, sysUpTime, sysName, sysServices, sysLocation, sysContact)
 - НЕ интерпретирует данные — это делает Correlation Engine
 - Параллельно перебирает community строки (первый успешный — стоп)
 - Пропускает SNMP, если устройство не отвечает на ping (SNMP_SKIP_IF_NO_PING)
@@ -33,13 +33,15 @@ from pysnmp.hlapi import (
 )
 
 
-# OID для сбора данных
+# OID для сбора данных (v1.4.2 — расширенный)
 SNMP_OIDS = {
     "sysDescr": Fingerprint.SNMP_OID_SYS_DESCR,
     "sysObjectID": Fingerprint.SNMP_OID_SYS_OBJECT_ID,
     "sysUpTime": Fingerprint.SNMP_OID_SYS_UP_TIME,
     "sysName": Fingerprint.SNMP_OID_SYS_NAME,
     "sysServices": Fingerprint.SNMP_OID_SYS_SERVICES,
+    "sysLocation": Fingerprint.SNMP_OID_SYS_LOCATION,  # <-- ДОБАВЛЕНО
+    "sysContact": Fingerprint.SNMP_OID_SYS_CONTACT,    # <-- ДОБАВЛЕНО
 }
 
 
@@ -60,14 +62,9 @@ class SNMPCollector(ActiveCollector):
         self.workers = Fingerprint.SNMP_WORKERS
         self.device_timeout = Fingerprint.SNMP_DEVICE_TIMEOUT
         self.skip_if_no_ping = Fingerprint.SNMP_SKIP_IF_NO_PING
-        # Переиспользуем SnmpEngine для всех запросов
         self.snmp_engine = SnmpEngine()
 
     def collect(self, device: Device) -> FingerprintResult:
-        """
-        Собирает SNMP-данные для одного устройства.
-        Параллельно перебирает community строки с общим таймаутом.
-        """
         start_time = time.time()
 
         # Проверка кэша
@@ -75,21 +72,18 @@ class SNMPCollector(ActiveCollector):
         if cached:
             return FingerprintResult(**cached, source="snmp", elapsed_ms=0.0)
 
-        # Проверка доступности (ping)
+        # Проверка доступности
         if not self.is_available(device):
             elapsed_ms = (time.time() - start_time) * 1000
             result = FingerprintResult(
                 source="snmp",
-                raw_data={
-                    "responded": False,
-                    "reason": "device_unavailable",
-                },
+                raw_data={"responded": False, "reason": "device_unavailable"},
                 elapsed_ms=elapsed_ms,
             )
             cache_set(device.ip, "snmp", asdict(result))
             return result
 
-        # Проверка ping из context (TTL collector уже собрал эти данные)
+        # Проверка ping из context
         if self.skip_if_no_ping:
             context = getattr(self, "_context", {})
             ttl_result = context.get("ttl", {}).get(device.ip)
@@ -99,10 +93,7 @@ class SNMPCollector(ActiveCollector):
                     elapsed_ms = (time.time() - start_time) * 1000
                     result = FingerprintResult(
                         source="snmp",
-                        raw_data={
-                            "responded": False,
-                            "reason": "skipped_no_ping",
-                        },
+                        raw_data={"responded": False, "reason": "skipped_no_ping"},
                         elapsed_ms=elapsed_ms,
                     )
                     cache_set(device.ip, "snmp", asdict(result))
@@ -110,7 +101,6 @@ class SNMPCollector(ActiveCollector):
 
         # Параллельно перебираем community строки
         result = self._query_device_parallel(device.ip)
-
         elapsed_ms = (time.time() - start_time) * 1000
 
         if result is not None:
@@ -131,15 +121,9 @@ class SNMPCollector(ActiveCollector):
             )
 
         cache_set(device.ip, "snmp", asdict(fingerprint_result))
-
         return fingerprint_result
 
     def _query_device_parallel(self, ip: str) -> dict | None:
-        """
-        Параллельно перебирает community строки для одного устройства.
-        Возвращает первый успешный результат или None.
-        Общий таймаут — SNMP_DEVICE_TIMEOUT.
-        """
         with ThreadPoolExecutor(max_workers=len(self.communities)) as executor:
             futures = {
                 executor.submit(self._query_single_community, ip, community): community
@@ -161,31 +145,20 @@ class SNMPCollector(ActiveCollector):
         return None
 
     def _query_single_community(self, ip: str, community: str) -> dict | None:
-        """
-        Делает SNMP GET для одного устройства с одной community строкой.
-        Возвращает dict с сырыми данными или None, если не удалось.
-        """
         try:
             oids = [ObjectType(ObjectIdentity(oid)) for oid in SNMP_OIDS.values()]
 
-            # Используем переиспользуемый SnmpEngine
             error_indication, error_status, error_index, var_binds = next(
                 getCmd(
-                    self.snmp_engine,  # Переиспользуем engine
+                    self.snmp_engine,
                     CommunityData(community, mpModel=1),
-                    UdpTransportTarget(
-                        (ip, self.port),
-                        timeout=self.timeout,
-                        retries=self.retries,
-                    ),
+                    UdpTransportTarget((ip, self.port), timeout=self.timeout, retries=self.retries),
                     ContextData(),
                     *oids,
                 )
             )
 
-            if error_indication:
-                return None
-            if error_status:
+            if error_indication or error_status:
                 return None
 
             result = {"responded": True, "community": community}
@@ -202,9 +175,7 @@ class SNMPCollector(ActiveCollector):
                         break
 
                 if name:
-                    if name == "sysServices":
-                        result[name] = int(value)
-                    elif name == "sysUpTime":
+                    if name in ("sysServices", "sysUpTime"):
                         result[name] = int(value)
                     else:
                         result[name] = str(value)
@@ -215,14 +186,10 @@ class SNMPCollector(ActiveCollector):
             return None
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        """
-        Параллельно собирает SNMP-данные для всех устройств.
-        """
         if not Fingerprint.SNMP_ENABLED:
             return {}
 
         self._context = context or {}
-
         results: dict[str, FingerprintResult] = {}
 
         with ThreadPoolExecutor(max_workers=self.workers) as executor:
