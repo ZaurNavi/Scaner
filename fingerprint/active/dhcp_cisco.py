@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через Netmiko.
-Netmiko автоматически обрабатывает устаревшие алгоритмы SSH для старых Cisco IOS.
+Использует фильтрацию на стороне роутера для получения данных только по целевой сети.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ except ImportError:
     print("      [ERROR] Netmiko не установлен. Выполните: pip install netmiko")
     raise
 
-from config import CiscoDHCP
+from config import CiscoDHCP, Network  # <-- ДОБАВЛЕНО: импортируем Network для получения префикса
 from models import Device
 
 from .base import ActiveCollector, FingerprintResult
@@ -109,30 +109,30 @@ class DHCPCiscoCollector(ActiveCollector):
                 if CiscoDHCP.ENABLE_PASSWORD:
                     net_connect.enable()
                 
-                # ВОЗВРАЩАЕМ РАБОЧУЮ КОМАНДУ (без 'all', так как IOS 15.x её не понимает)
-                output = net_connect.send_command("show ip dhcp binding", read_timeout=self.timeout)
+                # === ГЛАВНОЕ ИСПРАВЛЕНИЕ: Фильтрация на стороне роутера ===
+                # Берем префикс из config.py (например, "192.168.1.") и ищем только его
+                target_prefix = Network.PREFIX.rstrip('.') # "192.168.1"
+                command = f"show ip dhcp binding | include {target_prefix}\\."
                 
-                print(f"\n      [DEBUG DHCP] Raw output from Cisco ({len(output)} chars):")
+                output = net_connect.send_command(command, read_timeout=self.timeout)
+                
+                print(f"\n      [DEBUG DHCP] Executed on Cisco: '{command}'")
+                print(f"      [DEBUG DHCP] Raw output ({len(output)} chars):")
                 print("      " + "-" * 60)
-                if output:
-                    for line in output.split('\n')[:30]:
-                        print(f"      | {line}")
-                    if len(output.split('\n')) > 30:
-                        print(f"      | ... (truncated)")
+                if output.strip():
+                    for line in output.strip().split('\n')[:20]:
+                        print(f"      | {line.strip()}")
                 else:
-                    print("      | (empty output)")
+                    print("      | (no bindings found for this subnet)")
                 print("      " + "-" * 60)
                 
                 self._leases_cache = self._parse_dhcp_binding(output)
                 self._cache_timestamp = current_time
                 
-                print(f"      [DEBUG DHCP] Parsed {len(self._leases_cache)} leases from output")
+                print(f"      [DEBUG DHCP] Successfully parsed {len(self._leases_cache)} leases!")
                 if self._leases_cache:
-                    print("      [DEBUG DHCP] Sample parsed leases:")
-                    for ip, data in list(self._leases_cache.items())[:5]:
-                        print(f"         {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, expires={data.get('lease_expiration')}")
-                else:
-                    print("      [DEBUG DHCP] WARNING: No leases parsed! Check regex pattern above.")
+                    for ip, data in list(self._leases_cache.items())[:3]:
+                        print(f"         -> {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, expires={data.get('lease_expiration')}")
                 
                 return self._leases_cache
 
@@ -145,12 +145,14 @@ class DHCPCiscoCollector(ActiveCollector):
 
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
         leases = {}
+        if not output.strip():
+            return leases
         
-        # Regex адаптирован точно под вывод твоего Cisco:
-        # IP (192.168.0.50) + пробелы + 01 + MAC (ec.750c.186f.f8) + пробелы + Время (Infinite или дата) + пробелы + Тип (Manual/Automatic)
-        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)\s*$'
+        # Упрощенная и надежная регулярка под формат:
+        # 192.168.1.139       0176.bf40.fa78.11       Jul 14 2026 03:18 PM    Automatic
+        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)'
         
-        for match in re.finditer(pattern, output, re.MULTILINE):
+        for match in re.finditer(pattern, output):
             ip = match.group(1)
             client_id_raw = match.group(2)
             lease_expiration = match.group(3).strip()
@@ -174,9 +176,4 @@ class DHCPCiscoCollector(ActiveCollector):
             return {}
         
         results: dict[str, FingerprintResult] = {}
-        self._get_all_leases()
-        
-        for device in devices:
-            results[device.ip] = self.collect(device)
-        
-        return results
+        self._get_all
