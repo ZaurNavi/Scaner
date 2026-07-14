@@ -1,9 +1,19 @@
 from __future__ import annotations
 import time
+from dataclasses import dataclass
 from typing import List
 
 from .event import Event
 from .repository import EventRepository
+
+
+@dataclass(frozen=True)
+class PersistResult:
+    """Результат сохранения событий."""
+    saved: int = 0
+    elapsed_ms: float = 0.0
+    success: bool = True
+    error_message: str = ""
 
 
 class EventPersister:
@@ -12,7 +22,6 @@ class EventPersister:
     
     Получает List[Event] от Event Engine и сохраняет их в БД.
     Не вычисляет события, не знает про Event Engine.
-    Только отвечает на вопрос: "Как сохранить эти события?"
     """
 
     def __init__(self, repository: EventRepository):
@@ -43,15 +52,3 @@ class EventPersister:
                 success=False,
                 error_message=str(e),
             )
-
-
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
-class PersistResult:
-    """Результат сохранения событий."""
-    saved: int = 0
-    elapsed_ms: float = 0.0
-    success: bool = True
-    error_message: str = ""
