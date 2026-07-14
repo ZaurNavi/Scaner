@@ -12,19 +12,18 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scapy.all import Ether, LLC, SNAP, sendp, sniff
 from scapy.contrib.cdp import (
+    CDP,
     CDPMsgDeviceID, 
     CDPMsgPortID, 
     CDPMsgCapabilities, 
     CDPMsgPlatform, 
-    CDPMsgSoftwareVersion,  # <-- ИСПРАВЛЕНО
-    CiscoDiscoveryProtocol
+    CDPMsgSoftwareVersion,
 )
 from scapy.contrib.lldp import (
     LLDPDUChassisID, 
     LLDPDUPortID, 
     LLDPDUSystemName, 
     LLDPDUSystemDescription, 
-    LLDPDUManagementAddress, 
     LLDPMessage
 )
 
@@ -36,12 +35,12 @@ from storage.active_cache import get as cache_get, set as cache_set
 
 
 class LLDP_CDPCollector(ActiveCollector):
-    PRIORITY = 42  # Высокий приоритет, сразу после базовых проверок
+    PRIORITY = 42
     RELIABILITY = 90
 
     def __init__(self):
         super().__init__(timeout=2.0)
-        self.workers = 16  # Меньше воркеров, т.к. работа с raw-сокетами
+        self.workers = 16
 
     def collect(self, device: Device) -> FingerprintResult:
         start_time = time.time()
@@ -57,10 +56,7 @@ class LLDP_CDPCollector(ActiveCollector):
                 elapsed_ms=(time.time() - start_time) * 1000,
             )
 
-        # Нормализуем MAC для Scapy
         dst_mac = device.mac.upper()
-        
-        # Если MAC multicast или broadcast, пропускаем
         if dst_mac.startswith(("01:00:5E", "33:33", "FF:FF:FF")):
             return FingerprintResult(
                 source="lldp_cdp",
@@ -89,16 +85,13 @@ class LLDP_CDPCollector(ActiveCollector):
         return result
 
     def _probe_device(self, dst_mac: str) -> dict | None:
-        """
-        Отправляет CDP и LLDP запросы и слушает ответ в течение timeout.
-        """
         found_info = {}
 
         # 1. CDP Probe (Cisco)
         cdp_pkt = Ether(dst=dst_mac, src="00:00:00:00:00:01") / \
                   LLC(dsap=0xaa, ssap=0xaa, ctrl=0x03) / \
                   SNAP(OUI=0x00000c, code=0x2000) / \
-                  CiscoDiscoveryProtocol(version=2, ttl=180) / \
+                  CDP(version=2, ttl=180) / \
                   CDPMsgDeviceID(val="Scanner") / \
                   CDPMsgPortID(iface="eth0")
 
@@ -110,18 +103,15 @@ class LLDP_CDPCollector(ActiveCollector):
                    LLDPDUSystemName(system_name="Scanner")
 
         try:
-            # Отправляем оба пакета
             sendp(cdp_pkt, verbose=0)
             sendp(lldp_pkt, verbose=0)
 
-            # Слушаем ответы в течение timeout
-            # Фильтр: пакеты от целевого MAC, содержащие CDP или LLDP
             bpf_filter = f"ether src {dst_mac} and (ether proto 0x2000 or ether proto 0x88cc)"
             ans = sniff(filter=bpf_filter, timeout=self.timeout, count=5)
 
             for pkt in ans:
-                if pkt.haslayer(CiscoDiscoveryProtocol):
-                    cdp = pkt[CiscoDiscoveryProtocol]
+                if pkt.haslayer(CDP):
+                    cdp = pkt[CDP]
                     for msg in cdp.msg:
                         if isinstance(msg, CDPMsgDeviceID):
                             found_info["cdp_device_id"] = str(msg.val)
@@ -129,7 +119,7 @@ class LLDP_CDPCollector(ActiveCollector):
                             found_info["cdp_port"] = str(msg.iface)
                         elif isinstance(msg, CDPMsgPlatform):
                             found_info["cdp_platform"] = str(msg.val)
-                        elif isinstance(msg, CDPMsgSoftwareVersion):  # <-- ИСПРАВЛЕНО
+                        elif isinstance(msg, CDPMsgSoftwareVersion):
                             found_info["cdp_version"] = str(msg.val)
                 
                 elif pkt.haslayer(LLDPMessage):
@@ -149,7 +139,6 @@ class LLDP_CDPCollector(ActiveCollector):
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
         results: dict[str, FingerprintResult] = {}
-        # Сканируем только устройства с известным MAC (локальные)
         targets = [d for d in devices if d.mac and not d.mac.startswith(("01:00:5E", "33:33", "FF:FF:FF"))]
         
         with ThreadPoolExecutor(max_workers=self.workers) as executor:
