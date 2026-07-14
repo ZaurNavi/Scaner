@@ -14,8 +14,10 @@ from .netbios import NetBIOSCollector
 from .wsd import WSDCollector
 from .ssh import SSHCollector
 from .smb import SMBCollector
+from .banners import BannersCollector
 from .https_cert import HTTPSCertCollector
-from .banners import BannersCollector  # <-- ДОБАВЛЕНО
+from .ntp import NTPCollector             # <-- ДОБАВЛЕНО
+from .lldp_cdp import LLDP_CDPCollector   # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
@@ -33,8 +35,10 @@ __all__ = [
     "WSDCollector",
     "SSHCollector",
     "SMBCollector",
+    "BannersCollector",
     "HTTPSCertCollector",
-    "BannersCollector",   # <-- ДОБАВЛЕНО
+    "NTPCollector",        # <-- ДОБАВЛЕНО
+    "LLDP_CDPCollector",   # <-- ДОБАВЛЕНО
     "CORE_PORTS",
     "OPTIONAL_PORTS",
     "ALL_PORTS",
