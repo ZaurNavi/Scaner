@@ -11,18 +11,21 @@ from .tcp import TCPCollector
 from .ssdp import SSDPCollector
 from .snmp import SNMPCollector
 from .http import HTTPCollector
+from .switch_port import SwitchPortCollector  # <-- ДОБАВЛЕНО
 
 
 # Единый реестр всех активных коллекторов
 # Порядок важен:
 # 1. TTL — базовая проверка доступности (priority 40)
 # 2. SNMP — сбор sysDescr и т.д. (priority 45)
-# 3. TCP — сканирование портов (priority 50)
-# 4. SSDP — multicast (priority 60)
-# 5. HTTP — использует результат TCP (priority 70)
+# 3. Switch Port — определение порта коммутатора (priority 46)
+# 4. TCP — сканирование портов (priority 50)
+# 5. SSDP — multicast (priority 60)
+# 6. HTTP — использует результат TCP (priority 70)
 COLLECTORS: list[ActiveCollector] = [
     TTLCollector(),
     SNMPCollector(),
+    SwitchPortCollector(),  # <-- ДОБАВЛЕНО
     TCPCollector(),
     SSDPCollector(),
     HTTPCollector(),
