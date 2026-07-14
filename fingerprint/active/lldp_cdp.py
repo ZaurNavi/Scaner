@@ -20,11 +20,11 @@ from scapy.contrib.cdp import (
     CDPMsgSoftwareVersion,
 )
 from scapy.contrib.lldp import (
+    LLDPDU,
     LLDPDUChassisID, 
     LLDPDUPortID, 
     LLDPDUSystemName, 
     LLDPDUSystemDescription, 
-    LLDPMessage
 )
 
 from config import Fingerprint
@@ -97,7 +97,7 @@ class LLDP_CDPCollector(ActiveCollector):
 
         # 2. LLDP Probe (Standard)
         lldp_pkt = Ether(dst=dst_mac, src="00:00:00:00:00:01") / \
-                   LLDPMessage() / \
+                   LLDPDU() / \
                    LLDPDUChassisID(subtype=4, id="00:00:00:00:00:01") / \
                    LLDPDUPortID(subtype=3, id="eth0") / \
                    LLDPDUSystemName(system_name="Scanner")
@@ -122,15 +122,13 @@ class LLDP_CDPCollector(ActiveCollector):
                         elif isinstance(msg, CDPMsgSoftwareVersion):
                             found_info["cdp_version"] = str(msg.val)
                 
-                elif pkt.haslayer(LLDPMessage):
-                    lldp = pkt[LLDPMessage]
-                    for tlv in lldp.tlvs:
-                        if isinstance(tlv, LLDPDUSystemName):
-                            found_info["lldp_system_name"] = str(tlv.system_name)
-                        elif isinstance(tlv, LLDPDUSystemDescription):
-                            found_info["lldp_description"] = str(tlv.description)
-                        elif isinstance(tlv, LLDPDUPortID):
-                            found_info["lldp_port"] = str(tlv.id)
+                elif pkt.haslayer(LLDPDU):
+                    if pkt.haslayer(LLDPDUSystemName):
+                        found_info["lldp_system_name"] = str(pkt[LLDPDUSystemName].system_name)
+                    if pkt.haslayer(LLDPDUSystemDescription):
+                        found_info["lldp_description"] = str(pkt[LLDPDUSystemDescription].description)
+                    if pkt.haslayer(LLDPDUPortID):
+                        found_info["lldp_port"] = str(pkt[LLDPDUPortID].id)
 
             return {"responded": True, "info": found_info} if found_info else None
 
