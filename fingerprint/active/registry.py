@@ -25,6 +25,7 @@ from .lldp_cdp import LLDP_CDPCollector   # <-- ДОБАВЛЕНО
 
 
 COLLECTORS: list[ActiveCollector] = [
+    DHCPCiscoCollector(),
     ScapyFPCollector(),
     TTLCollector(),
     LLDP_CDPCollector(),    # <-- ДОБАВЛЕНО (высокий приоритет для сетевых устройств)
