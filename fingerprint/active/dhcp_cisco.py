@@ -1,32 +1,16 @@
 #!/usr/bin/env python3
 """
-DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через SSH.
-Выполняет команду 'show ip dhcp binding' и парсит вывод.
+DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через системный SSH-клиент.
+Использует subprocess с флагами для совместимости со старыми алгоритмами Cisco IOS.
 """
 
 from __future__ import annotations
 
 import re
+import subprocess
 import time
 from dataclasses import asdict
 from typing import Dict
-
-import paramiko
-
-# ==============================================================================
-# FIX для Cisco IOS 15.x: Разрешаем устаревшие алгоритмы Key Exchange (KEX).
-# Современные версии paramiko блокируют их по умолчанию из соображений безопасности.
-# ==============================================================================
-paramiko.transport.Transport._preferred_kex = (
-    "diffie-hellman-group14-sha1",
-    "diffie-hellman-group1-sha1",
-    "ecdh-sha2-nistp256",
-    "ecdh-sha2-nistp384",
-    "ecdh-sha2-nistp521",
-    "diffie-hellman-group-exchange-sha256",
-    "diffie-hellman-group-exchange-sha1",
-)
-# ==============================================================================
 
 from config import CiscoDHCP
 from models import Device
@@ -37,7 +21,7 @@ from storage.active_cache import get as cache_get, set as cache_set
 
 class DHCPCiscoCollector(ActiveCollector):
     """
-    Коллектор, который получает DHCP-leases с Cisco 3845 через SSH.
+    Коллектор, который получает DHCP-leases с Cisco 3845 через системный SSH.
     """
 
     PRIORITY = 30
@@ -93,49 +77,68 @@ class DHCPCiscoCollector(ActiveCollector):
             return self._leases_cache
 
         try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
-            connect_kwargs = {
-                "hostname": CiscoDHCP.IP,
-                "port": CiscoDHCP.PORT,
-                "username": CiscoDHCP.USERNAME,
-                "timeout": self.timeout,
-                "allow_agent": False,
-                "look_for_keys": False,
-            }
-            
-            if CiscoDHCP.SSH_KEY_PATH:
-                connect_kwargs["key_filename"] = CiscoDHCP.SSH_KEY_PATH
-            elif CiscoDHCP.PASSWORD:
-                connect_kwargs["password"] = CiscoDHCP.PASSWORD
-            else:
-                return {}
-            
-            ssh.connect(**connect_kwargs)
-            
-            commands = [
-                "terminal length 0",
-                "show ip dhcp binding",
+            # Формируем команду SSH с принудительным включением старых алгоритмов для Cisco IOS
+            ssh_cmd = [
+                "ssh",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", f"ConnectTimeout={self.timeout}",
+                "-o", "KexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1",
+                "-o", "HostKeyAlgorithms=+ssh-rsa,ssh-dss",
+                "-o", "Ciphers=+aes128-cbc,3des-cbc,aes256-cbc",
             ]
             
-            output = ""
-            for cmd in commands:
-                stdin, stdout, stderr = ssh.exec_command(cmd, timeout=self.timeout)
-                output += stdout.read().decode('utf-8', errors='ignore')
+            if CiscoDHCP.SSH_KEY_PATH:
+                ssh_cmd.extend(["-i", CiscoDHCP.SSH_KEY_PATH])
+                
+            target = f"{CiscoDHCP.USERNAME}@{CiscoDHCP.IP}"
             
-            ssh.close()
-
-            self._leases_cache = self._parse_dhcp_binding(output)
+            # Команды для Cisco
+            cisco_commands = "terminal length 0\nshow ip dhcp binding\nexit\n"
+            
+            # Если есть пароль, используем sshpass
+            if CiscoDHCP.PASSWORD:
+                # Проверяем наличие sshpass
+                try:
+                    subprocess.run(["sshpass", "-V"], capture_output=True, check=True)
+                    ssh_cmd = ["sshpass", "-p", CiscoDHCP.PASSWORD] + ssh_cmd
+                except FileNotFoundError:
+                    print("      [ERROR] Утилита 'sshpass' не найдена. Установите её: sudo apt install sshpass")
+                    print("      [INFO] Или настройте аутентификацию по SSH-ключу (SSH_KEY_PATH в .env)")
+                    return {}
+            
+            ssh_cmd.append(target)
+            
+            # Выполняем команду
+            process = subprocess.Popen(
+                ssh_cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            stdout, stderr = process.communicate(input=cisco_commands, timeout=CiscoDHCP.TIMEOUT)
+            
+            if process.returncode != 0:
+                print(f"      [ERROR] DHCP Cisco Collector failed (code {process.returncode}): {stderr.strip()}")
+                return {}
+                
+            # Парсим вывод
+            self._leases_cache = self._parse_dhcp_binding(stdout)
             self._cache_timestamp = current_time
             return self._leases_cache
 
+        except subprocess.TimeoutExpired:
+            print("      [ERROR] DHCP Cisco Collector failed: timeout")
+            return {}
         except Exception as e:
             print(f"      [ERROR] DHCP Cisco Collector failed: {e}")
             return {}
 
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
         leases = {}
+        # Регулярка для парсинга вывода 'show ip dhcp binding'
         pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)\s+(Active|Expired|Conflict)'
         
         for match in re.finditer(pattern, output):
