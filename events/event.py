@@ -9,9 +9,7 @@ from .event_type import EventType, Severity
 
 @dataclass(frozen=True)
 class Event:
-    """
-    Неизменяемое событие, вычисленное Event Engine.
-    """
+    """Неизменяемое событие, вычисленное Event Engine."""
     type: EventType
     severity: Severity
     title: str
