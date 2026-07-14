@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scapy.all import Ether, LLC, SNAP, sendp, sniff
 from scapy.contrib.cdp import (
-    CDP,
+    CDPv2_HDR,
     CDPMsgDeviceID, 
     CDPMsgPortID, 
     CDPMsgCapabilities, 
@@ -91,7 +91,7 @@ class LLDP_CDPCollector(ActiveCollector):
         cdp_pkt = Ether(dst=dst_mac, src="00:00:00:00:00:01") / \
                   LLC(dsap=0xaa, ssap=0xaa, ctrl=0x03) / \
                   SNAP(OUI=0x00000c, code=0x2000) / \
-                  CDP(version=2, ttl=180) / \
+                  CDPv2_HDR(version=2, ttl=180) / \
                   CDPMsgDeviceID(val="Scanner") / \
                   CDPMsgPortID(iface="eth0")
 
@@ -110,8 +110,8 @@ class LLDP_CDPCollector(ActiveCollector):
             ans = sniff(filter=bpf_filter, timeout=self.timeout, count=5)
 
             for pkt in ans:
-                if pkt.haslayer(CDP):
-                    cdp = pkt[CDP]
+                if pkt.haslayer(CDPv2_HDR):
+                    cdp = pkt[CDPv2_HDR]
                     for msg in cdp.msg:
                         if isinstance(msg, CDPMsgDeviceID):
                             found_info["cdp_device_id"] = str(msg.val)
