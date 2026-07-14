@@ -178,3 +178,19 @@ class Fingerprint:
     SNMP_OID_SYS_SERVICES = "1.3.6.1.2.1.1.7.0"
     SNMP_OID_SYS_LOCATION = "1.3.6.1.2.1.1.6.0"  # <-- ДОБАВЛЕНО
     SNMP_OID_SYS_CONTACT = "1.3.6.1.2.1.1.4.0"   # <-- ДОБАВЛЕНО
+
+class CiscoDHCP:
+    """Конфигурация для получения DHCP-leases с Cisco 3845 через SSH."""
+    
+    IP = "192.168.0.1"
+    PORT = 22  # SSH порт
+    
+    # Аутентификация (выбери один из вариантов)
+    USERNAME = "admin"
+    PASSWORD = "YOUR_SSH_PASSWORD"  # Если используешь пароль
+    SSH_KEY_PATH = ""  # Если используешь ключ: "/home/admin/.ssh/id_rsa"
+    
+    ENABLE_PASSWORD = ""  # Если нужен enable-пароль
+    
+    TIMEOUT = 10  # секунд на подключение
+    CACHE_TTL = 300  # 5 минут (leases меняются редко)
