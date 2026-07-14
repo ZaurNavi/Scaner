@@ -100,8 +100,13 @@ def _map_device_type(device_type: str) -> DeviceType:
 
 
 def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Observation]:
-    """Собирает Observations из всех источников."""
+    """
+    Собирает Observations из ВСЕХ источников.
+    Универсальный обработчик для всех коллекторов.
+    """
     observations = []
+
+    # === СПЕЦИАЛЬНАЯ ОБРАБОТКА (для источников с особой структурой) ===
 
     # TTL
     if "ttl" in collected.sources:
@@ -166,7 +171,47 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
             confidence=10,
         ))
 
+    # === УНИВЕРСАЛЬНАЯ ОБРАБОТКА (для всех остальных источников) ===
+    # Автоматически сохраняем raw_data для всех коллекторов, которые ответили
+    
+    universal_sources = [
+        "snmp", "ssh", "smb", "banners", "ntp", "scapy_fp", 
+        "lldp_cdp", "netbios", "wsd", "https_cert", "switch_port", 
+        "dhcp_cisco", "ssdp"
+    ]
+    
+    for source_name in universal_sources:
+        if source_name in collected.sources:
+            result = collected.sources[source_name]
+            # Сохраняем только если коллектор получил ответ
+            if result.raw_data.get("responded"):
+                # Маппим source_name в Source enum (если есть, иначе UNKNOWN)
+                source_enum = _map_source_string_to_enum(source_name)
+                
+                observations.append(Observation(
+                    snapshot_id=snapshot_id,
+                    source=source_enum,
+                    key=source_name,
+                    value=str(result.raw_data),
+                    obs_type=ObservationType.JSON,
+                    confidence=result.confidence,
+                ))
+
     return observations
+
+
+def _map_source_string_to_enum(source_name: str) -> Source:
+    """Маппит строку source_name в Enum Source."""
+    mapping = {
+        "snmp": Source.SNMP,
+        "ssdp": Source.SSDP,
+        "ttl": Source.TTL,
+        "tcp": Source.TCP,
+        "http": Source.HTTP,
+        "mdns": Source.MDNS,
+        "dns": Source.DNS,
+    }
+    return mapping.get(source_name.lower(), Source.UNKNOWN)
 
 
 def _build_evidence(snapshot_id: str, device: Device, collected: CollectedData) -> list[Evidence]:
