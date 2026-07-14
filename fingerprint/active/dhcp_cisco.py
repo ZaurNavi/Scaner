@@ -75,6 +75,11 @@ class DHCPCiscoCollector(ActiveCollector):
         """
         Получает все DHCP-leases с Cisco через SSH. Кэширует на CACHE_TTL секунд.
         """
+        # Проверяем, настроены ли учетные данные
+        if not CiscoDHCP.is_configured():
+            # Тихо пропускаем, если не настроено (не спамим логи)
+            return {}
+
         current_time = time.time()
         if self._leases_cache and (current_time - self._cache_timestamp) < CiscoDHCP.CACHE_TTL:
             return self._leases_cache
@@ -90,12 +95,16 @@ class DHCPCiscoCollector(ActiveCollector):
                 "port": CiscoDHCP.PORT,
                 "username": CiscoDHCP.USERNAME,
                 "timeout": self.timeout,
+                "allow_agent": False,
+                "look_for_keys": False,
             }
             
             if CiscoDHCP.SSH_KEY_PATH:
                 connect_kwargs["key_filename"] = CiscoDHCP.SSH_KEY_PATH
-            else:
+            elif CiscoDHCP.PASSWORD:
                 connect_kwargs["password"] = CiscoDHCP.PASSWORD
+            else:
+                return {}
             
             ssh.connect(**connect_kwargs)
             
@@ -107,7 +116,7 @@ class DHCPCiscoCollector(ActiveCollector):
             
             output = ""
             for cmd in commands:
-                stdin, stdout, stderr = ssh.exec_command(cmd)
+                stdin, stdout, stderr = ssh.exec_command(cmd, timeout=self.timeout)
                 output += stdout.read().decode('utf-8', errors='ignore')
             
             ssh.close()
@@ -159,6 +168,10 @@ class DHCPCiscoCollector(ActiveCollector):
         """
         Сканируем все устройства, но SSH-подключение делаем только один раз.
         """
+        # Если не настроено — сразу возвращаем пустой результат
+        if not CiscoDHCP.is_configured():
+            return {}
+        
         results: dict[str, FingerprintResult] = {}
         
         # Предварительно получаем все leases (один раз)
