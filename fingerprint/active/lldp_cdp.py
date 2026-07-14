@@ -11,8 +11,22 @@ from dataclasses import asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scapy.all import Ether, LLC, SNAP, sendp, sniff
-from scapy.contrib.cdp import CDPMsgDeviceID, CDPMsgPortID, CDPMsgCapabilities, CDPMsgPlatform, CDPMsgVersion, CiscoDiscoveryProtocol
-from scapy.contrib.lldp import LLDPDUChassisID, LLDPDUPortID, LLDPDUSystemName, LLDPDUSystemDescription, LLDPDUManagementAddress, LLDPMessage
+from scapy.contrib.cdp import (
+    CDPMsgDeviceID, 
+    CDPMsgPortID, 
+    CDPMsgCapabilities, 
+    CDPMsgPlatform, 
+    CDPMsgSoftwareVersion,  # <-- ИСПРАВЛЕНО
+    CiscoDiscoveryProtocol
+)
+from scapy.contrib.lldp import (
+    LLDPDUChassisID, 
+    LLDPDUPortID, 
+    LLDPDUSystemName, 
+    LLDPDUSystemDescription, 
+    LLDPDUManagementAddress, 
+    LLDPMessage
+)
 
 from config import Fingerprint
 from models import Device
@@ -46,7 +60,7 @@ class LLDP_CDPCollector(ActiveCollector):
         # Нормализуем MAC для Scapy
         dst_mac = device.mac.upper()
         
-        # Если MAC multicast или broadcast, пропускаем (нам нужны конкретные устройства)
+        # Если MAC multicast или broadcast, пропускаем
         if dst_mac.startswith(("01:00:5E", "33:33", "FF:FF:FF")):
             return FingerprintResult(
                 source="lldp_cdp",
@@ -115,7 +129,7 @@ class LLDP_CDPCollector(ActiveCollector):
                             found_info["cdp_port"] = str(msg.iface)
                         elif isinstance(msg, CDPMsgPlatform):
                             found_info["cdp_platform"] = str(msg.val)
-                        elif isinstance(msg, CDPMsgVersion):
+                        elif isinstance(msg, CDPMsgSoftwareVersion):  # <-- ИСПРАВЛЕНО
                             found_info["cdp_version"] = str(msg.val)
                 
                 elif pkt.haslayer(LLDPMessage):
