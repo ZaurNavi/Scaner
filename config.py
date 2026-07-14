@@ -272,5 +272,19 @@ class Telegram:
     
     @classmethod
     def is_configured(cls) -> bool:
+
+
+class Omada:
+    """
+    Конфигурация для Omada Controller (Infrastructure Controller Collector).
+    """
+    ENABLED = os.getenv("OMADA_ENABLED", "False").lower() == "true"
+    URL = os.getenv("OMADA_URL", "https://192.168.0.222:8043")
+    CLIENT_ID = os.getenv("OMADA_CLIENT_ID", "")
+    CLIENT_SECRET = os.getenv("OMADA_CLIENT_SECRET", "")
+    OMADA_ID = os.getenv("OMADA_ID", "")
+    VERIFY_SSL = os.getenv("OMADA_VERIFY_SSL", "False").lower() == "true"
+    TIMEOUT = int(os.getenv("OMADA_TIMEOUT", "15"))
+    CACHE_TTL = 60  # Жесткий TTL 60 секунд для контроллеров
         """Проверяет, настроен ли Telegram-бот."""
         return bool(cls.BOT_TOKEN and cls.CHAT_ID)
