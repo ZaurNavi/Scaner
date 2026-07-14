@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Scapy Fingerprint Collector — анализ TCP/ICMP стека для определения ОС.
-Включает TCP Options, Window Size, TTL и ICMP Timestamp (Type 13).
+Scapy Fingerprint Collector — анализ TCP/ICMP стека и топологии.
+Включает TCP Options, Window Size, TTL, ICMP Timestamp (Type 13) и Traceroute (TTL 1-3).
 """
 
 from __future__ import annotations
@@ -90,18 +90,37 @@ class ScapyFPCollector(ActiveCollector):
 
         # 2. ICMP Timestamp Fingerprint (Type 13)
         try:
-            # Отправляем ICMP Timestamp Request
             icmp_ts_req = IP(dst=ip) / ICMP(type=13, id=12345, seq=1)
             ts_response = sr1(icmp_ts_req, timeout=1.0, retry=0)
             
             if ts_response is not None and ts_response.haslayer(ICMP) and ts_response[ICMP].type == 14:
                 fp_data["icmp_timestamp_supported"] = True
-                # Можно также извлечь Originate, Receive и Transmit timestamps, 
-                # но сам факт ответа type=14 уже является мощным индикатором (Old Cisco, Printers, UPS)
         except Exception:
             pass
 
-        return fp_data if fp_data["responded"] or fp_data.get("icmp_timestamp_supported") else None
+        # 3. Traceroute TTL (Hops 1, 2, 3)
+        # Помогает определить, находится ли устройство за репитером или двойным NAT
+        try:
+            hops = []
+            for ttl in [1, 2, 3]:
+                pkt = IP(dst=ip, ttl=ttl) / ICMP(type=8, code=0)
+                resp = sr1(pkt, timeout=0.5, retry=0)
+                if resp is not None:
+                    if resp.haslayer(ICMP) and resp[ICMP].type == 0: # Echo Reply (достигли цели)
+                        hops.append({"hop": ttl, "ip": ip, "type": "target"})
+                        break
+                    elif resp.haslayer(ICMP) and resp[ICMP].type == 11: # Time Exceeded (промежуточный узел)
+                        hops.append({"hop": ttl, "ip": resp[IP].src, "type": "intermediate"})
+            
+            if hops:
+                fp_data["traceroute_hops"] = hops
+                # Если первый хоп не является целевым IP, значит устройство за NAT/репитером
+                if len(hops) > 0 and hops[0]["type"] == "intermediate":
+                    fp_data["behind_nat_or_repeater"] = True
+        except Exception:
+            pass
+
+        return fp_data if fp_data["responded"] or fp_data.get("icmp_timestamp_supported") or fp_data.get("traceroute_hops") else None
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
         results: dict[str, FingerprintResult] = {}
