@@ -10,9 +10,10 @@ from .ssdp import SSDPCollector
 from .snmp import SNMPCollector
 from .switch_port import SwitchPortCollector
 from .netbios import NetBIOSCollector
-from .wsd import WSDCollector          # <-- ДОБАВЛЕНО
-from .ssh import SSHCollector          # <-- ДОБАВЛЕНО
-from .smb import SMBCollector          # <-- ДОБАВЛЕНО
+from .wsd import WSDCollector
+from .ssh import SSHCollector
+from .smb import SMBCollector
+from .https_cert import HTTPSCertCollector  # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
@@ -26,9 +27,10 @@ __all__ = [
     "SNMPCollector",
     "SwitchPortCollector",
     "NetBIOSCollector",
-    "WSDCollector",      # <-- ДОБАВЛЕНО
-    "SSHCollector",      # <-- ДОБАВЛЕНО
-    "SMBCollector",      # <-- ДОБАВЛЕНО
+    "WSDCollector",
+    "SSHCollector",
+    "SMBCollector",
+    "HTTPSCertCollector",  # <-- ДОБАВЛЕНО
     "CORE_PORTS",
     "OPTIONAL_PORTS",
     "ALL_PORTS",
