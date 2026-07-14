@@ -29,7 +29,8 @@ from report import (
     save_debug_json,
 )
 from fingerprint.analysis import fingerprint_all
-from fingerprint.collectors.base import collect_all, CollectedData
+from fingerprint.collectors.base import collect_all, CollectedData, FingerprintResult
+from fingerprint.controllers.registry import get_controller_collectors  # <-- v1.4.9.1: ДОБАВЛЕНО
 from storage.history import enrich
 from storage.device_db import save_state
 
@@ -132,12 +133,66 @@ def main() -> int:
     ips = [d.ip for d in devices]
     collected_data = collect_all(ips, devices)
 
+    # ==============================================================================
+    # v1.4.9.1: Infrastructure Controller Integration (Omada)
+    # ==============================================================================
+    controller_collectors = get_controller_collectors()
+    if controller_collectors:
+        print("\n  [CONTROLLERS] Fetching infrastructure data...")
+        for collector in controller_collectors:
+            print(f"  [CONTROLLERS] Running {collector.name.capitalize()} Collector...")
+            controller_data = collector.collect()
+            
+            if "error" in controller_data:
+                print(f"  [CONTROLLERS] ❌ {collector.name} failed: {controller_data['error']}")
+                continue
+
+            # Маппим данные контроллера на IP-адреса для бесшовной интеграции с Archivist
+            omada_entities = {}
+            for entity in controller_data.get("clients", []) + controller_data.get("devices", []):
+                ip = entity.get("ip")
+                mac = entity.get("mac", "").replace("-", ":").upper()
+                
+                # Предпочитаем IP, если его нет, ищем по MAC в нашем списке устройств
+                if ip:
+                    key = ip
+                else:
+                    target_device = next((d for d in devices if d.mac and d.mac.upper() == mac), None)
+                    key = target_device.ip if target_device else f"mac:{mac}"
+
+                if key not in omada_entities:
+                    omada_entities[key] = []
+                omada_entities[key].append(entity)
+
+            # Внедряем данные Omada в существующий collected_data
+            merged_count = 0
+            for key, entities in omada_entities.items():
+                if key.startswith("mac:"):
+                    continue # Пропускаем, если не удалось сопоставить с IP (Archivist работает по IP)
+                
+                if key not in collected_data:
+                    collected_data[key] = CollectedData()
+                
+                # Создаем FingerprintResult для Omada с ПОЛНЫМ сырым JSON
+                omada_result = FingerprintResult(
+                    source="omada",
+                    raw_data={"entities": entities},
+                    elapsed_ms=0.0,
+                    confidence=100,
+                    capabilities=["managed_by_omada"]
+                )
+                collected_data[key].sources["omada"] = omada_result
+                merged_count += 1
+                
+            print(f"  [CONTROLLERS] ✅ {collector.name.capitalize()} data merged into {merged_count} entities.")
+    # ==============================================================================
+
     devices = fingerprint_all(devices, collected_data)
     analyze_all(devices)
 
     save_debug_json(devices, collected_data)
 
-        # === v1.4.0 + v1.4.1: Archivist + Event Engine + Event Persister ===
+    # === v1.4.0 + v1.4.1: Archivist + Event Engine + Event Persister ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
