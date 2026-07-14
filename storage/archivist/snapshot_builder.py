@@ -102,10 +102,11 @@ def _map_device_type(device_type: str) -> DeviceType:
 def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Observation]:
     """
     Собирает Observations из ВСЕХ источников.
+    Универсальный обработчик для всех коллекторов.
     """
     observations = []
 
-    # === СПЕЦИАЛЬНАЯ ОБРАБОТКА ===
+    # === СПЕЦИАЛЬНАЯ ОБРАБОТКА (для источников с особой структурой) ===
 
     # TTL
     if "ttl" in collected.sources:
@@ -170,43 +171,29 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
             confidence=10,
         ))
 
-    # === УНИВЕРСАЛЬНАЯ ОБРАБОТКА ===
-    # ВАЖНО: имена должны совпадать с source_name из коллекторов!
-    # source_name = ClassName.replace("Collector", "").lower()
-    #
-    # DHCPCiscoCollector -> dhcpcisco
-    # HTTPSCertCollector -> httpscert
-    # SwitchPortCollector -> switchport
-    # ScapyFPCollector -> scapyfp
-    # LLDP_CDPCollector -> lldp_cdp
-    # SNMPCollector -> snmp
-    # SSHCollector -> ssh
-    # SMBCollector -> smb
-    # BannersCollector -> banners
-    # NTPCollector -> ntp
-    # NetBIOSCollector -> netbios
-    # WSDCollector -> wsd
-    # SSDPCollector -> ssdp
-
-    universal_sources = [
-        "snmp", "ssh", "smb", "banners", "ntp",
-        "scapyfp", "lldp_cdp", "netbios", "wsd",
-        "httpscert", "switchport", "dhcpcisco", "ssdp"
-    ]
-
-    for source_name in universal_sources:
-        if source_name in collected.sources:
-            result = collected.sources[source_name]
-            if result.raw_data.get("responded"):
-                source_enum = _map_source_string_to_enum(source_name)
-                observations.append(Observation(
-                    snapshot_id=snapshot_id,
-                    source=source_enum,
-                    key=source_name,
-                    value=str(result.raw_data),
-                    obs_type=ObservationType.JSON,
-                    confidence=result.confidence,
-                ))
+    # === АВТОМАТИЧЕСКАЯ ОБРАБОТКА ВСЕХ ОСТАЛЬНЫХ ИСТОЧНИКОВ ===
+    # Теперь нам НЕ НУЖНО вручную перечислять каждый коллектор!
+    # Любой источник, который вернул responded=True, автоматически сохраняется.
+    # Это делает систему устойчивой к добавлению новых коллекторов.
+    
+    # Источники, которые мы уже обработали выше (специальная обработка)
+    already_processed = {"ttl", "tcp", "http"}
+    
+    for source_name, result in collected.sources.items():
+        if source_name in already_processed:
+            continue
+        
+        # Сохраняем любой источник, который ответил
+        if result.raw_data.get("responded"):
+            source_enum = _map_source_string_to_enum(source_name)
+            observations.append(Observation(
+                snapshot_id=snapshot_id,
+                source=source_enum,
+                key=source_name,
+                value=str(result.raw_data),
+                obs_type=ObservationType.JSON,
+                confidence=result.confidence,
+            ))
 
     return observations
 
