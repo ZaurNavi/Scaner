@@ -3,9 +3,16 @@ Repeater Monitor
 config.py
 
 Пользовательская конфигурация проекта.
+Чувствительные данные (пароли, токены) читаются из переменных окружения (.env файл).
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Загружаем переменные из .env файла при старте приложения
+load_dotenv()
 
 
 class App:
@@ -16,6 +23,7 @@ class App:
     DEBUG = False
     VERBOSE = True
     DEBUG_LEVEL = 3  # 0: только отчёт, 1: +timing, 2: +raw_data, 3: +все заголовки
+
 
 class Paths:
 
@@ -138,6 +146,7 @@ class Fingerprint:
     CACHE_TTL_HTTP = 86400    # 24 часа
     CACHE_TTL_SSDP = 43200    # 12 часов
     CACHE_TTL_SNMP = 86400    # 24 часа
+    CACHE_TTL_DHCP = 300      # 5 минут (DHCP leases меняются чаще)
 
     HTTP_MAX_WORKERS_PER_DEVICE = 4  # макс потоков на одно устройство
 
@@ -170,27 +179,98 @@ class Fingerprint:
     SNMP_DEVICE_TIMEOUT = 0.5   # Было 2.0 — уменьшаем
     SNMP_SKIP_IF_NO_PING = True # Пропускать SNMP, если нет ping
 
-    # SNMP OID (только сбор данных, без интерпретации)
+    # ---------------------------------------------------------
+    # SNMP OID: System (базовые)
+    # ---------------------------------------------------------
     SNMP_OID_SYS_DESCR = "1.3.6.1.2.1.1.1.0"
     SNMP_OID_SYS_OBJECT_ID = "1.3.6.1.2.1.1.2.0"
     SNMP_OID_SYS_UP_TIME = "1.3.6.1.2.1.1.3.0"
+    SNMP_OID_SYS_CONTACT = "1.3.6.1.2.1.1.4.0"
     SNMP_OID_SYS_NAME = "1.3.6.1.2.1.1.5.0"
+    SNMP_OID_SYS_LOCATION = "1.3.6.1.2.1.1.6.0"
     SNMP_OID_SYS_SERVICES = "1.3.6.1.2.1.1.7.0"
-    SNMP_OID_SYS_LOCATION = "1.3.6.1.2.1.1.6.0"  # <-- ДОБАВЛЕНО
-    SNMP_OID_SYS_CONTACT = "1.3.6.1.2.1.1.4.0"   # <-- ДОБАВЛЕНО
+
+    # ---------------------------------------------------------
+    # SNMP OID: Interfaces (IF-MIB)
+    # ---------------------------------------------------------
+    SNMP_OID_IF_NUMBER = "1.3.6.1.2.1.2.1.0"          # ifNumber (количество интерфейсов)
+    SNMP_OID_IF_TABLE = "1.3.6.1.2.1.2.2"             # ifTable (корневой OID)
+    SNMP_OID_IF_DESCR = "1.3.6.1.2.1.2.2.1.2"         # ifDescr
+    SNMP_OID_IF_TYPE = "1.3.6.1.2.1.2.2.1.3"          # ifType
+    SNMP_OID_IF_MTU = "1.3.6.1.2.1.2.2.1.4"           # ifMTU
+    SNMP_OID_IF_SPEED = "1.3.6.1.2.1.2.2.1.5"         # ifSpeed
+    SNMP_OID_IF_PHYS_ADDRESS = "1.3.6.1.2.1.2.2.1.6"  # ifPhysAddress (MAC интерфейса)
+    SNMP_OID_IF_ADMIN_STATUS = "1.3.6.1.2.1.2.2.1.7"  # ifAdminStatus
+    SNMP_OID_IF_OPER_STATUS = "1.3.6.1.2.1.2.2.1.8"   # ifOperStatus
+    SNMP_OID_IF_ALIAS = "1.3.6.1.2.1.31.1.1.1.18"     # ifAlias (описание интерфейса)
+
+    # ---------------------------------------------------------
+    # SNMP OID: Bridge MIB (для Switch Port Collector)
+    # ---------------------------------------------------------
+    SNMP_OID_DOT1D_BASE_BRIDGE_ADDRESS = "1.3.6.1.2.1.17.1.1.0"  # MAC коммутатора
+    SNMP_OID_DOT1D_TP_FDB_PORT = "1.3.6.1.2.1.17.4.3.1.2"        # MAC → Bridge Port
+    SNMP_OID_DOT1D_BASE_PORT_IF_INDEX = "1.3.6.1.2.1.17.1.4.1.2" # Bridge Port → ifIndex
+
+    # ---------------------------------------------------------
+    # SNMP OID: LLDP (LLDP-MIB)
+    # ---------------------------------------------------------
+    SNMP_OID_LLDP_LOC_SYS_NAME = "1.0.8802.1.1.2.1.3.2.0"        # lldpLocSysName
+    SNMP_OID_LLDP_REM_TABLE = "1.0.8802.1.1.2.1.4.1.1"           # lldpRemTable
+    SNMP_OID_LLDP_REM_SYS_NAME = "1.0.8802.1.1.2.1.4.1.1.9"      # lldpRemSysName
+    SNMP_OID_LLDP_REM_PORT_ID = "1.0.8802.1.1.2.1.4.1.1.7"       # lldpRemPortId
+
+    # ---------------------------------------------------------
+    # SNMP OID: Entity MIB (физические компоненты)
+    # ---------------------------------------------------------
+    SNMP_OID_ENT_PHYSICAL_TABLE = "1.3.6.1.2.1.47.1.1.1.1"       # entPhysicalEntry
+    SNMP_OID_ENT_PHYSICAL_DESCR = "1.3.6.1.2.1.47.1.1.1.1.2"     # entPhysicalDescr
+    SNMP_OID_ENT_PHYSICAL_MODEL = "1.3.6.1.2.1.47.1.1.1.1.13"    # entPhysicalModelName
+    SNMP_OID_ENT_PHYSICAL_SERIAL = "1.3.6.1.2.1.47.1.1.1.1.11"   # entPhysicalSerialNum
+
 
 class CiscoDHCP:
-    """Конфигурация для получения DHCP-leases с Cisco 3845 через SSH."""
+    """
+    Конфигурация для получения DHCP-leases с Cisco 3845 через SSH.
     
-    IP = "192.168.0.1"
-    PORT = 22  # SSH порт
+    Все чувствительные данные (пароли, пути к ключам) читаются из переменных
+    окружения через файл .env в корне проекта.
     
-    # Аутентификация (выбери один из вариантов)
-    USERNAME = "admin"
-    PASSWORD = "YOUR_SSH_PASSWORD"  # Если используешь пароль
-    SSH_KEY_PATH = ""  # Если используешь ключ: "/home/admin/.ssh/id_rsa"
+    Файл .env должен быть добавлен в .gitignore и НЕ коммититься в Git.
+    Для шаблона используйте .env.example.
+    """
     
-    ENABLE_PASSWORD = ""  # Если нужен enable-пароль
+    IP = os.getenv("CISCO_DHCP_IP", "192.168.0.1")
+    PORT = int(os.getenv("CISCO_DHCP_PORT", "22"))
     
-    TIMEOUT = 10  # секунд на подключение
-    CACHE_TTL = 300  # 5 минут (leases меняются редко)
+    # Аутентификация (читается из .env)
+    USERNAME = os.getenv("CISCO_DHCP_USERNAME", "admin")
+    PASSWORD = os.getenv("CISCO_DHCP_PASSWORD", "")  # Пароль SSH
+    SSH_KEY_PATH = os.getenv("CISCO_DHCP_SSH_KEY_PATH", "")  # Путь к приватному ключу
+    
+    ENABLE_PASSWORD = os.getenv("CISCO_DHCP_ENABLE_PASSWORD", "")
+    
+    TIMEOUT = int(os.getenv("CISCO_DHCP_TIMEOUT", "10"))
+    CACHE_TTL = int(os.getenv("CISCO_DHCP_CACHE_TTL", "300"))  # 5 минут
+    
+    @classmethod
+    def is_configured(cls) -> bool:
+        """
+        Проверяет, настроены ли учетные данные для подключения к Cisco.
+        Возвращает True, если задан хотя бы пароль или путь к SSH-ключу.
+        """
+        return bool(cls.PASSWORD or cls.SSH_KEY_PATH)
+
+
+class Telegram:
+    """
+    Конфигурация для Telegram-бота (будет использоваться в v1.6.0).
+    Все данные читаются из .env.
+    """
+    
+    BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+    
+    @classmethod
+    def is_configured(cls) -> bool:
+        """Проверяет, настроен ли Telegram-бот."""
+        return bool(cls.BOT_TOKEN and cls.CHAT_ID)
