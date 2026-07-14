@@ -2,6 +2,7 @@
 Активные коллекторы fingerprint.
 """
 
+from .scapy_fp import ScapyFPCollector  # <-- ДОБАВЛЕНО
 from .base import ActiveCollector, FingerprintResult
 from .ttl import TTLCollector
 from .tcp import TCPCollector, CORE_PORTS, OPTIONAL_PORTS, ALL_PORTS
@@ -18,6 +19,7 @@ from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
 __all__ = [
+    "ScapyFPCollector",  # <-- ДОБАВЛЕНО
     "ActiveCollector",
     "FingerprintResult",
     "TTLCollector",
