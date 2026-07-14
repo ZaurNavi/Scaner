@@ -6,7 +6,7 @@ from ..event_type import EventType, Severity
 
 
 class VendorDiscoveredRule:
-    """Если Vendor был Unknown, а стал известен — генерирует VENDOR_DISCOVERED."""
+    """Если Vendor был Unknown, а стал известен."""
 
     def check(self, old_snapshot: Optional[dict], new_snapshot: dict) -> Optional[Event]:
         if old_snapshot is None:
@@ -15,7 +15,6 @@ class VendorDiscoveredRule:
         old_vendor = (old_snapshot.get("vendor") or "").strip()
         new_vendor = (new_snapshot.get("vendor") or "").strip()
 
-        # Считаем "неизвестным" пустую строку или "Unknown"
         def is_unknown(v: str) -> bool:
             return not v or v.lower() == "unknown"
 
@@ -26,6 +25,7 @@ class VendorDiscoveredRule:
                 title="Производитель определён",
                 description=f"Устройство идентифицировано как {new_vendor}",
                 device_id=new_snapshot.get("device_id", ""),
+                snapshot_id=new_snapshot.get("id", ""),  # <-- ДОБАВЛЕНО
                 old_value=old_vendor or "Unknown",
                 new_value=new_vendor,
             )
