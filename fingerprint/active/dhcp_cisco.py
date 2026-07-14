@@ -42,7 +42,6 @@ class DHCPCiscoCollector(ActiveCollector):
 
         cached = cache_get(device.ip, "dhcp_cisco")
         if cached:
-            # Исправление TypeError: безопасно обновляем поля из кэша
             cached_dict = dict(cached)
             cached_dict["source"] = "dhcp_cisco"
             cached_dict["elapsed_ms"] = 0.0
@@ -79,16 +78,13 @@ class DHCPCiscoCollector(ActiveCollector):
 
     def _get_all_leases(self) -> Dict[str, dict]:
         if not CiscoDHCP.is_configured():
-            print("      [DEBUG DHCP] CiscoDHCP credentials not configured (skipping)")
             return {}
 
         current_time = time.time()
         if self._leases_cache and (current_time - self._cache_timestamp) < CiscoDHCP.CACHE_TTL:
-            print(f"      [DEBUG DHCP] Using cached leases ({len(self._leases_cache)} entries)")
             return self._leases_cache
 
         try:
-            # Настройка устройства для Netmiko
             connect_params = {
                 "device_type": "cisco_ios",
                 "host": CiscoDHCP.IP,
@@ -104,42 +100,32 @@ class DHCPCiscoCollector(ActiveCollector):
             elif CiscoDHCP.PASSWORD:
                 connect_params["password"] = CiscoDHCP.PASSWORD
             else:
-                print("      [DEBUG DHCP] No password or SSH key configured")
                 return {}
             
-            # Если нужен enable пароль
             if CiscoDHCP.ENABLE_PASSWORD:
                 connect_params["secret"] = CiscoDHCP.ENABLE_PASSWORD
 
-            # Подключение через Netmiko
             with ConnectHandler(**connect_params) as net_connect:
-                # Если нужен enable, входим в него
                 if CiscoDHCP.ENABLE_PASSWORD:
                     net_connect.enable()
                 
-                # === ИСПРАВЛЕНИЕ: Показываем ВСЕ bindings, включая все VRF ===
-                # Команда "show ip dhcp binding all" показывает bindings для всех VRF
-                output = net_connect.send_command("show ip dhcp binding all", read_timeout=self.timeout)
+                # ВОЗВРАЩАЕМ РАБОЧУЮ КОМАНДУ (без 'all', так как IOS 15.x её не понимает)
+                output = net_connect.send_command("show ip dhcp binding", read_timeout=self.timeout)
                 
-                # === ОТЛАДКА: показываем реальный вывод Cisco ===
                 print(f"\n      [DEBUG DHCP] Raw output from Cisco ({len(output)} chars):")
                 print("      " + "-" * 60)
                 if output:
-                    # Показываем первые 2000 символов
-                    for line in output[:2000].split('\n')[:30]:
+                    for line in output.split('\n')[:30]:
                         print(f"      | {line}")
-                    if len(output) > 2000:
-                        print(f"      | ... (truncated, {len(output)} total chars)")
+                    if len(output.split('\n')) > 30:
+                        print(f"      | ... (truncated)")
                 else:
                     print("      | (empty output)")
                 print("      " + "-" * 60)
-                # ================================================
                 
-                # Парсим вывод
                 self._leases_cache = self._parse_dhcp_binding(output)
                 self._cache_timestamp = current_time
                 
-                # === ОТЛАДКА: показываем результат парсинга ===
                 print(f"      [DEBUG DHCP] Parsed {len(self._leases_cache)} leases from output")
                 if self._leases_cache:
                     print("      [DEBUG DHCP] Sample parsed leases:")
@@ -147,7 +133,6 @@ class DHCPCiscoCollector(ActiveCollector):
                         print(f"         {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, expires={data.get('lease_expiration')}")
                 else:
                     print("      [DEBUG DHCP] WARNING: No leases parsed! Check regex pattern above.")
-                # ================================================
                 
                 return self._leases_cache
 
@@ -161,13 +146,11 @@ class DHCPCiscoCollector(ActiveCollector):
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
         leases = {}
         
-        # ИСПРАВЛЕННЫЙ regex под реальный формат Cisco IOS
-        # Формат: IP  Client-ID  Lease expiration  Type
-        # Пример: 192.168.0.50  01ec.750c.186f.f8  Infinite  Manual
-        # Убрали требование колонки State (Active/Expired), т.к. её нет в выводе
-        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)'
+        # Regex адаптирован точно под вывод твоего Cisco:
+        # IP (192.168.0.50) + пробелы + 01 + MAC (ec.750c.186f.f8) + пробелы + Время (Infinite или дата) + пробелы + Тип (Manual/Automatic)
+        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)\s*$'
         
-        for match in re.finditer(pattern, output):
+        for match in re.finditer(pattern, output, re.MULTILINE):
             ip = match.group(1)
             client_id_raw = match.group(2)
             lease_expiration = match.group(3).strip()
@@ -181,7 +164,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 "ip": ip,
                 "mac": mac_formatted,
                 "lease_expiration": lease_expiration,
-                "lease_type": lease_type,  # Automatic = DHCP, Manual = статика
+                "lease_type": lease_type,
             }
         
         return leases
