@@ -30,6 +30,11 @@ VENDOR_ALIASES = {
     
     "intel corporate": "Intel",
     "intel": "Intel",
+    
+    "ubiquiti inc.": "Ubiquiti",
+    "ubiquiti": "Ubiquiti",
+    
+    "mikrotik": "MikroTik",
 }
 
 def normalize_vendor(vendor: str) -> str:
