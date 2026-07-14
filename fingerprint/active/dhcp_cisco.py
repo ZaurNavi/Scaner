@@ -25,10 +25,6 @@ from storage.active_cache import get as cache_get, set as cache_set
 
 
 class DHCPCiscoCollector(ActiveCollector):
-    """
-    Коллектор, который получает DHCP-leases с Cisco 3845 через Netmiko.
-    """
-
     PRIORITY = 30
     RELIABILITY = 95
 
@@ -81,7 +77,8 @@ class DHCPCiscoCollector(ActiveCollector):
             return {}
 
         current_time = time.time()
-        if self._leases_cache and (current_time - self._cache_timestamp) < CiscoDHCP.CACHE_TTL:
+        # ИСПРАВЛЕНИЕ 2: Правильная проверка кэша (пустой словарь {} тоже должен считаться кэшем)
+        if self._leases_cache is not None and (current_time - self._cache_timestamp) < CiscoDHCP.CACHE_TTL:
             return self._leases_cache
 
         try:
@@ -109,8 +106,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 if CiscoDHCP.ENABLE_PASSWORD:
                     net_connect.enable()
                 
-                # Фильтрация на стороне роутера
-                target_prefix = Network.PREFIX.rstrip('.') # "192.168.1"
+                target_prefix = Network.PREFIX.rstrip('.')
                 command = f"show ip dhcp binding | include {target_prefix}\\."
                 
                 output = net_connect.send_command(command, read_timeout=self.timeout)
@@ -119,7 +115,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 print(f"      [DEBUG DHCP] Raw output ({len(output)} chars):")
                 print("      " + "-" * 60)
                 if output.strip():
-                    for line in output.strip().split('\n')[:20]:
+                    for line in output.strip().split('\n')[:15]:
                         print(f"      | {line.strip()}")
                 else:
                     print("      | (no bindings found for this subnet)")
@@ -147,7 +143,9 @@ class DHCPCiscoCollector(ActiveCollector):
         if not output.strip():
             return leases
         
-        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)'
+        # ИСПРАВЛЕНИЕ 1: Точная регулярка под формат Cisco: 01 + 2 символа . 4 символа . 4 символа . 2 символа
+        # Пример: 01be.5633.5176.b3
+        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{2}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{2})\s+(.*?)\s+(Automatic|Manual)'
         
         for match in re.finditer(pattern, output):
             ip = match.group(1)
@@ -155,6 +153,7 @@ class DHCPCiscoCollector(ActiveCollector):
             lease_expiration = match.group(3).strip()
             lease_type = match.group(4)
             
+            # Преобразуем be.5633.5176.b3 в be:56:33:51:76:b3
             mac = client_id_raw.replace('.', '').lower()
             mac_formatted = ':'.join(mac[i:i+2] for i in range(0, 12, 2))
             
@@ -174,7 +173,7 @@ class DHCPCiscoCollector(ActiveCollector):
         
         results: dict[str, FingerprintResult] = {}
         
-        # ИСПРАВЛЕНО: правильное название метода
+        # Получаем данные ОДИН раз для всех устройств
         self._get_all_leases()
         
         for device in devices:
