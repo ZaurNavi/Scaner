@@ -2,6 +2,7 @@
 """
 Omada Controller Collector.
 Получает данные напрямую от TP-Link Omada Controller через OpenAPI v1.
+Полностью соответствует официальной документации Omada Open API.
 """
 
 from __future__ import annotations
@@ -74,7 +75,7 @@ class OmadaCollector(BaseControllerCollector):
             all_clients.extend(clients)
             all_devices.extend(devices)
 
-        print("      [OMADA] ✅ Done.")
+        print(f"      [OMADA] ✅ Done. Clients: {len(all_clients)}, Devices: {len(all_devices)}")
 
         result = {
             "sites": sites,
@@ -88,26 +89,43 @@ class OmadaCollector(BaseControllerCollector):
         return result
 
     def _authenticate(self) -> bool:
-        """Получает access_token через client_credentials."""
+        """
+        Получает access_token через client_credentials.
+        Согласно документации: grant_type в QUERY, остальные поля в BODY.
+        """
         url = f"{Omada.URL}/openapi/authorize/token"
+        
+        # grant_type передается в QUERY параметрах
+        params = {"grant_type": "client_credentials"}
+        
+        # Остальные поля передаются в BODY
         payload = {
-            "grant_type": "client_credentials",
+            "omadacId": Omada.OMADA_ID,
             "client_id": Omada.CLIENT_ID,
-            "client_secret": Omada.CLIENT_SECRET,
-            "omadacId": Omada.OMADA_ID
+            "client_secret": Omada.CLIENT_SECRET
         }
         headers = {"Content-Type": "application/json"}
         
         try:
-            response = requests.post(url, json=payload, headers=headers, verify=Omada.VERIFY_SSL, timeout=Omada.TIMEOUT)
+            response = requests.post(
+                url, 
+                params=params,  # grant_type в query
+                json=payload,   # credentials в body
+                headers=headers, 
+                verify=Omada.VERIFY_SSL, 
+                timeout=Omada.TIMEOUT
+            )
             response.raise_for_status()
             data = response.json()
             
-            if data.get("errorCode") == 0 and "result" in data and "access_token" in data["result"]:
-                self._token = data["result"]["access_token"]
+            # Согласно документации, поле называется accessToken (camelCase)
+            if data.get("errorCode") == 0 and "result" in data and "accessToken" in data["result"]:
+                self._token = data["result"]["accessToken"]
                 return True
             else:
-                print(f"      [OMADA] Auth API error: {data}")
+                error_code = data.get("errorCode")
+                error_msg = data.get("msg", "Unknown error")
+                print(f"      [OMADA] Auth API error: {error_msg} (Code: {error_code})")
                 return False
         except requests.exceptions.RequestException as e:
             print(f"      [OMADA] Cannot connect: {e}")
@@ -116,40 +134,102 @@ class OmadaCollector(BaseControllerCollector):
     def _get_sites(self) -> List[Dict[str, Any]]:
         """Получает список сайтов."""
         url = f"{Omada.URL}/openapi/v1/{Omada.OMADA_ID}/sites"
-        return self._make_request(url).get("result", [])
+        params = {"page": 1, "pageSize": 50}
+        data = self._make_request(url, params)
+        # Согласно документации, массив находится в result.data
+        return data.get("result", {}).get("data", [])
 
     def _get_clients(self, site_id: str) -> List[Dict[str, Any]]:
-        """Получает всех клиентов сайта. Сохраняет ВСЕ поля, которые возвращает API."""
+        """
+        Получает всех клиентов сайта с учетом пагинации.
+        Сохраняет ВСЕ поля, которые возвращает API.
+        """
         url = f"{Omada.URL}/openapi/v1/{Omada.OMADA_ID}/sites/{site_id}/clients"
-        params = {"page": 1, "pageSize": 500}
-        data = self._make_request(url, params)
-        # Omada API возвращает список клиентов в data.get("result", [])
-        return data.get("result", [])
+        all_clients = []
+        page = 1
+        page_size = 500
+        
+        while True:
+            params = {"page": page, "pageSize": page_size}
+            data = self._make_request(url, params)
+            clients_on_page = data.get("result", {}).get("data", [])
+            all_clients.extend(clients_on_page)
+            
+            # Если получили меньше, чем page_size, значит это последняя страница
+            if len(clients_on_page) < page_size:
+                break
+            page += 1
+            
+        return all_clients
 
     def _get_devices(self, site_id: str) -> List[Dict[str, Any]]:
-        """Получает все устройства сайта (AP, Switch, Gateway). Сохраняет ВСЕ поля."""
+        """
+        Получает все устройства сайта (AP, Switch, Gateway) с учетом пагинации.
+        Сохраняет ВСЕ поля.
+        """
         url = f"{Omada.URL}/openapi/v1/{Omada.OMADA_ID}/sites/{site_id}/devices"
-        params = {"page": 1, "pageSize": 500}
-        data = self._make_request(url, params)
-        return data.get("result", [])
+        all_devices = []
+        page = 1
+        page_size = 500
+        
+        while True:
+            params = {"page": page, "pageSize": page_size}
+            data = self._make_request(url, params)
+            devices_on_page = data.get("result", {}).get("data", [])
+            all_devices.extend(devices_on_page)
+            
+            if len(devices_on_page) < page_size:
+                break
+            page += 1
+            
+        return all_devices
 
-    def _make_request(self, url: str, params: dict | None = None) -> Dict[str, Any]:
-        """Универсальный метод для GET-запросов с токеном."""
+    def _make_request(self, url: str, params: dict | None = None, retry: bool = True) -> Dict[str, Any]:
+        """
+        Универсальный метод для GET-запросов с токеном.
+        Согласно документации: префикс токена в заголовке — 'AccessToken=', а не 'Bearer'.
+        Обрабатывает истекший токен (401 или errorCode -44112/-44113) автоматической переавторизацией.
+        """
         headers = {
-            "Authorization": f"Bearer {self._token}",
+            # КРИТИЧЕСКИ ВАЖНО: Префикс AccessToken=, а не Bearer!
+            "Authorization": f"AccessToken={self._token}",
             "Content-Type": "application/json"
         }
         try:
-            response = requests.get(url, headers=headers, params=params, verify=Omada.VERIFY_SSL, timeout=Omada.TIMEOUT)
+            response = requests.get(
+                url, 
+                headers=headers, 
+                params=params, 
+                verify=Omada.VERIFY_SSL, 
+                timeout=Omada.TIMEOUT
+            )
+            
+            # Проверяем, не истек ли токен
+            is_auth_error = False
+            try:
+                response_json = response.json()
+                error_code = response_json.get("errorCode")
+                # Коды ошибок из документации: -44112 (token expired), -44113 (token invalid)
+                if error_code in [-44112, -44113]:
+                    is_auth_error = True
+            except:
+                pass
+            
+            if response.status_code == 401 or is_auth_error:
+                if retry:
+                    print("      [OMADA] ⚠️ Token expired or invalid. Re-authenticating...")
+                    if self._authenticate():
+                        # Повторяем запрос с новым токеном (но только один раз, чтобы избежать бесконечного цикла)
+                        return self._make_request(url, params, retry=False)
+                    else:
+                        return {"errorCode": -1, "result": {"data": []}}
+            
             response.raise_for_status()
-            data = response.json()
-            if data.get("errorCode") != 0:
-                print(f"      [OMADA] API Error on {url}: {data.get('msg', 'Unknown error')}")
-                return {"result": []}
-            return data
+            return response.json()
+            
         except requests.exceptions.Timeout:
             print(f"      [OMADA] Timeout on {url}")
-            return {"result": []}
+            return {"errorCode": -1, "result": {"data": []}}
         except requests.exceptions.RequestException as e:
             print(f"      [OMADA] Request failed on {url}: {e}")
-            return {"result": []}
+            return {"errorCode": -1, "result": {"data": []}}
