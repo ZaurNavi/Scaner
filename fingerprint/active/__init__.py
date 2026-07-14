@@ -2,8 +2,8 @@
 Активные коллекторы fingerprint.
 """
 
-from .scapy_fp import ScapyFPCollector  # <-- ДОБАВЛЕНО
 from .base import ActiveCollector, FingerprintResult
+from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
 from .tcp import TCPCollector, CORE_PORTS, OPTIONAL_PORTS, ALL_PORTS
 from .http import HTTPCollector, HTTP_PORTS, HTTPS_PORTS
@@ -14,14 +14,15 @@ from .netbios import NetBIOSCollector
 from .wsd import WSDCollector
 from .ssh import SSHCollector
 from .smb import SMBCollector
-from .https_cert import HTTPSCertCollector  # <-- ДОБАВЛЕНО
+from .https_cert import HTTPSCertCollector
+from .banners import BannersCollector  # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
 __all__ = [
-    "ScapyFPCollector",  # <-- ДОБАВЛЕНО
     "ActiveCollector",
     "FingerprintResult",
+    "ScapyFPCollector",
     "TTLCollector",
     "TCPCollector",
     "HTTPCollector",
@@ -32,7 +33,8 @@ __all__ = [
     "WSDCollector",
     "SSHCollector",
     "SMBCollector",
-    "HTTPSCertCollector",  # <-- ДОБАВЛЕНО
+    "HTTPSCertCollector",
+    "BannersCollector",   # <-- ДОБАВЛЕНО
     "CORE_PORTS",
     "OPTIONAL_PORTS",
     "ALL_PORTS",
