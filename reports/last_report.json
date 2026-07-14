@@ -1,0 +1,119 @@
+{
+  "timestamp": "14.07.2026 16:02:11",
+  "statistics": {
+    "total": 4,
+    "suspects": 3,
+    "warnings": 0,
+    "normal": 1
+  },
+  "devices": [
+    {
+      "ip": "192.168.1.142",
+      "mac": "BE:56:33:51:76:B3",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 40,
+      "flows": 157,
+      "bytes": 15493037,
+      "megabytes": 14.78,
+      "first_seen": "2026-07-14 15:50:13",
+      "duration_seconds": 3412.53,
+      "hours_online": 0.95,
+      "mb_per_hour": 15.59,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (157) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.154",
+      "mac": "2E:AB:67:6D:3D:02",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 40,
+      "flows": 144,
+      "bytes": 2345579,
+      "megabytes": 2.24,
+      "first_seen": "2026-07-14 15:53:22",
+      "duration_seconds": 2655.77,
+      "hours_online": 0.74,
+      "mb_per_hour": 3.03,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (144) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.157",
+      "mac": "DA:C3:38:8A:2A:74",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 45,
+      "flows": 135,
+      "bytes": 829072,
+      "megabytes": 0.79,
+      "first_seen": "2026-07-14 15:53:20",
+      "duration_seconds": 1257.19,
+      "hours_online": 0.35,
+      "mb_per_hour": 2.26,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (135) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.160",
+      "mac": "E2:96:94:B3:BE:CA",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 40,
+      "flows": 63,
+      "bytes": 499102,
+      "megabytes": 0.48,
+      "first_seen": "2026-07-14 15:54:16",
+      "duration_seconds": 514.16,
+      "hours_online": 0.14,
+      "mb_per_hour": 3.33,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    }
+  ]
+}
