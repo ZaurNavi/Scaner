@@ -32,6 +32,7 @@ class FingerprintResult:
     elapsed_ms: float = 0.0
     raw_data: dict = field(default_factory=dict)
     source: str = ""
+    capabilities: list[str] = field(default_factory=list)  # <-- ДОБАВЛЕНО: список возможностей
 
 
 class ActiveCollector(ABC):
@@ -74,7 +75,39 @@ class ActiveCollector(ABC):
             for future in as_completed(futures):
                 device = futures[future]
                 try:
-                    results[device.ip] = future.result()
+                    res = future.result()
+                    
+                    # === AUTO-CAPABILITIES ===
+                    # Если устройство ответило, автоматически добавляем флаг возможности
+                    if res.raw_data.get("responded"):
+                        new_caps = list(res.capabilities)
+                        cap_name = f"supports_{self.source_name}"
+                        if cap_name not in new_caps:
+                            new_caps.append(cap_name)
+                        
+                        # Пересоздаем frozen dataclass с обновленным списком capabilities
+                        res = FingerprintResult(
+                            hostname=res.hostname,
+                            model=res.model,
+                            os=res.os,
+                            device_type=res.device_type,
+                            vendor=res.vendor,
+                            reason=res.reason,
+                            services=res.services,
+                            ports=res.ports,
+                            ttl=res.ttl,
+                            latency_ms=res.latency_ms,
+                            mac_vendor=res.mac_vendor,
+                            banner=res.banner,
+                            server=res.server,
+                            confidence=res.confidence,
+                            elapsed_ms=res.elapsed_ms,
+                            raw_data=res.raw_data,
+                            source=res.source,
+                            capabilities=new_caps
+                        )
+                        
+                    results[device.ip] = res
                 except Exception:
                     results[device.ip] = FingerprintResult(source=self.source_name, elapsed_ms=0.0)
         return results
