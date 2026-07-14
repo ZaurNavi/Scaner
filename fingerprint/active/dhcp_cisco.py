@@ -17,7 +17,7 @@ except ImportError:
     print("      [ERROR] Netmiko не установлен. Выполните: pip install netmiko")
     raise
 
-from config import CiscoDHCP, Network  # <-- ДОБАВЛЕНО: импортируем Network для получения префикса
+from config import CiscoDHCP, Network
 from models import Device
 
 from .base import ActiveCollector, FingerprintResult
@@ -109,8 +109,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 if CiscoDHCP.ENABLE_PASSWORD:
                     net_connect.enable()
                 
-                # === ГЛАВНОЕ ИСПРАВЛЕНИЕ: Фильтрация на стороне роутера ===
-                # Берем префикс из config.py (например, "192.168.1.") и ищем только его
+                # Фильтрация на стороне роутера
                 target_prefix = Network.PREFIX.rstrip('.') # "192.168.1"
                 command = f"show ip dhcp binding | include {target_prefix}\\."
                 
@@ -148,8 +147,6 @@ class DHCPCiscoCollector(ActiveCollector):
         if not output.strip():
             return leases
         
-        # Упрощенная и надежная регулярка под формат:
-        # 192.168.1.139       0176.bf40.fa78.11       Jul 14 2026 03:18 PM    Automatic
         pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)'
         
         for match in re.finditer(pattern, output):
@@ -176,4 +173,11 @@ class DHCPCiscoCollector(ActiveCollector):
             return {}
         
         results: dict[str, FingerprintResult] = {}
-        self._get_all
+        
+        # ИСПРАВЛЕНО: правильное название метода
+        self._get_all_leases()
+        
+        for device in devices:
+            results[device.ip] = self.collect(device)
+        
+        return results
