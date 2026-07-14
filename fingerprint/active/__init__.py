@@ -8,7 +8,8 @@ from .tcp import TCPCollector, CORE_PORTS, OPTIONAL_PORTS, ALL_PORTS
 from .http import HTTPCollector, HTTP_PORTS, HTTPS_PORTS
 from .ssdp import SSDPCollector
 from .snmp import SNMPCollector
-from .switch_port import SwitchPortCollector  # <-- ДОБАВЛЕНО
+from .switch_port import SwitchPortCollector
+from .netbios import NetBIOSCollector  # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
@@ -20,7 +21,8 @@ __all__ = [
     "HTTPCollector",
     "SSDPCollector",
     "SNMPCollector",
-    "SwitchPortCollector",  # <-- ДОБАВЛЕНО
+    "SwitchPortCollector",
+    "NetBIOSCollector",  # <-- ДОБАВЛЕНО
     "CORE_PORTS",
     "OPTIONAL_PORTS",
     "ALL_PORTS",
