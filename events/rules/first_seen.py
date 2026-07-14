@@ -18,6 +18,7 @@ class FirstSeenRule:
             title="Новое устройство",
             description=f"Устройство {new_snapshot.get('ip', '?')} впервые обнаружено в сети",
             device_id=new_snapshot.get("device_id", ""),
+            snapshot_id=new_snapshot.get("id", ""),  # <-- ДОБАВЛЕНО
             old_value="",
             new_value=new_snapshot.get("ip", ""),
             metadata={"device_type": new_snapshot.get("device_type", "UNKNOWN")},
