@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from .dhcp_cisco import DHCPCiscoCollector
 from .base import ActiveCollector
 from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
