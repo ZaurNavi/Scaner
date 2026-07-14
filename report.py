@@ -31,6 +31,7 @@ from constants import (
 )
 from models import Device
 from vendors import get_vendor
+from fingerprint.vendor_normalizer import normalize_vendor  # <-- ДОБАВЛЕНО
 from fingerprint import fingerprint_all
 from fingerprint.collectors.base import CollectedData
 from fingerprint.correlation import engine as correlation_engine
@@ -53,7 +54,6 @@ def _empty_flow() -> dict:
     Пустые данные NetFlow для устройства,
     которое не было замечено в трафике.
     """
-
     return {
         "flows": 0,
         "bytes": 0,
@@ -72,11 +72,9 @@ def build_devices(
     """
     Объединяет данные SNMP и NetFlow в список Device.
     """
-
     devices = []
 
     for ip, mac in arp.items():
-
         if ip in Detection.EXCLUDED_IPS:
             continue
 
@@ -88,7 +86,7 @@ def build_devices(
         device = Device(
             ip=ip,
             mac=mac,
-            vendor=get_vendor(mac),
+            vendor=normalize_vendor(get_vendor(mac)),  # <-- ИЗМЕНЕНО: добавлена нормализация
             flows=flow["flows"],
             bytes=flow["bytes"],
             megabytes=flow["megabytes"],
@@ -109,17 +107,11 @@ def build_devices(
 
 
 def detect_vendor(device: Device) -> bool:
-    """
-    Проверяет, является ли производитель подозрительным.
-    """
-
     vendor_lower = device.vendor.lower()
-
     if any(sv in vendor_lower for sv in SUSPECT_VENDOR_KEYWORDS):
         device.status = STATUS_SUSPECT
         device.reason = f"Производитель: {device.vendor}"
         return True
-
     return False
 
 
@@ -129,10 +121,6 @@ def detect_vendor(device: Device) -> bool:
 
 
 def detect_flow_anomaly(device: Device) -> bool:
-    """
-    Проверяет аномальное количество flows при низком трафике.
-    """
-
     if device.flows > Thresholds.SUSPECT_FLOWS_THRESHOLD and device.mb_per_hour < Thresholds.LOW_MB_PER_HOUR:
         device.status = STATUS_SUSPECT
         device.reason = f"Много flows ({device.flows}) при низком трафике"
@@ -152,10 +140,6 @@ def detect_flow_anomaly(device: Device) -> bool:
 
 
 def detect_background_device(device: Device) -> bool:
-    """
-    Проверяет, является ли устройство фоновым (низкий трафик, долгое время).
-    """
-
     if (
         device.hours_online >= Thresholds.MIN_ONLINE_MINUTES / 60
         and device.megabytes < Thresholds.MIN_TOTAL_MB
@@ -163,7 +147,6 @@ def detect_background_device(device: Device) -> bool:
         device.status = STATUS_WARNING
         device.reason = "Фоновое устройство (низкий трафик)"
         return True
-
     return False
 
 
@@ -173,15 +156,10 @@ def detect_background_device(device: Device) -> bool:
 
 
 def detect_high_traffic(device: Device) -> bool:
-    """
-    Проверяет аномально высокий трафик.
-    """
-
     if device.mb_per_hour > Thresholds.NORMAL_MB_PER_HOUR:
         device.status = STATUS_WARNING
         device.reason = f"Высокий трафик: {device.mb_per_hour:.1f} MB/h"
         return True
-
     return False
 
 
@@ -191,19 +169,12 @@ def detect_high_traffic(device: Device) -> bool:
 
 
 def analyze(device: Device) -> None:
-    """
-    Определяет статус и причину для устройства.
-    """
-
     if detect_vendor(device):
         return
-
     if detect_flow_anomaly(device):
         return
-
     if detect_background_device(device):
         return
-
     if detect_high_traffic(device):
         return
 
@@ -212,13 +183,8 @@ def analyze(device: Device) -> None:
 
 
 def analyze_all(devices: list[Device]) -> list[Device]:
-    """
-    Применяет анализ ко всем устройствам.
-    """
-
     for device in devices:
         analyze(device)
-
     return devices
 
 
@@ -228,29 +194,17 @@ def analyze_all(devices: list[Device]) -> list[Device]:
 
 
 def sort_devices(devices: list[Device]) -> list[Device]:
-    """
-    Сортировка: сначала подозреваемые, потом по MB/h.
-    """
-
     if Detection.SORT_SUSPECTS_FIRST:
-
         def sort_key(d: Device):
             priority = 0 if d.status == STATUS_SUSPECT else 1
             return (priority, -d.mb_per_hour)
-
         return sorted(devices, key=sort_key)
-
     return sorted(devices, key=lambda d: -d.mb_per_hour)
 
 
 def filter_devices(devices: list[Device]) -> list[Device]:
-    """
-    Применяет фильтры из config.Detection.
-    """
-
     if Detection.ACTIVE_ONLY:
         devices = [d for d in devices if d.flows > 0]
-
     return devices
 
 
@@ -260,10 +214,6 @@ def filter_devices(devices: list[Device]) -> list[Device]:
 
 
 def calculate_statistics(devices: list[Device]) -> dict:
-    """
-    Подсчёт итоговой статистики по устройствам.
-    """
-
     return {
         "total": len(devices),
         "suspects": sum(1 for d in devices if d.status == STATUS_SUSPECT),
@@ -278,12 +228,7 @@ def calculate_statistics(devices: list[Device]) -> dict:
 
 
 def render_table_compact(devices: list[Device]) -> list[str]:
-    """
-    Возвращает список строк для компактной таблицы.
-    """
-
     lines = []
-
     if not devices:
         lines.append("Нет устройств для отображения.")
         return lines
@@ -317,7 +262,6 @@ def render_table_compact(devices: list[Device]) -> list[str]:
         lines.append(line)
 
     lines.append("-" * TABLE_WIDTH)
-
     stats = calculate_statistics(devices)
     lines.append(
         f"Всего: {stats['total']} | "
@@ -325,7 +269,6 @@ def render_table_compact(devices: list[Device]) -> list[str]:
         f"🟡 Неопределённых: {stats['warnings']} | "
         f"🟢 Нормальных: {stats['normal']}"
     )
-
     return lines
 
 
@@ -335,12 +278,7 @@ def render_table_compact(devices: list[Device]) -> list[str]:
 
 
 def render_table_verbose(devices: list[Device]) -> list[str]:
-    """
-    Возвращает список строк для расширенной таблицы с fingerprint-данными.
-    """
-
     lines = []
-
     if not devices:
         lines.append("Нет устройств для отображения.")
         return lines
@@ -359,7 +297,6 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
         f"{'MB/h':>8}"
         f"  Причина"
     )
-
     actual_width = len(header)
 
     lines.append(header)
@@ -389,7 +326,6 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
         lines.append(line)
 
     lines.append("-" * actual_width)
-
     stats = calculate_statistics(devices)
     lines.append(
         f"Всего: {stats['total']} | "
@@ -397,22 +333,16 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
         f"🟡 Неопределённых: {stats['warnings']} | "
         f"🟢 Нормальных: {stats['normal']}"
     )
-
     return lines
 
 
 # ---------------------------------------------------------
-# Рендер Evidence (показывает, ПОЧЕМУ устройство классифицировано так)
+# Рендер Evidence
 # ---------------------------------------------------------
 
 
 def render_evidence(devices: list[Device], collected_data: dict[str, CollectedData]) -> list[str]:
-    """
-    Возвращает список строк с evidence items для каждого устройства.
-    Показывает, почему устройство получило именно такой confidence.
-    """
     lines = []
-
     for d in devices:
         collected = collected_data.get(d.ip, CollectedData())
         corr = correlation_engine.correlate(d, collected)
@@ -428,7 +358,6 @@ def render_evidence(devices: list[Device], collected_data: dict[str, CollectedDa
                 lines.append(f"     ✔ {item.description} [+{item.contribution}]")
         lines.append(f"     ─── Total: {corr.breakdown.total()}")
         lines.append("")
-
     return lines
 
 
@@ -438,11 +367,6 @@ def render_evidence(devices: list[Device], collected_data: dict[str, CollectedDa
 
 
 def render_table(devices: list[Device], verbose: bool = False) -> list[str]:
-    """
-    Возвращает список строк для таблицы.
-    Если verbose=True — расширенная таблица с fingerprint.
-    """
-
     if verbose:
         return render_table_verbose(devices)
     return render_table_compact(devices)
@@ -454,11 +378,6 @@ def render_table(devices: list[Device], verbose: bool = False) -> list[str]:
 
 
 def print_table(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
-    """
-    Печатает таблицу в консоль.
-    Если VERBOSE и есть collected_data — показывает evidence items.
-    """
-
     if App.VERBOSE:
         header = (
             f"{'Статус':<20}"
@@ -490,7 +409,6 @@ def print_table(devices: list[Device], collected_data: dict[str, CollectedData] 
     for line in render_table(devices, verbose=App.VERBOSE):
         print(line)
 
-    # Evidence Explorer — показываем ПОЧЕМУ устройство классифицировано так
     if App.VERBOSE and collected_data:
         evidence_lines = render_evidence(devices, collected_data)
         if evidence_lines:
@@ -498,7 +416,6 @@ def print_table(devices: list[Device], collected_data: dict[str, CollectedData] 
             print()
             for line in evidence_lines:
                 print(line)
-
     print()
 
 
@@ -508,13 +425,8 @@ def print_table(devices: list[Device], collected_data: dict[str, CollectedData] 
 
 
 def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
-    """
-    Сохраняет отчёт в TXT.
-    """
-
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
-
     file_path = report_dir / REPORT_TXT
 
     if App.VERBOSE:
@@ -537,7 +449,6 @@ def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | N
         width = TABLE_WIDTH
 
     lines = []
-
     lines.append("=" * width)
     lines.append(f"{'Repeater Monitor':^{width}}")
     lines.append(f"{datetime.now().strftime(DATE_FORMAT):^{width}}")
@@ -545,11 +456,9 @@ def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | N
         lines.append(f"{'[VERBOSE MODE]':^{width}}")
     lines.append("=" * width)
     lines.append("")
-
     lines.extend(render_table(devices, verbose=App.VERBOSE))
     lines.append("")
 
-    # Evidence Explorer
     if App.VERBOSE and collected_data:
         evidence_lines = render_evidence(devices, collected_data)
         if evidence_lines:
@@ -558,7 +467,6 @@ def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | N
             lines.extend(evidence_lines)
 
     file_path.write_text("\n".join(lines), encoding="utf-8")
-
     return file_path
 
 
@@ -568,60 +476,21 @@ def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | N
 
 
 def save_csv(devices: list[Device]) -> Path:
-    """
-    Сохраняет отчёт в CSV.
-    """
-
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
-
     file_path = report_dir / REPORT_CSV
 
     with file_path.open("w", encoding=CSV_ENCODING, newline="") as f:
-
         writer = csv.writer(f, delimiter=CSV_SEPARATOR)
-
         writer.writerow([
-            "Статус",
-            "IP",
-            "MAC",
-            "Vendor",
-            "Hostname",
-            "Model",
-            "OS",
-            "Type",
-            "Confidence",
-            "Flows",
-            "Bytes",
-            "MB",
-            "First Seen",
-            "Duration (sec)",
-            "Hours Online",
-            "MB/h",
-            "Причина",
+            "Статус", "IP", "MAC", "Vendor", "Hostname", "Model", "OS", "Type",
+            "Confidence", "Flows", "Bytes", "MB", "First Seen", "Duration (sec)", "Hours Online", "MB/h", "Причина",
         ])
-
         for d in devices:
             writer.writerow([
-                d.status,
-                d.ip,
-                d.mac,
-                d.vendor,
-                d.hostname,
-                d.model,
-                d.os,
-                d.device_type,
-                d.confidence,
-                d.flows,
-                d.bytes,
-                d.megabytes,
-                d.first_seen,
-                d.duration_seconds,
-                d.hours_online,
-                d.mb_per_hour,
-                d.reason,
+                d.status, d.ip, d.mac, d.vendor, d.hostname, d.model, d.os, d.device_type,
+                d.confidence, d.flows, d.bytes, d.megabytes, d.first_seen, d.duration_seconds, d.hours_online, d.mb_per_hour, d.reason,
             ])
-
     return file_path
 
 
@@ -631,25 +500,17 @@ def save_csv(devices: list[Device]) -> Path:
 
 
 def save_json(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
-    """
-    Сохраняет полный экспорт в JSON.
-    """
-
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
-
     file_path = report_dir / REPORT_JSON
 
     devices_data = []
     for d in devices:
         device_dict = asdict(d)
-        
-        # Добавляем evidence items
         if collected_data:
             collected = collected_data.get(d.ip, CollectedData())
             corr = correlation_engine.correlate(d, collected)
             device_dict["evidence_items"] = [e.to_dict() for e in corr.evidence_items]
-        
         devices_data.append(device_dict)
 
     data = {
@@ -657,31 +518,18 @@ def save_json(devices: list[Device], collected_data: dict[str, CollectedData] | 
         "statistics": calculate_statistics(devices),
         "devices": devices_data,
     }
-
-    file_path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
+    file_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     return file_path
 
 
 # ---------------------------------------------------------
-# Debug JSON — полный экспорт всех источников
+# Debug JSON
 # ---------------------------------------------------------
 
 
-def save_debug_json(
-    devices: list[Device],
-    collected_data: dict[str, CollectedData],
-) -> Path:
-    """
-    Сохраняет полные данные всех коллекторов в JSON для отладки.
-    """
-
+def save_debug_json(devices: list[Device], collected_data: dict[str, CollectedData]) -> Path:
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
-
     file_path = report_dir / "debug_fingerprint.json"
 
     data = {
@@ -692,43 +540,26 @@ def save_debug_json(
 
     for device in devices:
         collected = collected_data.get(device.ip, CollectedData())
-
         device_data = {
-            "ip": device.ip,
-            "mac": device.mac,
-            "vendor": device.vendor,
-            "hostname": device.hostname,
-            "model": device.model,
-            "os": device.os,
-            "device_type": device.device_type,
-            "confidence": device.confidence,
-            "status": device.status,
-            "reason": device.reason,
-            "sources": {},
+            "ip": device.ip, "mac": device.mac, "vendor": device.vendor,
+            "hostname": device.hostname, "model": device.model, "os": device.os,
+            "device_type": device.device_type, "confidence": device.confidence,
+            "status": device.status, "reason": device.reason, "sources": {},
         }
 
-        # Экспортируем каждый источник
         for source_name, source_result in collected.sources.items():
             device_data["sources"][source_name] = {
                 "elapsed_ms": source_result.elapsed_ms,
                 "confidence": source_result.confidence,
-                "os": source_result.os,
-                "model": source_result.model,
-                "device_type": source_result.device_type,
-                "reason": source_result.reason,
-                "ports": source_result.ports,
-                "ttl": source_result.ttl,
-                "latency_ms": source_result.latency_ms,
-                "raw_data": source_result.raw_data,
+                "os": source_result.os, "model": source_result.model,
+                "device_type": source_result.device_type, "reason": source_result.reason,
+                "ports": source_result.ports, "ttl": source_result.ttl,
+                "latency_ms": source_result.latency_ms, "raw_data": source_result.raw_data,
             }
 
-        # DNS hostname
         if collected.hostname:
-            device_data["sources"]["dns"] = {
-                "hostname": collected.hostname,
-            }
+            device_data["sources"]["dns"] = {"hostname": collected.hostname}
 
-        # mDNS
         if collected.mdns.hostname or collected.mdns.model or collected.mdns.device_type:
             device_data["sources"]["mdns"] = {
                 "hostname": collected.mdns.hostname,
@@ -737,7 +568,6 @@ def save_debug_json(
                 "services": collected.mdns.services,
             }
 
-        # Correlation Engine (пересчитываем для debug)
         corr = correlation_engine.correlate(device, collected)
         device_data["correlation"] = {
             "matched_rules": [r.to_dict() for r in corr.matched_rules],
@@ -748,11 +578,7 @@ def save_debug_json(
         }
         data["devices"].append(device_data)
 
-    file_path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
+    file_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     return file_path
 
 
@@ -762,18 +588,11 @@ def save_debug_json(
 
 
 def save_report(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
-    """
-    Сохраняет отчёт во включённые форматы.
-    """
-
     saved_paths = []
-
     if Export.TXT:
         saved_paths.append(("TXT", save_txt(devices, collected_data)))
-
     if Export.CSV:
         saved_paths.append(("CSV", save_csv(devices)))
-
     if Export.JSON:
         saved_paths.append(("JSON", save_json(devices, collected_data)))
 
@@ -790,10 +609,6 @@ def save_report(devices: list[Device], collected_data: dict[str, CollectedData] 
 
 
 def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
-    """
-    Полный цикл: сборка → fingerprint → анализ → сортировка → печать → сохранение.
-    """
-
     devices = build_devices(arp, netflow)
     devices = fingerprint_all(devices)
     analyze_all(devices)
@@ -801,21 +616,10 @@ def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Devic
     devices = sort_devices(devices)
     print_table(devices)
     save_report(devices)
-
     return devices
 
 
-# ---------------------------------------------------------
-# Экспорт
-# ---------------------------------------------------------
-
 __all__ = [
-    "build_devices",
-    "analyze_all",
-    "filter_devices",
-    "sort_devices",
-    "print_table",
-    "save_report",
-    "save_debug_json",
-    "generate_report",
+    "build_devices", "analyze_all", "filter_devices", "sort_devices",
+    "print_table", "save_report", "save_debug_json", "generate_report",
 ]
