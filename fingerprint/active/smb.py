@@ -25,43 +25,6 @@ class SMBCollector(ActiveCollector):
         super().__init__(timeout=1.0)
         self.workers = 64
         self.port = 445
-        # Минимальный SMB2 Negotiate Protocol Request
-        self.smb2_probe = bytes.fromhex("00000048fef5424d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000......The user provided a large block of text that seems to be cut off or malformed at the end (`self.smb2_probe = bytes.fromhex("00000048fef5424d...`).
-I need to provide a clean, working version of the SMB collector, update the registry, and test it.
-
-Let's refine the SMB collector to be simpler and more robust. Instead of a raw hex SMB2 probe which can be tricky, we can just try to connect and read the first few bytes, or use a known minimal SMB1/SMB2 negotiate request.
-Actually, a simpler approach for SMB banner is just to connect to port 445 and read the first response to a minimal NetBIOS Session Request + SMB Negotiate.
-Or even simpler: just connect and see if it's open, and maybe read the OS version if possible. But a raw hex probe is fine if it's correct.
-Let's use a standard, minimal SMB2 Negotiate request.
-
-```python
-#!/usr/bin/env python3
-"""
-SMB Collector — определение версии ОС через SMB Negotiation (порт 445).
-"""
-
-from __future__ import annotations
-
-import socket
-import time
-from dataclasses import asdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from config import Fingerprint
-from models import Device
-
-from .base import ActiveCollector, FingerprintResult
-from storage.active_cache import get as cache_get, set as cache_set
-
-
-class SMBCollector(ActiveCollector):
-    PRIORITY = 52
-    RELIABILITY = 85
-
-    def __init__(self):
-        super().__init__(timeout=1.0)
-        self.workers = 64
-        self.port = 445
         # Minimal SMB2 Negotiate Protocol Request
         self.smb2_probe = bytes.fromhex(
             "00000048"  # NetBIOS Session Service (Length: 72)
@@ -130,7 +93,6 @@ class SMBCollector(ActiveCollector):
             sock.close()
 
             if len(response) >= 64 and response[4:8] == b'\xfe\x53\x4d\x42':
-                # SMB2 response detected
                 return {"responded": True, "protocol": "SMB2/3", "os_version": "Windows/Samba (SMB2+)"}
             elif len(response) > 0:
                 return {"responded": True, "protocol": "SMB1/Unknown", "raw_hex": response[:32].hex()}
