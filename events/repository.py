@@ -18,10 +18,6 @@ class EventRepository:
         self.db = db_manager
 
     def save_events(self, events: List[Event]) -> int:
-        """
-        Сохраняет список событий в БД.
-        Возвращает количество сохранённых событий.
-        """
         if not events:
             return 0
 
@@ -31,7 +27,12 @@ class EventRepository:
         try:
             saved = 0
             for event in events:
-                # Проверяем, не сохранено ли уже это событие
+                # Отладка: проверяем, есть ли такой device_id в таблице device
+                cursor.execute("SELECT 1 FROM device WHERE id = ?", (event.device_id,))
+                if not cursor.fetchone():
+                    print(f"      [DEBUG EVENT] device_id '{event.device_id}' NOT FOUND in device table!")
+                    continue  # Пропускаем, чтобы не упасть на FOREIGN KEY
+
                 cursor.execute("SELECT 1 FROM event WHERE event_id = ?", (event.event_id,))
                 if cursor.fetchone():
                     continue  # Пропускаем дубликаты
@@ -44,7 +45,7 @@ class EventRepository:
                 """, (
                     event.event_id,
                     event.device_id,
-                    "",  # snapshot_id пока не используем
+                    "",
                     _dt_to_str(event.timestamp),
                     event.type.value,
                     event.severity.value,
