@@ -12,9 +12,7 @@ import requests
 from dataclasses import asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from config import Fingerprint
 from models import Device
-
 from .base import ActiveCollector, FingerprintResult
 from storage.active_cache import get as cache_get, set as cache_set
 
@@ -70,8 +68,7 @@ class FaviconCollector(ActiveCollector):
                 response = requests.get(url, timeout=self.timeout, verify=False, allow_redirects=True)
                 
                 if response.status_code == 200 and len(response.content) > 0:
-                    # Вычисляем mmh3 hash (используем base64-подобное кодирование, как в Shodan)
-                    # Для простоты используем прямой mmh3 hash от байтов
+                    # Вычисляем mmh3 hash от байтов
                     hash_val = mmh3.hash(response.content)
                     return {
                         "responded": True,
