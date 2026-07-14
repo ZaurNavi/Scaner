@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from .scapy_fp import ScapyFPCollector  # <-- ДОБАВЛЕНО
 from .base import ActiveCollector
 from .ttl import TTLCollector
 from .tcp import TCPCollector
@@ -21,6 +22,7 @@ from .https_cert import HTTPSCertCollector  # <-- ДОБАВЛЕНО
 
 # Единый реестр всех активных коллекторов
 COLLECTORS: list[ActiveCollector] = [
+    ScapyFPCollector(),
     TTLCollector(),
     SNMPCollector(),
     SwitchPortCollector(),
