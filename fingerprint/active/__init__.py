@@ -23,6 +23,7 @@ from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
 
 __all__ = [
+    "DHCPCiscoCollector",
     "ActiveCollector",
     "FingerprintResult",
     "ScapyFPCollector",
