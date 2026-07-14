@@ -13,6 +13,21 @@ from typing import Dict
 
 import paramiko
 
+# ==============================================================================
+# FIX для Cisco IOS 15.x: Разрешаем устаревшие алгоритмы Key Exchange (KEX).
+# Современные версии paramiko блокируют их по умолчанию из соображений безопасности.
+# ==============================================================================
+paramiko.transport.Transport._preferred_kex = (
+    "diffie-hellman-group14-sha1",
+    "diffie-hellman-group1-sha1",
+    "ecdh-sha2-nistp256",
+    "ecdh-sha2-nistp384",
+    "ecdh-sha2-nistp521",
+    "diffie-hellman-group-exchange-sha256",
+    "diffie-hellman-group-exchange-sha1",
+)
+# ==============================================================================
+
 from config import CiscoDHCP
 from models import Device
 
@@ -25,7 +40,7 @@ class DHCPCiscoCollector(ActiveCollector):
     Коллектор, который получает DHCP-leases с Cisco 3845 через SSH.
     """
 
-    PRIORITY = 30  # Очень высокий приоритет — базовая информация
+    PRIORITY = 30
     RELIABILITY = 95
 
     def __init__(self):
@@ -47,11 +62,9 @@ class DHCPCiscoCollector(ActiveCollector):
                 elapsed_ms=(time.time() - start_time) * 1000,
             )
 
-        # Получаем leases (с кэшированием на уровне коллектора)
         leases = self._get_all_leases()
         elapsed_ms = (time.time() - start_time) * 1000
 
-        # Ищем lease для текущего устройства
         device_lease = leases.get(device.ip)
 
         if device_lease:
@@ -72,12 +85,7 @@ class DHCPCiscoCollector(ActiveCollector):
         return result
 
     def _get_all_leases(self) -> Dict[str, dict]:
-        """
-        Получает все DHCP-leases с Cisco через SSH. Кэширует на CACHE_TTL секунд.
-        """
-        # Проверяем, настроены ли учетные данные
         if not CiscoDHCP.is_configured():
-            # Тихо пропускаем, если не настроено (не спамим логи)
             return {}
 
         current_time = time.time()
@@ -85,11 +93,9 @@ class DHCPCiscoCollector(ActiveCollector):
             return self._leases_cache
 
         try:
-            # Создаем SSH-клиент
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             
-            # Подключаемся (с ключом или паролем)
             connect_kwargs = {
                 "hostname": CiscoDHCP.IP,
                 "port": CiscoDHCP.PORT,
@@ -108,9 +114,8 @@ class DHCPCiscoCollector(ActiveCollector):
             
             ssh.connect(**connect_kwargs)
             
-            # Выполняем команды
             commands = [
-                "terminal length 0",  # Отключаем постраничный вывод
+                "terminal length 0",
                 "show ip dhcp binding",
             ]
             
@@ -121,7 +126,6 @@ class DHCPCiscoCollector(ActiveCollector):
             
             ssh.close()
 
-            # Парсим вывод
             self._leases_cache = self._parse_dhcp_binding(output)
             self._cache_timestamp = current_time
             return self._leases_cache
@@ -131,25 +135,16 @@ class DHCPCiscoCollector(ActiveCollector):
             return {}
 
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
-        """
-        Парсит вывод 'show ip dhcp binding'.
-        
-        Пример строки:
-        192.168.1.10    0100.1a.2b.3c.4d.5e     Jul 15 2026 12:00 PM    Automatic  Active      0.0.0.0
-        """
         leases = {}
-        
-        # Регулярка для парсинга
         pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)\s+(Active|Expired|Conflict)'
         
         for match in re.finditer(pattern, output):
             ip = match.group(1)
-            client_id_raw = match.group(2)  # 001a.2b3c.4d5e
+            client_id_raw = match.group(2)
             lease_expiration = match.group(3).strip()
             lease_type = match.group(4)
             lease_state = match.group(5)
             
-            # Конвертируем Client-ID в MAC
             mac = client_id_raw.replace('.', '').lower()
             mac_formatted = ':'.join(mac[i:i+2] for i in range(0, 12, 2))
             
@@ -158,23 +153,17 @@ class DHCPCiscoCollector(ActiveCollector):
                 "ip": ip,
                 "mac": mac_formatted,
                 "lease_expiration": lease_expiration,
-                "lease_type": lease_type,  # Automatic = DHCP, Manual = статика
-                "lease_state": lease_state,  # Active, Expired, Conflict
+                "lease_type": lease_type,
+                "lease_state": lease_state,
             }
         
         return leases
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        """
-        Сканируем все устройства, но SSH-подключение делаем только один раз.
-        """
-        # Если не настроено — сразу возвращаем пустой результат
         if not CiscoDHCP.is_configured():
             return {}
         
         results: dict[str, FingerprintResult] = {}
-        
-        # Предварительно получаем все leases (один раз)
         self._get_all_leases()
         
         for device in devices:
