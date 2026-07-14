@@ -6,7 +6,7 @@ from ..event_type import EventType, Severity
 
 
 class DeviceClassifiedRule:
-    """Если тип устройства изменился (особенно UNKNOWN -> что-то) — генерирует DEVICE_CLASSIFIED."""
+    """Если тип устройства изменился."""
 
     def check(self, old_snapshot: Optional[dict], new_snapshot: dict) -> Optional[Event]:
         if old_snapshot is None:
@@ -15,20 +15,10 @@ class DeviceClassifiedRule:
         old_type = (old_snapshot.get("device_type") or "UNKNOWN").upper()
         new_type = (new_snapshot.get("device_type") or "UNKNOWN").upper()
 
-        # Пропускаем, если тип не изменился
-        if old_type == new_type:
+        if old_type == new_type or new_type == "UNKNOWN":
             return None
 
-        # Пропускаем, если новый тип — UNKNOWN (деградация)
-        if new_type == "UNKNOWN":
-            return None
-
-        # Определяем серьёзность: UNKNOWN -> что-то важнее, чем X -> Y
-        severity = Severity.INFO
-        if old_type == "UNKNOWN":
-            severity = Severity.INFO  # Первая классификация
-        else:
-            severity = Severity.WARNING  # Переклассификация
+        severity = Severity.INFO if old_type == "UNKNOWN" else Severity.WARNING
 
         return Event(
             type=EventType.DEVICE_CLASSIFIED,
@@ -36,6 +26,7 @@ class DeviceClassifiedRule:
             title="Тип устройства изменился",
             description="Устройство переклассифицировано",
             device_id=new_snapshot.get("device_id", ""),
+            snapshot_id=new_snapshot.get("id", ""),  # <-- ДОБАВЛЕНО
             old_value=old_type,
             new_value=new_type,
         )
