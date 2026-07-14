@@ -39,6 +39,9 @@ def collect_all(ips: list[str], devices: list[Device]) -> dict[str, CollectedDat
 
     all_sources: dict[str, dict[str, FingerprintResult]] = {}
     context: dict[str, dict[str, FingerprintResult]] = {}
+    
+    # Статистика для таблицы (Requirement #10)
+    collector_stats = []
 
     for collector in get_collectors():
         source = collector.source_name
@@ -66,7 +69,13 @@ def collect_all(ips: list[str], devices: list[Device]) -> dict[str, CollectedDat
                 all_sources[ip] = {}
             all_sources[ip][source] = res
 
-        print(f"  [DEBUG] {source}: {(time.time() - start) * 1000:.1f} мс ({len(uncached)} uncached)")
+        elapsed = (time.time() - start) * 1000
+        collector_stats.append({
+            "name": source,
+            "elapsed": elapsed,
+            "uncached": len(uncached),
+            "status": "✅ OK" if elapsed < 5000 else "⚠️ Slow"
+        })
 
     result = {}
     for d in devices:
@@ -77,6 +86,15 @@ def collect_all(ips: list[str], devices: list[Device]) -> dict[str, CollectedDat
             sources=all_sources.get(ip, {}),
         )
     
-    print(f"  [DEBUG] Итого: {(time.time() - start_total) * 1000:.1f} мс\n")
+    total_time = (time.time() - start_total) * 1000
+    
+    # Вывод красивой таблицы статистики коллекторов
+    print(f"\n  [STATS] Collector Performance:")
+    print(f"  {'Collector':<15} | {'Elapsed':<10} | {'Uncached':<10} | {'Status'}")
+    print(f"  " + "-" * 52)
+    for stat in collector_stats:
+        print(f"  {stat['name']:<15} | {stat['elapsed']:>7.1f} ms | {stat['uncached']:>8} | {stat['status']}")
+    print(f"  " + "-" * 52)
+    print(f"  [DEBUG] Итого: {total_time:.1f} мс\n")
     
     return result
