@@ -174,9 +174,10 @@ def main() -> int:
                     collected_data[key] = CollectedData()
                 
                 # Создаем FingerprintResult для Omada с ПОЛНЫМ сырым JSON
+                # ВАЖНО: добавлен "responded": True, чтобы Archivist гарантированно сохранил эти данные!
                 omada_result = FingerprintResult(
                     source="omada",
-                    raw_data={"entities": entities},
+                    raw_data={"responded": True, "entities": entities},
                     elapsed_ms=0.0,
                     confidence=100,
                     capabilities=["managed_by_omada"]
