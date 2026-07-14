@@ -27,15 +27,10 @@ class EventRepository:
         try:
             saved = 0
             for event in events:
-                # Отладка: проверяем, есть ли такой device_id в таблице device
-                cursor.execute("SELECT 1 FROM device WHERE id = ?", (event.device_id,))
-                if not cursor.fetchone():
-                    print(f"      [DEBUG EVENT] device_id '{event.device_id}' NOT FOUND in device table!")
-                    continue  # Пропускаем, чтобы не упасть на FOREIGN KEY
-
+                # Проверяем дубликаты
                 cursor.execute("SELECT 1 FROM event WHERE event_id = ?", (event.event_id,))
                 if cursor.fetchone():
-                    continue  # Пропускаем дубликаты
+                    continue
 
                 cursor.execute("""
                     INSERT INTO event 
@@ -45,7 +40,7 @@ class EventRepository:
                 """, (
                     event.event_id,
                     event.device_id,
-                    "",
+                    event.snapshot_id,  # <-- ТЕПЕРЬ ЗДЕСЬ РЕАЛЬНЫЙ ID
                     _dt_to_str(event.timestamp),
                     event.type.value,
                     event.severity.value,
