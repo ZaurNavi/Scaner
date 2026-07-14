@@ -2,6 +2,7 @@
 Активные коллекторы fingerprint.
 """
 
+from .dhcp_cisco import DHCPCiscoCollector
 from .base import ActiveCollector, FingerprintResult
 from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
