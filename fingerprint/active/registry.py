@@ -23,6 +23,7 @@ from .ntp import NTPCollector
 from .lldp_cdp import LLDP_CDPCollector
 from .dhcp_cisco import DHCPCiscoCollector
 from .favicon import FaviconCollector  # <-- ДОБАВЛЕНО
+from .dns_sd import DnsSdCollector  # <-- ДОБАВЛЕНО
 
 
 COLLECTORS: list[ActiveCollector] = [
@@ -43,6 +44,7 @@ COLLECTORS: list[ActiveCollector] = [
     HTTPCollector(),
     HTTPSCertCollector(),
     FaviconCollector(),  # <-- ДОБАВЛЕНО
+    DnsSdCollector(),
 ]
 
 
