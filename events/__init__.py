@@ -1,5 +1,8 @@
 """
 Event Engine v1.4.0 + Persistence Layer v1.4.1
+
+Event Engine — чистый вычислитель событий.
+Event Persister — слой сохранения событий.
 """
 
 from .event import Event
