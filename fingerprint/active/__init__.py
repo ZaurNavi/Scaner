@@ -22,6 +22,7 @@ from .dhcp_cisco import DHCPCiscoCollector
 from .favicon import FaviconCollector  # <-- ДОБАВЛЕНО
 from .ping import ping, PingResult
 from .registry import COLLECTORS, get_collectors
+from .dns_sd import DnsSdCollector  # <-- ДОБАВЛЕНО
 
 __all__ = [
     "ActiveCollector",
