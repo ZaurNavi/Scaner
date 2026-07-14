@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-HTTPS Certificate Collector — извлечение информации из SSL-сертификата (порт 443).
+HTTPS Certificate & TLS Fingerprint Collector.
+Собирает данные сертификата + TLS Version, Cipher Suite, ALPN.
 """
 
 from __future__ import annotations
@@ -11,25 +12,19 @@ import time
 from dataclasses import asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.x509.oid import NameOID
-
-from config import Fingerprint
 from models import Device
-
 from .base import ActiveCollector, FingerprintResult
 from storage.active_cache import get as cache_get, set as cache_set
 
 
 class HTTPSCertCollector(ActiveCollector):
-    PRIORITY = 75  # После HTTP
+    PRIORITY = 75
     RELIABILITY = 90
 
     def __init__(self):
         super().__init__(timeout=2.0)
         self.workers = 32
-        self.port = 443
+        self.ports = [443, 8443, 4443]
 
     def collect(self, device: Device) -> FingerprintResult:
         start_time = time.time()
@@ -45,82 +40,89 @@ class HTTPSCertCollector(ActiveCollector):
                 elapsed_ms=(time.time() - start_time) * 1000,
             )
 
-        cert_data = self._get_cert(device.ip)
+        tls_data = self._get_tls_fingerprint(device.ip)
         elapsed_ms = (time.time() - start_time) * 1000
 
-        if cert_data:
-            result = FingerprintResult(source="https_cert", raw_data=cert_data, elapsed_ms=elapsed_ms)
+        if tls_data:
+            result = FingerprintResult(
+                source="https_cert",
+                raw_data=tls_data,
+                elapsed_ms=elapsed_ms,
+                capabilities=["supports_https", "supports_tls_fp"]
+            )
         else:
             result = FingerprintResult(
                 source="https_cert",
-                raw_data={"responded": False, "reason": "no_cert_or_timeout"},
+                raw_data={"responded": False, "reason": "no_https_or_timeout"},
                 elapsed_ms=elapsed_ms,
             )
 
         cache_set(device.ip, "https_cert", asdict(result))
         return result
 
-    def _get_cert(self, ip: str) -> dict | None:
-        try:
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            
-            with socket.create_connection((ip, self.port), timeout=self.timeout) as sock:
-                with ctx.wrap_socket(sock, server_hostname=ip) as ssock:
-                    der_cert = ssock.getpeercert(binary_form=True)
-                    if not der_cert:
-                        return None
+    def _get_tls_fingerprint(self, ip: str) -> dict | None:
+        for port in self.ports:
+            try:
+                # Создаем контекст, который НЕ проверяет сертификат (для самоподписанных)
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(self.timeout)
+                
+                # Оборачиваем сокет в SSL
+                with context.wrap_socket(sock, server_hostname=ip) as ssock:
+                    ssock.connect((ip, port))
+                    cert = ssock.getpeercert()
                     
-                    cert = x509.load_der_x509_certificate(der_cert, default_backend())
+                    # === TLS FINGERPRINTING ===
+                    tls_version = ssock.version()
+                    cipher_info = ssock.cipher()
+                    cipher_suite = cipher_info[0] if cipher_info else "Unknown"
+                    alpn = ssock.selected_alpn_protocol()
                     
-                    cn = ""
-                    try:
-                        cn = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-                    except Exception:
-                        pass
-
-                    issuer = ""
-                    try:
-                        issuer = cert.issuer.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-                    except Exception:
-                        pass
+                    # === ПАРСИНГ СЕРТИФИКАТА ===
+                    subject = dict(x[0] for x in cert['subject'])
+                    issuer = dict(x[0] for x in cert['issuer'])
                     
-                    org = ""
-                    try:
-                        org = cert.subject.get_attributes_for_oid(NameOID.ORGANIZATION_NAME)[0].value
-                    except Exception:
-                        pass
+                    cn = subject.get('commonName', '')
+                    org = subject.get('organizationName', '')
+                    issuer_cn = issuer.get('commonName', '')
+                    
+                    # SAN (Subject Alternative Name)
+                    san_list = []
+                    for ext in cert.get('subjectAltName', []):
+                        if ext[0] == 'DNS':
+                            san_list.append(ext[1])
 
                     return {
                         "responded": True,
+                        "port": port,
+                        "tls_version": tls_version,          # <-- НОВОЕ
+                        "cipher_suite": cipher_suite,        # <-- НОВОЕ
+                        "alpn": alpn or "None",              # <-- НОВОЕ
                         "cn": cn,
-                        "issuer": issuer,
                         "organization": org,
-                        "not_valid_before": cert.not_valid_before_utc.isoformat(),
-                        "not_valid_after": cert.not_valid_after_utc.isoformat(),
+                        "issuer_cn": issuer_cn,
+                        "san": san_list
                     }
-        except Exception:
-            return None
+            except (socket.timeout, ssl.SSLError, ConnectionRefusedError):
+                continue
+            except Exception:
+                continue
+        return None
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        """
-        Запускаем только для устройств, у которых открыт порт 443 (из TCP context).
-        """
-        targets = []
-        tcp_context = context.get("tcp", {}) if context else {}
-        
-        for d in devices:
-            tcp_res = tcp_context.get(d.ip)
-            if tcp_res and tcp_res.raw_data.get("open_ports"):
-                ports = tcp_res.raw_data.get("open_ports", [])
-                # Поддерживаем и int, и str в списке портов
-                if 443 in ports or "443" in ports or 8443 in ports or "8443" in ports:
-                    targets.append(d)
-            elif not tcp_res:
-                targets.append(d)
+        targets = devices
+        if context and "tcp" in context:
+            tcp_ctx = context["tcp"]
+            targets = [
+                d for d in devices 
+                if tcp_ctx.get(d.ip) and any(str(p) in tcp_ctx[d.ip].raw_data.get("open_ports", []) for p in self.ports)
+            ]
 
-        results = {}
+        results: dict[str, FingerprintResult] = {}
         with ThreadPoolExecutor(max_workers=self.workers) as executor:
             futures = {executor.submit(self.collect, d): d.ip for d in targets}
             for future in as_completed(futures):
