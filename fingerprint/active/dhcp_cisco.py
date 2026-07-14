@@ -111,20 +111,21 @@ class DHCPCiscoCollector(ActiveCollector):
             if CiscoDHCP.ENABLE_PASSWORD:
                 connect_params["secret"] = CiscoDHCP.ENABLE_PASSWORD
 
-            # Подключение через Netmiko (он сам разберется с legacy алгоритмами Cisco)
+            # Подключение через Netmiko
             with ConnectHandler(**connect_params) as net_connect:
                 # Если нужен enable, входим в него
                 if CiscoDHCP.ENABLE_PASSWORD:
                     net_connect.enable()
                 
-                # Выполняем команду
-                output = net_connect.send_command("show ip dhcp binding", read_timeout=self.timeout)
+                # === ИСПРАВЛЕНИЕ: Показываем ВСЕ bindings, включая все VRF ===
+                # Команда "show ip dhcp binding all" показывает bindings для всех VRF
+                output = net_connect.send_command("show ip dhcp binding all", read_timeout=self.timeout)
                 
                 # === ОТЛАДКА: показываем реальный вывод Cisco ===
                 print(f"\n      [DEBUG DHCP] Raw output from Cisco ({len(output)} chars):")
                 print("      " + "-" * 60)
                 if output:
-                    # Показываем первые 2000 символов, чтобы не засорять консоль
+                    # Показываем первые 2000 символов
                     for line in output[:2000].split('\n')[:30]:
                         print(f"      | {line}")
                     if len(output) > 2000:
@@ -143,7 +144,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 if self._leases_cache:
                     print("      [DEBUG DHCP] Sample parsed leases:")
                     for ip, data in list(self._leases_cache.items())[:5]:
-                        print(f"         {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, state={data.get('lease_state')}")
+                        print(f"         {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, expires={data.get('lease_expiration')}")
                 else:
                     print("      [DEBUG DHCP] WARNING: No leases parsed! Check regex pattern above.")
                 # ================================================
@@ -159,16 +160,18 @@ class DHCPCiscoCollector(ActiveCollector):
 
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
         leases = {}
-        # Регулярка для парсинга вывода 'show ip dhcp binding'
-        # Формат: IP  Client-ID/HW address  Lease expiration  Type  State
-        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)\s+(Active|Expired|Conflict)'
+        
+        # ИСПРАВЛЕННЫЙ regex под реальный формат Cisco IOS
+        # Формат: IP  Client-ID  Lease expiration  Type
+        # Пример: 192.168.0.50  01ec.750c.186f.f8  Infinite  Manual
+        # Убрали требование колонки State (Active/Expired), т.к. её нет в выводе
+        pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\s+(.*?)\s+(Automatic|Manual)'
         
         for match in re.finditer(pattern, output):
             ip = match.group(1)
             client_id_raw = match.group(2)
             lease_expiration = match.group(3).strip()
             lease_type = match.group(4)
-            lease_state = match.group(5)
             
             mac = client_id_raw.replace('.', '').lower()
             mac_formatted = ':'.join(mac[i:i+2] for i in range(0, 12, 2))
@@ -178,8 +181,7 @@ class DHCPCiscoCollector(ActiveCollector):
                 "ip": ip,
                 "mac": mac_formatted,
                 "lease_expiration": lease_expiration,
-                "lease_type": lease_type,
-                "lease_state": lease_state,
+                "lease_type": lease_type,  # Automatic = DHCP, Manual = статика
             }
         
         return leases
