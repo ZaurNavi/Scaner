@@ -37,6 +37,7 @@ class Session:
     
     # Временные характеристики
     start_time: datetime
+    last_seen: datetime  # Время последнего snapshot'а в сессии
     end_time: Optional[datetime] = None
     duration: Optional[float] = None  # в секундах
     
@@ -47,6 +48,7 @@ class Session:
     # История
     ip_history: List[str] = field(default_factory=list)
     hostname_history: List[str] = field(default_factory=list)
+    snapshots_count: int = 0
     
     # Метаданные
     created_at: datetime = field(default_factory=datetime.now)
