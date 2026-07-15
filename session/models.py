@@ -30,26 +30,23 @@ class Session:
     Непрерывное присутствие устройства в сети.
     Неизменяема после получения статуса ENDED.
     """
-    # Идентификаторы
+    # 1. Поля БЕЗ значений по умолчанию (должны идти первыми!)
     id: str
     device_id: str
-    schema_version: int = 1
-    
-    # Временные характеристики
     start_time: datetime
-    last_seen: datetime  # Время последнего snapshot'а в сессии
+    last_seen: datetime
+    
+    # 2. Поля СО значениями по умолчанию (должны идти после)
+    schema_version: int = 1
     end_time: Optional[datetime] = None
     duration: Optional[float] = None  # в секундах
     
-    # Состояние
     status: SessionStatus = SessionStatus.ACTIVE
     end_reason: Optional[SessionEndReason] = None
     
-    # История
     ip_history: List[str] = field(default_factory=list)
     hostname_history: List[str] = field(default_factory=list)
     snapshots_count: int = 0
     
-    # Метаданные
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
