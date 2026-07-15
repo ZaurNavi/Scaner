@@ -27,6 +27,7 @@ from report import (
     print_table,
     save_report,
     save_debug_json,
+    enrich_device_metadata,  # <-- v1.5.0: ДОБАВЛЕНО
 )
 from fingerprint.analysis import fingerprint_all
 from fingerprint.collectors.base import collect_all, CollectedData, FingerprintResult
@@ -189,6 +190,11 @@ def main() -> int:
     # ==============================================================================
 
     devices = fingerprint_all(devices, collected_data)
+    
+    # === v1.5.0: Обогащение метаданных устройств из коллекторов ===
+    enrich_device_metadata(devices, collected_data)
+    # ===============================================================
+    
     analyze_all(devices)
 
     save_debug_json(devices, collected_data)
