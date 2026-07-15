@@ -31,7 +31,7 @@ from constants import (
 )
 from models import Device
 from vendors import get_vendor
-from fingerprint.vendor_normalizer import normalize_vendor  # <-- ДОБАВЛЕНО
+from fingerprint.vendor_normalizer import normalize_vendor
 from fingerprint import fingerprint_all
 from fingerprint.collectors.base import CollectedData
 from fingerprint.correlation import engine as correlation_engine
@@ -86,7 +86,7 @@ def build_devices(
         device = Device(
             ip=ip,
             mac=mac,
-            vendor=normalize_vendor(get_vendor(mac)),  # <-- ИЗМЕНЕНО: добавлена нормализация
+            vendor=normalize_vendor(get_vendor(mac)),
             flows=flow["flows"],
             bytes=flow["bytes"],
             megabytes=flow["megabytes"],
@@ -99,6 +99,55 @@ def build_devices(
         devices.append(device)
 
     return devices
+
+
+# ---------------------------------------------------------
+# Обогащение метаданных устройств из коллекторов
+# ---------------------------------------------------------
+
+
+def enrich_device_metadata(devices: list[Device], collected_data: dict[str, CollectedData]) -> None:
+    """
+    Заполняет пустые поля Device (Hostname, Model, Vendor) данными из коллекторов,
+    если они не были определены на этапе SNMP/NetFlow.
+    """
+    for device in devices:
+        data = collected_data.get(device.ip)
+        if not data:
+            continue
+        
+        # 1. Hostname: Приоритет Omada > mDNS > DNS
+        if not device.hostname or device.hostname == "Unknown":
+            # Проверяем Omada
+            omada = data.sources.get("omada")
+            if omada and omada.raw_data.get("entities"):
+                entity = omada.raw_data["entities"][0]
+                device.hostname = entity.get("hostName") or entity.get("name") or ""
+            
+            # Если всё ещё пусто, проверяем mDNS
+            if (not device.hostname or device.hostname == "Unknown") and data.mdns.hostname:
+                device.hostname = data.mdns.hostname
+
+        # 2. Model: mDNS > Omada (или используем Hostname, если он похож на модель телефона)
+        if not device.model or device.model == "Unknown":
+            if data.mdns.model:
+                device.model = data.mdns.model
+            elif device.hostname and any(x in device.hostname.lower() for x in ["redmi", "galaxy", "iphone", "ipad", "macbook", "note", "honor"]):
+                device.model = device.hostname  # Если имя похоже на модель, дублируем его сюда для наглядности
+
+        # 3. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени из Omada/mDNS
+        if device.vendor == "Unknown":
+            name_to_check = (device.hostname or "").lower()
+            if "samsung" in name_to_check or "galaxy" in name_to_check:
+                device.vendor = "Samsung"
+            elif "xiaomi" in name_to_check or "redmi" in name_to_check:
+                device.vendor = "Xiaomi"
+            elif "apple" in name_to_check or "iphone" in name_to_check or "ipad" in name_to_check:
+                device.vendor = "Apple"
+            elif "honor" in name_to_check or "huawei" in name_to_check:
+                device.vendor = "Honor/Huawei"
+            elif "lenovo" in name_to_check or "thinkpad" in name_to_check:
+                device.vendor = "Lenovo"
 
 
 # ---------------------------------------------------------
@@ -622,4 +671,5 @@ def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Devic
 __all__ = [
     "build_devices", "analyze_all", "filter_devices", "sort_devices",
     "print_table", "save_report", "save_debug_json", "generate_report",
+    "enrich_device_metadata",
 ]
