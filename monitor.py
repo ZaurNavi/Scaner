@@ -27,11 +27,11 @@ from report import (
     print_table,
     save_report,
     save_debug_json,
-    enrich_device_metadata,  # <-- v1.5.0: ДОБАВЛЕНО
+    enrich_device_metadata,
 )
 from fingerprint.analysis import fingerprint_all
 from fingerprint.collectors.base import collect_all, CollectedData, FingerprintResult
-from fingerprint.controllers.registry import get_controller_collectors  # <-- v1.4.9.1: ДОБАВЛЕНО
+from fingerprint.controllers.registry import get_controller_collectors
 from storage.history import enrich
 from storage.device_db import save_state
 
@@ -44,6 +44,7 @@ from storage.archivist import (
 )
 from storage.schema import Scan, ScanStatus
 from events import EventEngine
+from history import HistoryService  # <-- v1.5.1: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -99,6 +100,16 @@ def main() -> int:
     print_header()
 
     archivist, db, scan = init_archivist()
+    
+    # === v1.5.1: Инициализация History Service ===
+    history_service = None
+    if db:
+        try:
+            history_service = HistoryService(db.get_connection())
+            print("  [HISTORY] ✅ History Service initialized")
+        except Exception as exc:
+            print(f"  [HISTORY] ❌ History Service initialization failed: {exc}")
+    # ===============================================
 
     print("  [1/4]  Получение ARP-таблицы через SNMP...")
     try:
@@ -169,13 +180,11 @@ def main() -> int:
             merged_count = 0
             for key, entities in omada_entities.items():
                 if key.startswith("mac:"):
-                    continue # Пропускаем, если не удалось сопоставить с IP (Archivist работает по IP)
+                    continue
                 
                 if key not in collected_data:
                     collected_data[key] = CollectedData()
                 
-                # Создаем FingerprintResult для Omada с ПОЛНЫМ сырым JSON
-                # ВАЖНО: добавлен "responded": True, чтобы Archivist гарантированно сохранил эти данные!
                 omada_result = FingerprintResult(
                     source="omada",
                     raw_data={"responded": True, "entities": entities},
@@ -216,6 +225,9 @@ def main() -> int:
         total_event_elapsed_ms = 0.0
         total_persisted = 0
 
+        # Сохраняем device_id для smoke-test History Service
+        first_device_id = None
+
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
             bundle = build_snapshot_bundle(device, scan, collected)
@@ -225,6 +237,10 @@ def main() -> int:
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 print(f"      [DEBUG] result.device_id = '{result.device_id}'")
+                
+                # Сохраняем device_id первого устройства для smoke-test
+                if first_device_id is None:
+                    first_device_id = result.device_id
 
                 current_snapshot_dict = {
                     "id": bundle.snapshot.id,
@@ -262,6 +278,47 @@ def main() -> int:
         else:
             print()
             print(f"  📢 Events: Нет изменений (состояние устройств не изменилось, {total_event_elapsed_ms:.1f} ms)")
+
+        # === v1.5.1: Smoke-test History Service ===
+        if history_service and first_device_id:
+            print()
+            print("  [HISTORY] Testing History Service...")
+            try:
+                # Получаем историю первого устройства
+                device_history = history_service.get_device_history(first_device_id)
+                
+                # Показываем базовую статистику (ленивая загрузка)
+                snapshots_count = len(device_history.snapshots)
+                observations_count = len(device_history.observations)
+                events_count = len(device_history.events)
+                
+                # Получаем историю IP (показывает, как устройство меняло IP)
+                ip_history = history_service.get_ip_history(first_device_id)
+                unique_ips = len(set(entry["ip"] for entry in ip_history))
+                
+                # Получаем историю hostname
+                hostname_history = history_service.get_hostname_history(first_device_id)
+                unique_hostnames = len(set(entry["hostname"] for entry in hostname_history))
+                
+                print(f"      ✅ History Service is working!")
+                print(f"         Device: {device_history.mac}")
+                print(f"         First seen: {device_history.first_seen.strftime('%Y-%m-%d %H:%M')}")
+                print(f"         Last seen: {device_history.last_seen.strftime('%Y-%m-%d %H:%M')}")
+                print(f"         Snapshots: {snapshots_count}")
+                print(f"         Observations: {observations_count}")
+                print(f"         Events: {events_count}")
+                print(f"         Unique IPs: {unique_ips}")
+                print(f"         Unique Hostnames: {unique_hostnames}")
+                
+                # Показываем последние 3 IP из истории
+                if ip_history:
+                    recent_ips = ip_history[-3:]
+                    ip_list = ", ".join([f"{entry['ip']} ({entry['timestamp'].strftime('%H:%M')})" for entry in recent_ips])
+                    print(f"         Recent IPs: {ip_list}")
+                
+            except Exception as exc:
+                print(f"      ❌ History Service test failed: {exc}")
+        # ===========================================
 
     devices = filter_devices(devices)
     devices = sort_devices(devices)
