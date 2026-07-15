@@ -1,88 +1,55 @@
 =====================================================================================================================================================================
                                                                           Repeater Monitor                                                                           
-                                                                         14.07.2026 17:12:31                                                                         
+                                                                         15.07.2026 14:31:22                                                                         
                                                                            [VERBOSE MODE]                                                                            
 =====================================================================================================================================================================
 
 Статус              IP              MAC                 Vendor              Hostname          Model           OS          Type           Conf  Flows    MB/h  Причина
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.180   32:4A:47:6E:19:CA   Unknown                                               Linux       Network Device   40    130    6.14  Много flows (130) при низком трафике
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.187   50:3D:C6:11:10:DA   Xiaomi                                                Android     Smartphone       80     25    6.09  Производитель: Xiaomi
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.178   A2:43:59:1D:39:63   Unknown                                               Linux       Network Device   40    155    4.30  Много flows (155) при низком трафике
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.186   B6:06:D5:7A:59:37   Unknown                                               Linux       Network Device   40    115    4.13  Много flows (115) при низком трафике
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.182   62:06:2F:AF:9A:A7   Unknown                                               Unknown     Mobile Device    45    284    2.93  Много flows (284) при низком трафике
-🟢 НОРМАЛЬНЫЙ        192.168.1.185   12:79:08:92:4E:6F   Unknown                                               Unknown     Mobile Device    45     82   24.00  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.165   1A:B9:88:4E:96:A8   Unknown                                               Unknown     Mobile Device    45      3    8.59  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.189   42:2D:47:86:FC:C5   Unknown                                               Unknown     Mobile Device    45     98    8.21  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.183   AA:B1:DF:FF:FA:4D   Unknown                                               Linux       Network Device   40      9    8.04  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.181   4A:26:35:8D:AA:81   Unknown                                               Unknown     Mobile Device    45      2    7.46  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.179   5E:B3:B7:0F:DA:7F   Unknown                                               Linux       Network Device   40     81    6.57  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.188   7E:FD:83:BA:5B:4A   Unknown                                               Linux       Network Device   40     76    4.08  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.142   BE:56:33:51:76:B3   Unknown                                               Unknown     Mobile Device    45     17    2.93  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.167   E2:F6:E2:C3:43:DE   Unknown                                               Linux       Network Device   40     18    2.00  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.168   62:AB:05:59:8E:F1   Unknown                                               Linux       Network Device   40      6    0.49  —
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.32    DE:09:BE:E6:A0:C8   Xiaomi              Redmi-Note-9S     Redmi-Note-9S   Android     Smartphone       95     25    9.49  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.37    A6:90:A1:97:FD:A4   Unknown             A6-90-A1-97-FD-A4                 Linux       Network Device   50    342    8.75  Много flows (342) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.31    8E:58:83:D3:D7:C2   Xiaomi              Redmi-Note-14     Redmi-Note-14   Android     Smartphone       95    152    3.74  Производитель: Xiaomi
+🟢 НОРМАЛЬНЫЙ        192.168.1.38    76:70:A5:D1:ED:2B   Unknown             Rauf                              Linux       Network Device   40     67    6.41  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.39    BE:05:0D:A2:02:5F   Unknown             BE-05-0D-A2-02-5F                 Linux       Network Device   40     31    3.30  —
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Всего: 15 | 🔴 Подозрительных: 5 | 🟡 Неопределённых: 0 | 🟢 Нормальных: 10
+Всего: 5 | 🔴 Подозрительных: 3 | 🟡 Неопределённых: 0 | 🟢 Нормальных: 2
 
   🔍 Evidence Explorer:
 
-  📋 192.168.1.180 (32:4A:47:6E:19:CA) — Linux Network Device [40]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
-
-  📋 192.168.1.187 (50:3D:C6:11:10:DA) — Android Smartphone [80]
-     ✔ Vendor = Xiaomi (MAC: 50:3D:C6) [+10]
+  📋 192.168.1.32 (DE:09:BE:E6:A0:C8) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: DE:09:BE) [+10]
+     ✔ Hostname = Redmi-Note-9S [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-9S, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -72dBm, Signal: 45, Rank: 3, SNR: 23dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 39Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 38min, LastSeen: 1784111462540, Active: True, Down: 314.5MB, Up: 9.9MB, PktDown: 267222, PktUp: 40119, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
      ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ─── Total: 80
-
-  📋 192.168.1.178 (A2:43:59:1D:39:63) — Linux Network Device [40]
+     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
+     ─── Total: 95
 
-  📋 192.168.1.186 (B6:06:D5:7A:59:37) — Linux Network Device [40]
+  📋 192.168.1.37 (A6:90:A1:97:FD:A4) — Linux Network Device [50]
+     ✔ Hostname = A6-90-A1-97-FD-A4 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: A6-90-A1-97-FD-A4, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 43Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784111462540, Active: True, Down: 55.9MB, Up: 6.4MB, PktDown: 47135, PktUp: 25821, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
+     ─── Total: 50
 
-  📋 192.168.1.182 (62:06:2F:AF:9A:A7) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.185 (12:79:08:92:4E:6F) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.165 (1A:B9:88:4E:96:A8) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.189 (42:2D:47:86:FC:C5) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.183 (AA:B1:DF:FF:FA:4D) — Linux Network Device [40]
+  📋 192.168.1.31 (8E:58:83:D3:D7:C2) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: 8E:58:83) [+10]
+     ✔ Hostname = Redmi-Note-14 [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-14, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 40min, LastSeen: 1784111462540, Active: True, Down: 311.0MB, Up: 15.8MB, PktDown: 243559, PktUp: 140180, PowerSave: True, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
+     ─── Total: 95
 
-  📋 192.168.1.181 (4A:26:35:8D:AA:81) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.179 (5E:B3:B7:0F:DA:7F) — Linux Network Device [40]
+  📋 192.168.1.38 (76:70:A5:D1:ED:2B) — Linux Network Device [40]
+     ✔ Hostname = Rauf [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: Rauf, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 40, Radio: 5GHz, TX: 130Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 8.1MB, Up: 1.0MB, PktDown: 7828, PktUp: 5376, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
+     ─── Total: 50
 
-  📋 192.168.1.188 (7E:FD:83:BA:5B:4A) — Linux Network Device [40]
+  📋 192.168.1.39 (BE:05:0D:A2:02:5F) — Linux Network Device [40]
+     ✔ Hostname = BE-05-0D-A2-02-5F [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: BE-05-0D-A2-02-5F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 40, Radio: 5GHz, TX: 65Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 1.5MB, Up: 0.1MB, PktDown: 1386, PktUp: 978, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
-
-  📋 192.168.1.142 (BE:56:33:51:76:B3) — Unknown Mobile Device [45]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 45
-
-  📋 192.168.1.167 (E2:F6:E2:C3:43:DE) — Linux Network Device [40]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
-
-  📋 192.168.1.168 (62:AB:05:59:8E:F1) — Linux Network Device [40]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 40
+     ─── Total: 50

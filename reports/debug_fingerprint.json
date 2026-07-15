@@ -1,1128 +1,18 @@
 {
-  "timestamp": "14.07.2026 17:12:29",
-  "total_devices": 18,
+  "timestamp": "15.07.2026 14:31:21",
+  "total_devices": 9,
   "devices": [
     {
-      "ip": "192.168.1.142",
-      "mac": "BE:56:33:51:76:B3",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.142",
-            "mac": "be:56:33:51:76:b3",
-            "lease_expiration": "Jul 14 2026 05:10 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 1015.3453350067139,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.142"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.06818771362304688,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "skipped_no_ping"
-          }
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1004.1613578796387,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1504.3466091156006,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 103.57904434204102,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 210.66808700561523,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 541.841983795166,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1003.8290023803711,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 520.5705165863037,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.3800392150878906,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
-          }
-        ],
-        "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
-          "history": 0,
-          "total": 45
-        },
-        "fingerprint_score": 45,
-        "evidence_items": [
-          {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.165",
-      "mac": "1A:B9:88:4E:96:A8",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.165",
-            "mac": "1a:b9:88:4e:96:a8",
-            "lease_expiration": "Jul 14 2026 05:14 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 1009.7372531890869,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.165"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 19.525527954101562,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "skipped_no_ping"
-          }
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1004.1244029998779,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1511.7571353912354,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 1001.2912750244141,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 1003.2191276550293,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 11017.57025718689,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1004.4753551483154,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 2046.9470024108887,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.10013580322265625,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
-          }
-        ],
-        "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
-          "history": 0,
-          "total": 45
-        },
-        "fingerprint_score": 45,
-        "evidence_items": [
-          {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.167",
-      "mac": "E2:F6:E2:C3:43:DE",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.167",
-            "mac": "e2:f6:e2:c3:43:de",
-            "lease_expiration": "Jul 14 2026 05:12 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 187.70694732666016,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 182.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 182.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.167"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1004.4102668762207,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1502.3057460784912,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 31.35514259338379,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 154.09111976623535,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 184.4925880432129,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1008.7487697601318,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 200.11329650878906,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 1.2392997741699219,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
-          {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.168",
-      "mac": "62:AB:05:59:8E:F1",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.168",
-            "mac": "62:ab:05:59:8e:f1",
-            "lease_expiration": "Jul 14 2026 05:14 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 490.692138671875,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 479.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 479.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.168"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1005.373477935791,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1508.0959796905518,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 7.041454315185547,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 6.104230880737305,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 1161.5846157073975,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1004.1210651397705,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 116.56355857849121,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 1.56402587890625,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
-          {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.178",
-      "mac": "A2:43:59:1D:39:63",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
+      "ip": "192.168.1.31",
+      "mac": "8E:58:83:D3:D7:C2",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-Note-14",
+      "model": "Redmi-Note-14",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
       "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (155) при низком трафике",
+      "reason": "Производитель: Xiaomi",
       "sources": {
         "dhcpcisco": {
           "elapsed_ms": 0.0,
@@ -1136,9 +26,9 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.178",
-            "mac": "a2:43:59:1d:39:63",
-            "lease_expiration": "Jul 14 2026 05:09 PM",
+            "ip": "192.168.1.31",
+            "mac": "36:fe:3e:b8:ec:24",
+            "lease_expiration": "Jul 14 2026 10:47 PM",
             "lease_type": "Automatic"
           }
         },
@@ -1155,7 +45,7 @@
           "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 552.3014068603516,
+          "elapsed_ms": 143.35894584655762,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -1163,13 +53,13 @@
           "reason": "",
           "ports": [],
           "ttl": 63,
-          "latency_ms": 541.0,
+          "latency_ms": 132.0,
           "raw_data": {
             "alive": true,
             "ttl": 63,
-            "latency_ms": 541.0,
+            "latency_ms": 132.0,
             "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.178"
+            "command": "ping -c 1 -W 1 192.168.1.31"
           }
         },
         "lldp_cdp": {
@@ -1185,7 +75,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 151.38626098632812,
+          "elapsed_ms": 13.820171356201172,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -1196,174 +86,244 @@
           "latency_ms": null,
           "raw_data": {
             "responded": false,
-            "reason": "no_snmp_response",
-            "communities_tried": [
-              "My_Navi_RO_String",
-              "public",
-              "private",
-              "monitor"
+            "reason": "skipped_no_ping"
+          }
+        },
+        "switchport": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "netbios": {
+          "elapsed_ms": 1007.8680515289307,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_netbios_response"
+          }
+        },
+        "wsd": {
+          "elapsed_ms": 1501.831293106079,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_wsd_response"
+          }
+        },
+        "ssh": {
+          "elapsed_ms": 1002.3026466369629,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_banner"
+          }
+        },
+        "smb": {
+          "elapsed_ms": 153.74231338500977,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_smb_response"
+          }
+        },
+        "banners": {
+          "elapsed_ms": 11032.706022262573,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false
+          }
+        },
+        "ntp": {
+          "elapsed_ms": 1007.8725814819336,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ntp_response"
+          }
+        },
+        "tcp": {
+          "elapsed_ms": 2091.243267059326,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "fast_mode": false,
+            "ports_scanned": 22,
+            "ports_open": 0
+          }
+        },
+        "ssdp": {
+          "elapsed_ms": 3001.1730194091797,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ssdp_response"
+          }
+        },
+        "http": {
+          "elapsed_ms": 0.19550323486328125,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "dnssd": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "8E-58-83-D3-D7-C2",
+                "name": "Redmi-Note-14",
+                "hostName": "Redmi-Note-14",
+                "deviceType": "unknown",
+                "ip": "192.168.1.31",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 0,
+                "signalRank": 0,
+                "wifiMode": 4,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 1000,
+                "txRate": 1000,
+                "powerSave": true,
+                "rssi": -92,
+                "snr": 3,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 326111840,
+                "trafficUp": 16558210,
+                "uptime": 2423,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 243559,
+                "upPacket": 140180,
+                "multiLink": [],
+                "systemName": "Redmi-Note-14",
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
             ]
           }
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1060.5547428131104,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1513.4918689727783,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 239.72249031066895,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 1003.3783912658691,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 1498.8315105438232,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1011.542558670044,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 665.8399105072021,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 4.294157028198242,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
         }
       },
       "correlation": {
         "matched_rules": [
+          {
+            "name": "android_redmi_poco",
+            "confidence": 75,
+            "reason": "Hostname indicates Xiaomi device",
+            "priority": 75
+          },
+          {
+            "name": "android_xiaomi",
+            "confidence": 70,
+            "reason": "Xiaomi vendor + no HTTP ports (Android firewall)",
+            "priority": 70
+          },
+          {
+            "name": "linux_vendor_silent",
+            "confidence": 65,
+            "reason": "Vendor + TTL=64 + no open TCP ports (likely Android)",
+            "priority": 65
+          },
           {
             "name": "linux_ttl_generic",
             "confidence": 40,
@@ -1372,22 +332,59 @@
           }
         ],
         "reasons": [
-          "TTL=55-64 (Linux)"
+          "Hostname indicates Xiaomi device",
+          "Omada: Android device (Redmi-Note-14)"
         ],
         "breakdown": {
-          "vendor": 0,
+          "vendor": 10,
           "ttl": 0,
           "tcp": 0,
           "http": 0,
           "mdns": 0,
           "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
+          "correlation": 75,
+          "hostname": 10,
           "history": 0,
-          "total": 40
+          "total": 95
         },
-        "fingerprint_score": 40,
+        "fingerprint_score": 95,
         "evidence_items": [
+          {
+            "description": "Vendor = Xiaomi",
+            "contribution": 10,
+            "source": "vendor",
+            "details": "MAC: 8E:58:83"
+          },
+          {
+            "description": "Hostname = Redmi-Note-14",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller identifies device",
+            "contribution": 70,
+            "source": "omada",
+            "details": "type: unknown, hostname: Redmi-Note-14, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 40min, LastSeen: 1784111462540, Active: True, Down: 311.0MB, Up: 15.8MB, PktDown: 243559, PktUp: 140180, PowerSave: True, Wireless: True, Guest: False"
+          },
+          {
+            "description": "Rule: android_redmi_poco",
+            "contribution": 75,
+            "source": "rule:android_redmi_poco",
+            "details": "Hostname indicates Xiaomi device"
+          },
+          {
+            "description": "Rule: android_xiaomi",
+            "contribution": 70,
+            "source": "rule:android_xiaomi",
+            "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+          },
+          {
+            "description": "Rule: linux_vendor_silent",
+            "contribution": 65,
+            "source": "rule:linux_vendor_silent",
+            "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+          },
           {
             "description": "Rule: linux_ttl_generic",
             "contribution": 40,
@@ -1398,292 +395,16 @@
       }
     },
     {
-      "ip": "192.168.1.179",
-      "mac": "5E:B3:B7:0F:DA:7F",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.179",
-            "mac": "5e:b3:b7:0f:da:7f",
-            "lease_expiration": "Jul 14 2026 05:09 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 14.065742492675781,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 2.12,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 2.12,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.179"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1062.3080730438232,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1503.826379776001,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 4.5337677001953125,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 13.889789581298828,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 41.159629821777344,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1007.0638656616211,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 137.93611526489258,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.9522438049316406,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
-          {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.180",
-      "mac": "32:4A:47:6E:19:CA",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
+      "ip": "192.168.1.32",
+      "mac": "DE:09:BE:E6:A0:C8",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-Note-9S",
+      "model": "Redmi-Note-9S",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
       "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (130) при низком трафике",
+      "reason": "Производитель: Xiaomi",
       "sources": {
         "dhcpcisco": {
           "elapsed_ms": 0.0,
@@ -1697,9 +418,9 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.180",
-            "mac": "32:4a:47:6e:19:ca",
-            "lease_expiration": "Jul 14 2026 05:10 PM",
+            "ip": "192.168.1.32",
+            "mac": "9a:d9:36:7c:fb:8b",
+            "lease_expiration": "Jul 14 2026 10:54 PM",
             "lease_type": "Automatic"
           }
         },
@@ -1716,7 +437,7 @@
           "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 61.59853935241699,
+          "elapsed_ms": 88.10138702392578,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -1724,13 +445,13 @@
           "reason": "",
           "ports": [],
           "ttl": 63,
-          "latency_ms": 48.7,
+          "latency_ms": 74.3,
           "raw_data": {
             "alive": true,
             "ttl": 63,
-            "latency_ms": 48.7,
+            "latency_ms": 74.3,
             "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.180"
+            "command": "ping -c 1 -W 1 192.168.1.32"
           }
         },
         "lldp_cdp": {
@@ -1746,283 +467,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1006.1547756195068,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1505.3744316101074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 103.79290580749512,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 5.353212356567383,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 164.93535041809082,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1006.4318180084229,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 151.6416072845459,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.6837844848632812,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
-          {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.181",
-      "mac": "4A:26:35:8D:AA:81",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.181",
-            "mac": "4a:26:35:8d:aa:81",
-            "lease_expiration": "Jul 14 2026 05:11 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 1008.9221000671387,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.181"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 4.375457763671875,
+          "elapsed_ms": 12.44807243347168,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2049,7 +494,7 @@
           "raw_data": {}
         },
         "netbios": {
-          "elapsed_ms": 1003.9618015289307,
+          "elapsed_ms": 1004.7228336334229,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2064,7 +509,7 @@
           }
         },
         "wsd": {
-          "elapsed_ms": 1506.864070892334,
+          "elapsed_ms": 1504.913568496704,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2079,7 +524,7 @@
           }
         },
         "ssh": {
-          "elapsed_ms": 1002.732515335083,
+          "elapsed_ms": 1002.6302337646484,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2094,7 +539,7 @@
           }
         },
         "smb": {
-          "elapsed_ms": 1004.1730403900146,
+          "elapsed_ms": 1003.8845539093018,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2109,7 +554,7 @@
           }
         },
         "banners": {
-          "elapsed_ms": 11018.16201210022,
+          "elapsed_ms": 11027.334451675415,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2123,7 +568,7 @@
           }
         },
         "ntp": {
-          "elapsed_ms": 1005.0725936889648,
+          "elapsed_ms": 1013.2124423980713,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2138,7 +583,7 @@
           }
         },
         "tcp": {
-          "elapsed_ms": 2106.8122386932373,
+          "elapsed_ms": 2041.1608219146729,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2154,7 +599,7 @@
           }
         },
         "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
+          "elapsed_ms": 3001.1730194091797,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2169,7 +614,7 @@
           }
         },
         "http": {
-          "elapsed_ms": 0.6005764007568359,
+          "elapsed_ms": 0.26726722717285156,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2191,54 +636,167 @@
           "ttl": null,
           "latency_ms": null,
           "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "DE-09-BE-E6-A0-C8",
+                "name": "Redmi-Note-9S",
+                "hostName": "Redmi-Note-9S",
+                "deviceType": "unknown",
+                "ip": "192.168.1.32",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 45,
+                "signalRank": 3,
+                "wifiMode": 4,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 39000,
+                "txRate": 26000,
+                "powerSave": false,
+                "rssi": -72,
+                "snr": 23,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 329782554,
+                "trafficUp": 10425004,
+                "uptime": 2314,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 267222,
+                "upPacket": 40119,
+                "multiLink": [],
+                "systemName": "Redmi-Note-9S",
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
+          }
         }
       },
       "correlation": {
         "matched_rules": [
           {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
+            "name": "android_redmi_poco",
+            "confidence": 75,
+            "reason": "Hostname indicates Xiaomi device",
+            "priority": 75
+          },
+          {
+            "name": "android_xiaomi",
+            "confidence": 70,
+            "reason": "Xiaomi vendor + no HTTP ports (Android firewall)",
+            "priority": 70
+          },
+          {
+            "name": "linux_vendor_silent",
+            "confidence": 65,
+            "reason": "Vendor + TTL=64 + no open TCP ports (likely Android)",
+            "priority": 65
+          },
+          {
+            "name": "linux_ttl_generic",
+            "confidence": 40,
+            "reason": "TTL=55-64 (Linux)",
+            "priority": 40
           }
         ],
         "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+          "Hostname indicates Xiaomi device",
+          "Omada: Android device (Redmi-Note-9S)"
         ],
         "breakdown": {
-          "vendor": 0,
+          "vendor": 10,
           "ttl": 0,
           "tcp": 0,
           "http": 0,
           "mdns": 0,
           "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
+          "correlation": 75,
+          "hostname": 10,
           "history": 0,
-          "total": 45
+          "total": 95
         },
-        "fingerprint_score": 45,
+        "fingerprint_score": 95,
         "evidence_items": [
           {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+            "description": "Vendor = Xiaomi",
+            "contribution": 10,
+            "source": "vendor",
+            "details": "MAC: DE:09:BE"
+          },
+          {
+            "description": "Hostname = Redmi-Note-9S",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller identifies device",
+            "contribution": 70,
+            "source": "omada",
+            "details": "type: unknown, hostname: Redmi-Note-9S, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -72dBm, Signal: 45, Rank: 3, SNR: 23dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 39Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 38min, LastSeen: 1784111462540, Active: True, Down: 314.5MB, Up: 9.9MB, PktDown: 267222, PktUp: 40119, PowerSave: False, Wireless: True, Guest: False"
+          },
+          {
+            "description": "Rule: android_redmi_poco",
+            "contribution": 75,
+            "source": "rule:android_redmi_poco",
+            "details": "Hostname indicates Xiaomi device"
+          },
+          {
+            "description": "Rule: android_xiaomi",
+            "contribution": 70,
+            "source": "rule:android_xiaomi",
+            "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+          },
+          {
+            "description": "Rule: linux_vendor_silent",
+            "contribution": 65,
+            "source": "rule:linux_vendor_silent",
+            "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+          },
+          {
+            "description": "Rule: linux_ttl_generic",
+            "contribution": 40,
+            "source": "rule:linux_ttl_generic",
+            "details": "TTL=55-64 (Linux)"
           }
         ]
       }
     },
     {
-      "ip": "192.168.1.182",
-      "mac": "62:06:2F:AF:9A:A7",
+      "ip": "192.168.1.34",
+      "mac": "DE:BB:AE:43:2C:EF",
       "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "Camal-nin-A15",
       "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (284) при низком трафике",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
       "sources": {
         "dhcpcisco": {
           "elapsed_ms": 0.0,
@@ -2252,9 +810,9 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.182",
-            "mac": "62:06:2f:af:9a:a7",
-            "lease_expiration": "Jul 14 2026 05:12 PM",
+            "ip": "192.168.1.34",
+            "mac": "22:eb:78:61:9c:54",
+            "lease_expiration": "Jul 14 2026 10:49 PM",
             "lease_type": "Automatic"
           }
         },
@@ -2271,21 +829,21 @@
           "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 1017.8084373474121,
+          "elapsed_ms": 9.789466857910156,
           "confidence": 0,
           "os": "",
           "model": "",
           "device_type": "",
           "reason": "",
           "ports": [],
-          "ttl": null,
-          "latency_ms": null,
+          "ttl": 63,
+          "latency_ms": 3.02,
           "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.182"
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 3.02,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.34"
           }
         },
         "lldp_cdp": {
@@ -2301,7 +859,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 14.707803726196289,
+          "elapsed_ms": 16.345739364624023,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2328,7 +886,7 @@
           "raw_data": {}
         },
         "netbios": {
-          "elapsed_ms": 1004.3134689331055,
+          "elapsed_ms": 1016.2255764007568,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2343,7 +901,7 @@
           }
         },
         "wsd": {
-          "elapsed_ms": 1510.6620788574219,
+          "elapsed_ms": 1503.291130065918,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2358,7 +916,7 @@
           }
         },
         "ssh": {
-          "elapsed_ms": 26.95298194885254,
+          "elapsed_ms": 52.81209945678711,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2373,7 +931,7 @@
           }
         },
         "smb": {
-          "elapsed_ms": 155.09724617004395,
+          "elapsed_ms": 1001.7178058624268,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2388,7 +946,7 @@
           }
         },
         "banners": {
-          "elapsed_ms": 121.35887145996094,
+          "elapsed_ms": 11017.41337776184,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2402,7 +960,7 @@
           }
         },
         "ntp": {
-          "elapsed_ms": 1007.6274871826172,
+          "elapsed_ms": 1008.4586143493652,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2417,7 +975,7 @@
           }
         },
         "tcp": {
-          "elapsed_ms": 45.08495330810547,
+          "elapsed_ms": 2053.8570880889893,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2433,7 +991,7 @@
           }
         },
         "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
+          "elapsed_ms": 3001.1367797851562,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2448,7 +1006,7 @@
           }
         },
         "http": {
-          "elapsed_ms": 1.6281604766845703,
+          "elapsed_ms": 0.6577968597412109,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2470,58 +1028,10 @@
           "ttl": null,
           "latency_ms": null,
           "raw_data": {}
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
-          }
-        ],
-        "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
-          "history": 0,
-          "total": 45
         },
-        "fingerprint_score": 45,
-        "evidence_items": [
-          {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.183",
-      "mac": "AA:B1:DF:FF:FA:4D",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
+        "omada": {
           "elapsed_ms": 0.0,
-          "confidence": 0,
+          "confidence": 100,
           "os": "",
           "model": "",
           "device_type": "",
@@ -2531,221 +1041,51 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.183",
-            "mac": "aa:b1:df:ff:fa:4d",
-            "lease_expiration": "Jul 14 2026 05:14 PM",
-            "lease_type": "Automatic"
+            "entities": [
+              {
+                "mac": "DE-BB-AE-43-2C-EF",
+                "name": "Camal-nin-A15",
+                "hostName": "Camal-nin-A15",
+                "deviceType": "unknown",
+                "ip": "192.168.1.34",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 0,
+                "signalRank": 0,
+                "wifiMode": 5,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 1,
+                "channel": 40,
+                "rxRate": 6000,
+                "txRate": 6000,
+                "powerSave": false,
+                "rssi": -94,
+                "snr": 1,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 92,
+                "trafficDown": 4814646,
+                "trafficUp": 970470,
+                "uptime": 818,
+                "lastSeen": 1784111431938,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 5110,
+                "upPacket": 2808,
+                "multiLink": [],
+                "systemName": "Camal-nin-A15",
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
           }
-        },
-        "scapyfp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "ttl": {
-          "elapsed_ms": 183.5319995880127,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 168.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 168.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.183"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "netbios": {
-          "elapsed_ms": 1002.8259754180908,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1506.263017654419,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 116.51802062988281,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 648.266077041626,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 276.05319023132324,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1005.1026344299316,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 383.3727836608887,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 2.2165775299072266,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
         }
       },
       "correlation": {
@@ -2768,12 +1108,24 @@
           "mdns": 0,
           "dns": 0,
           "correlation": 40,
-          "hostname": 0,
+          "hostname": 10,
           "history": 0,
-          "total": 40
+          "total": 50
         },
-        "fingerprint_score": 40,
+        "fingerprint_score": 50,
         "evidence_items": [
+          {
+            "description": "Hostname = Camal-nin-A15",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: Camal-nin-A15, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -94dBm, SNR: 1dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 13min, LastSeen: 1784111431938, Active: True, Down: 4.6MB, Up: 0.9MB, PktDown: 5110, PktUp: 2808, PowerSave: False, Wireless: True, Guest: False"
+          },
           {
             "description": "Rule: linux_ttl_generic",
             "contribution": 40,
@@ -2784,10 +1136,357 @@
       }
     },
     {
-      "ip": "192.168.1.184",
-      "mac": "BE:B7:5F:32:93:EC",
+      "ip": "192.168.1.35",
+      "mac": "42:61:CC:6E:8F:3E",
       "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "42-61-CC-6E-8F-3E",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "sources": {
+        "dhcpcisco": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "ip": "192.168.1.35",
+            "mac": "ee:cc:82:5d:1b:4c",
+            "lease_expiration": "Jul 14 2026 10:55 PM",
+            "lease_type": "Automatic"
+          }
+        },
+        "scapyfp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "ttl": {
+          "elapsed_ms": 17.47870445251465,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": 63,
+          "latency_ms": 12.0,
+          "raw_data": {
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 12.0,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.35"
+          }
+        },
+        "lldp_cdp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "snmp": {
+          "elapsed_ms": 4.280328750610352,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "skipped_no_ping"
+          }
+        },
+        "switchport": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "netbios": {
+          "elapsed_ms": 1005.8705806732178,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_netbios_response"
+          }
+        },
+        "wsd": {
+          "elapsed_ms": 1506.1383247375488,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_wsd_response"
+          }
+        },
+        "ssh": {
+          "elapsed_ms": 1004.1401386260986,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_banner"
+          }
+        },
+        "smb": {
+          "elapsed_ms": 1004.5855045318604,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_smb_response"
+          }
+        },
+        "banners": {
+          "elapsed_ms": 11032.898902893066,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false
+          }
+        },
+        "ntp": {
+          "elapsed_ms": 1005.2344799041748,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ntp_response"
+          }
+        },
+        "tcp": {
+          "elapsed_ms": 2068.9170360565186,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "fast_mode": false,
+            "ports_scanned": 22,
+            "ports_open": 0
+          }
+        },
+        "ssdp": {
+          "elapsed_ms": 3001.1367797851562,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ssdp_response"
+          }
+        },
+        "http": {
+          "elapsed_ms": 0.4017353057861328,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "dnssd": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "42-61-CC-6E-8F-3E",
+                "name": "42-61-CC-6E-8F-3E",
+                "deviceType": "unknown",
+                "ip": "192.168.1.35",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 0,
+                "signalRank": 0,
+                "wifiMode": 7,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 1000,
+                "txRate": 1000,
+                "powerSave": false,
+                "rssi": -94,
+                "snr": 1,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 224667210,
+                "trafficUp": 6115737,
+                "uptime": 594,
+                "lastSeen": 1784111370658,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 151677,
+                "upPacket": 65642,
+                "multiLink": [],
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
+          }
+        }
+      },
+      "correlation": {
+        "matched_rules": [
+          {
+            "name": "linux_ttl_generic",
+            "confidence": 40,
+            "reason": "TTL=55-64 (Linux)",
+            "priority": 40
+          }
+        ],
+        "reasons": [
+          "TTL=55-64 (Linux)"
+        ],
+        "breakdown": {
+          "vendor": 0,
+          "ttl": 0,
+          "tcp": 0,
+          "http": 0,
+          "mdns": 0,
+          "dns": 0,
+          "correlation": 40,
+          "hostname": 10,
+          "history": 0,
+          "total": 50
+        },
+        "fingerprint_score": 50,
+        "evidence_items": [
+          {
+            "description": "Hostname = 42-61-CC-6E-8F-3E",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: 42-61-CC-6E-8F-3E, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -94dBm, SNR: 1dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784111370658, Active: True, Down: 214.3MB, Up: 5.8MB, PktDown: 151677, PktUp: 65642, PowerSave: False, Wireless: True, Guest: False"
+          },
+          {
+            "description": "Rule: linux_ttl_generic",
+            "contribution": 40,
+            "source": "rule:linux_ttl_generic",
+            "details": "TTL=55-64 (Linux)"
+          }
+        ]
+      }
+    },
+    {
+      "ip": "192.168.1.36",
+      "mac": "B2:D7:8C:F0:60:5B",
+      "vendor": "Unknown",
+      "hostname": "B2-D7-8C-F0-60-5B",
       "model": "",
       "os": "Unknown",
       "device_type": "Idle Device",
@@ -2807,9 +1506,9 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.184",
-            "mac": "be:b7:5f:32:93:ec",
-            "lease_expiration": "Jul 14 2026 05:17 PM",
+            "ip": "192.168.1.36",
+            "mac": "76:f5:41:a7:99:f5",
+            "lease_expiration": "Jul 14 2026 10:52 PM",
             "lease_type": "Automatic"
           }
         },
@@ -2826,7 +1525,7 @@
           "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 1013.6041641235352,
+          "elapsed_ms": 1011.0878944396973,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2840,7 +1539,7 @@
             "ttl": null,
             "latency_ms": null,
             "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.184"
+            "command": "ping -c 1 -W 1 192.168.1.36"
           }
         },
         "lldp_cdp": {
@@ -2856,7 +1555,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 3.7908554077148438,
+          "elapsed_ms": 5.329132080078125,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2883,7 +1582,7 @@
           "raw_data": {}
         },
         "netbios": {
-          "elapsed_ms": 1057.5988292694092,
+          "elapsed_ms": 1008.2621574401855,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2898,7 +1597,7 @@
           }
         },
         "wsd": {
-          "elapsed_ms": 1505.5477619171143,
+          "elapsed_ms": 1503.3726692199707,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2913,7 +1612,7 @@
           }
         },
         "ssh": {
-          "elapsed_ms": 1001.4784336090088,
+          "elapsed_ms": 1006.1686038970947,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2928,7 +1627,7 @@
           }
         },
         "smb": {
-          "elapsed_ms": 1002.5331974029541,
+          "elapsed_ms": 1006.3426494598389,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2943,7 +1642,7 @@
           }
         },
         "banners": {
-          "elapsed_ms": 11016.974925994873,
+          "elapsed_ms": 11019.075870513916,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2957,7 +1656,7 @@
           }
         },
         "ntp": {
-          "elapsed_ms": 1005.643367767334,
+          "elapsed_ms": 1006.4382553100586,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2972,7 +1671,7 @@
           }
         },
         "tcp": {
-          "elapsed_ms": 2059.609889984131,
+          "elapsed_ms": 2023.646593093872,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -2988,7 +1687,7 @@
           }
         },
         "ssdp": {
-          "elapsed_ms": 3002.5904178619385,
+          "elapsed_ms": 3001.094102859497,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3003,7 +1702,7 @@
           }
         },
         "http": {
-          "elapsed_ms": 0.2918243408203125,
+          "elapsed_ms": 0.32448768615722656,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3025,6 +1724,62 @@
           "ttl": null,
           "latency_ms": null,
           "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "B2-D7-8C-F0-60-5B",
+                "name": "B2-D7-8C-F0-60-5B",
+                "deviceType": "unknown",
+                "ip": "192.168.1.36",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 0,
+                "signalRank": 0,
+                "wifiMode": 7,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 1000,
+                "txRate": 1000,
+                "powerSave": true,
+                "rssi": -95,
+                "snr": 0,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 2010424,
+                "trafficUp": 320390,
+                "uptime": 478,
+                "lastSeen": 1784111370658,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 2278,
+                "upPacket": 1557,
+                "multiLink": [],
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
+          }
         }
       },
       "correlation": {
@@ -3047,12 +1802,24 @@
           "mdns": 0,
           "dns": 0,
           "correlation": 20,
-          "hostname": 0,
+          "hostname": 10,
           "history": 0,
-          "total": 20
+          "total": 30
         },
-        "fingerprint_score": 20,
+        "fingerprint_score": 30,
         "evidence_items": [
+          {
+            "description": "Hostname = B2-D7-8C-F0-60-5B",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: B2-D7-8C-F0-60-5B, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -95dBm, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784111370658, Active: True, Down: 1.9MB, Up: 0.3MB, PktDown: 2278, PktUp: 1557, PowerSave: True, Wireless: True, Guest: False"
+          },
           {
             "description": "Rule: idle_device",
             "contribution": 20,
@@ -3063,19 +1830,19 @@
       }
     },
     {
-      "ip": "192.168.1.185",
-      "mac": "12:79:08:92:4E:6F",
+      "ip": "192.168.1.37",
+      "mac": "A6:90:A1:97:FD:A4",
       "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "A6-90-A1-97-FD-A4",
       "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (342) при низком трафике",
       "sources": {
         "dhcpcisco": {
-          "elapsed_ms": 0.12874603271484375,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3086,14 +1853,14 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.185",
-            "mac": "12:79:08:92:4e:6f",
-            "lease_expiration": "Jul 14 2026 05:28 PM",
+            "ip": "192.168.1.37",
+            "mac": "52:63:14:5d:ad:f9",
+            "lease_expiration": "Jul 14 2026 10:50 PM",
             "lease_type": "Automatic"
           }
         },
         "scapyfp": {
-          "elapsed_ms": 27.161121368408203,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3102,27 +1869,24 @@
           "ports": [],
           "ttl": null,
           "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
+          "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 1009.0537071228027,
+          "elapsed_ms": 106.57668113708496,
           "confidence": 0,
           "os": "",
           "model": "",
           "device_type": "",
           "reason": "",
           "ports": [],
-          "ttl": null,
-          "latency_ms": null,
+          "ttl": 63,
+          "latency_ms": 91.7,
           "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.185"
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 91.7,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.37"
           }
         },
         "lldp_cdp": {
@@ -3138,7 +1902,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 6.829023361206055,
+          "elapsed_ms": 0.8077621459960938,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3153,7 +1917,7 @@
           }
         },
         "switchport": {
-          "elapsed_ms": 16747.65944480896,
+          "elapsed_ms": 2694.2498683929443,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3168,7 +1932,7 @@
           }
         },
         "netbios": {
-          "elapsed_ms": 1003.551721572876,
+          "elapsed_ms": 1006.4859390258789,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3183,7 +1947,7 @@
           }
         },
         "wsd": {
-          "elapsed_ms": 1509.817361831665,
+          "elapsed_ms": 1505.6605339050293,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3198,7 +1962,7 @@
           }
         },
         "ssh": {
-          "elapsed_ms": 1001.6918182373047,
+          "elapsed_ms": 1004.6465396881104,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3213,7 +1977,7 @@
           }
         },
         "smb": {
-          "elapsed_ms": 1005.4888725280762,
+          "elapsed_ms": 1005.530834197998,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3228,7 +1992,7 @@
           }
         },
         "banners": {
-          "elapsed_ms": 11015.62786102295,
+          "elapsed_ms": 7745.6724643707275,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3242,7 +2006,7 @@
           }
         },
         "ntp": {
-          "elapsed_ms": 1005.1248073577881,
+          "elapsed_ms": 1012.6736164093018,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3257,7 +2021,7 @@
           }
         },
         "tcp": {
-          "elapsed_ms": 2017.249345779419,
+          "elapsed_ms": 1810.0478649139404,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3273,7 +2037,7 @@
           }
         },
         "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
+          "elapsed_ms": 3001.094102859497,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3288,7 +2052,7 @@
           }
         },
         "http": {
-          "elapsed_ms": 1.850128173828125,
+          "elapsed_ms": 0.6418228149414062,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3300,7 +2064,7 @@
           "raw_data": {}
         },
         "dnssd": {
-          "elapsed_ms": 1507.9677104949951,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3309,62 +2073,11 @@
           "ports": [],
           "ttl": null,
           "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
-          }
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
-          }
-        ],
-        "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
-          "history": 0,
-          "total": 45
+          "raw_data": {}
         },
-        "fingerprint_score": 45,
-        "evidence_items": [
-          {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.186",
-      "mac": "B6:06:D5:7A:59:37",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (115) при низком трафике",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.08082389831542969,
-          "confidence": 0,
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
           "os": "",
           "model": "",
           "device_type": "",
@@ -3374,229 +2087,48 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.186",
-            "mac": "b6:06:d5:7a:59:37",
-            "lease_expiration": "Jul 14 2026 05:24 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 13.376474380493164,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
-        },
-        "ttl": {
-          "elapsed_ms": 294.0502166748047,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 285.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 285.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.186"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 15195.817232131958,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
-        },
-        "netbios": {
-          "elapsed_ms": 1004.8561096191406,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1506.7503452301025,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 396.49176597595215,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 391.373872756958,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 685.664176940918,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1007.9741477966309,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 717.7295684814453,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 1.4405250549316406,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 1508.1779956817627,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
+            "entities": [
+              {
+                "mac": "A6-90-A1-97-FD-A4",
+                "name": "A6-90-A1-97-FD-A4",
+                "deviceType": "unknown",
+                "ip": "192.168.1.37",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 27,
+                "signalRank": 2,
+                "wifiMode": 4,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 1000,
+                "txRate": 43000,
+                "powerSave": true,
+                "rssi": -79,
+                "snr": 16,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 354348,
+                "trafficDown": 58564448,
+                "trafficUp": 6679434,
+                "uptime": 375,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 47135,
+                "upPacket": 25821,
+                "multiLink": [],
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
           }
         }
       },
@@ -3620,12 +2152,24 @@
           "mdns": 0,
           "dns": 0,
           "correlation": 40,
-          "hostname": 0,
+          "hostname": 10,
           "history": 0,
-          "total": 40
+          "total": 50
         },
-        "fingerprint_score": 40,
+        "fingerprint_score": 50,
         "evidence_items": [
+          {
+            "description": "Hostname = A6-90-A1-97-FD-A4",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: A6-90-A1-97-FD-A4, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 43Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784111462540, Active: True, Down: 55.9MB, Up: 6.4MB, PktDown: 47135, PktUp: 25821, PowerSave: True, Wireless: True, Guest: False"
+          },
           {
             "description": "Rule: linux_ttl_generic",
             "contribution": 40,
@@ -3636,19 +2180,19 @@
       }
     },
     {
-      "ip": "192.168.1.187",
-      "mac": "50:3D:C6:11:10:DA",
-      "vendor": "Xiaomi",
-      "hostname": "",
+      "ip": "192.168.1.38",
+      "mac": "76:70:A5:D1:ED:2B",
+      "vendor": "Unknown",
+      "hostname": "Rauf",
       "model": "",
-      "os": "Android",
-      "device_type": "Smartphone",
-      "confidence": 80,
-      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Производитель: Xiaomi",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 40,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
       "sources": {
         "dhcpcisco": {
-          "elapsed_ms": 0.06031990051269531,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3659,14 +2203,14 @@
           "latency_ms": null,
           "raw_data": {
             "responded": true,
-            "ip": "192.168.1.187",
-            "mac": "50:3d:c6:11:10:da",
-            "lease_expiration": "Jul 14 2026 05:26 PM",
+            "ip": "192.168.1.38",
+            "mac": "de:bc:47:0d:62:2f",
+            "lease_expiration": "Jul 14 2026 10:58 PM",
             "lease_type": "Automatic"
           }
         },
         "scapyfp": {
-          "elapsed_ms": 32.97758102416992,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3675,27 +2219,24 @@
           "ports": [],
           "ttl": null,
           "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
+          "raw_data": {}
         },
         "ttl": {
-          "elapsed_ms": 1013.4243965148926,
+          "elapsed_ms": 16.381263732910156,
           "confidence": 0,
           "os": "",
           "model": "",
           "device_type": "",
           "reason": "",
           "ports": [],
-          "ttl": null,
-          "latency_ms": null,
+          "ttl": 63,
+          "latency_ms": 3.13,
           "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.187"
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 3.13,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.38"
           }
         },
         "lldp_cdp": {
@@ -3711,7 +2252,7 @@
           "raw_data": {}
         },
         "snmp": {
-          "elapsed_ms": 57.358741760253906,
+          "elapsed_ms": 6.182670593261719,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3726,7 +2267,7 @@
           }
         },
         "switchport": {
-          "elapsed_ms": 16706.905603408813,
+          "elapsed_ms": 0.0,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3735,13 +2276,10 @@
           "ports": [],
           "ttl": null,
           "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
+          "raw_data": {}
         },
         "netbios": {
-          "elapsed_ms": 1005.3174495697021,
+          "elapsed_ms": 1006.4656734466553,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3756,7 +2294,7 @@
           }
         },
         "wsd": {
-          "elapsed_ms": 1503.8511753082275,
+          "elapsed_ms": 1507.065773010254,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3771,7 +2309,7 @@
           }
         },
         "ssh": {
-          "elapsed_ms": 1002.0842552185059,
+          "elapsed_ms": 1003.148078918457,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3786,7 +2324,7 @@
           }
         },
         "smb": {
-          "elapsed_ms": 1005.6018829345703,
+          "elapsed_ms": 1004.0223598480225,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3801,7 +2339,7 @@
           }
         },
         "banners": {
-          "elapsed_ms": 11017.371654510498,
+          "elapsed_ms": 9442.00587272644,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3815,7 +2353,7 @@
           }
         },
         "ntp": {
-          "elapsed_ms": 1004.3630599975586,
+          "elapsed_ms": 1007.8303813934326,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3830,7 +2368,7 @@
           }
         },
         "tcp": {
-          "elapsed_ms": 2032.4101448059082,
+          "elapsed_ms": 1532.6485633850098,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3846,7 +2384,7 @@
           }
         },
         "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
+          "elapsed_ms": 3001.094102859497,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3861,7 +2399,7 @@
           }
         },
         "http": {
-          "elapsed_ms": 1.5039443969726562,
+          "elapsed_ms": 1.1699199676513672,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3873,7 +2411,197 @@
           "raw_data": {}
         },
         "dnssd": {
-          "elapsed_ms": 1507.659673690796,
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "76-70-A5-D1-ED-2B",
+                "name": "Rauf",
+                "hostName": "Rauf",
+                "deviceType": "unknown",
+                "ip": "192.168.1.38",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 17,
+                "signalRank": 1,
+                "wifiMode": 5,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 1,
+                "channel": 40,
+                "rxRate": 6000,
+                "txRate": 130000,
+                "powerSave": true,
+                "rssi": -83,
+                "snr": 12,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 212,
+                "trafficDown": 8469555,
+                "trafficUp": 1041224,
+                "uptime": 164,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 7828,
+                "upPacket": 5376,
+                "multiLink": [],
+                "systemName": "Rauf",
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
+          }
+        }
+      },
+      "correlation": {
+        "matched_rules": [
+          {
+            "name": "linux_ttl_generic",
+            "confidence": 40,
+            "reason": "TTL=55-64 (Linux)",
+            "priority": 40
+          }
+        ],
+        "reasons": [
+          "TTL=55-64 (Linux)"
+        ],
+        "breakdown": {
+          "vendor": 0,
+          "ttl": 0,
+          "tcp": 0,
+          "http": 0,
+          "mdns": 0,
+          "dns": 0,
+          "correlation": 40,
+          "hostname": 10,
+          "history": 0,
+          "total": 50
+        },
+        "fingerprint_score": 50,
+        "evidence_items": [
+          {
+            "description": "Hostname = Rauf",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: Rauf, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 40, Radio: 5GHz, TX: 130Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 8.1MB, Up: 1.0MB, PktDown: 7828, PktUp: 5376, PowerSave: True, Wireless: True, Guest: False"
+          },
+          {
+            "description": "Rule: linux_ttl_generic",
+            "contribution": 40,
+            "source": "rule:linux_ttl_generic",
+            "details": "TTL=55-64 (Linux)"
+          }
+        ]
+      }
+    },
+    {
+      "ip": "192.168.1.39",
+      "mac": "BE:05:0D:A2:02:5F",
+      "vendor": "Unknown",
+      "hostname": "BE-05-0D-A2-02-5F",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 40,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "sources": {
+        "dhcpcisco": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "ip": "192.168.1.39",
+            "mac": "be:06:b7:39:85:04",
+            "lease_expiration": "Jul 14 2026 10:52 PM",
+            "lease_type": "Automatic"
+          }
+        },
+        "scapyfp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "ttl": {
+          "elapsed_ms": 311.31434440612793,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": 63,
+          "latency_ms": 298.0,
+          "raw_data": {
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 298.0,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.39"
+          }
+        },
+        "lldp_cdp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "snmp": {
+          "elapsed_ms": 9.379148483276367,
           "confidence": 0,
           "os": "",
           "model": "",
@@ -3884,21 +2612,592 @@
           "latency_ms": null,
           "raw_data": {
             "responded": false,
-            "reason": "no_services_found"
+            "reason": "skipped_no_ping"
+          }
+        },
+        "switchport": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "netbios": {
+          "elapsed_ms": 1012.6736164093018,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_netbios_response"
+          }
+        },
+        "wsd": {
+          "elapsed_ms": 1509.0696811676025,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_wsd_response"
+          }
+        },
+        "ssh": {
+          "elapsed_ms": 1002.922773361206,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_banner"
+          }
+        },
+        "smb": {
+          "elapsed_ms": 1006.3140392303467,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_smb_response"
+          }
+        },
+        "banners": {
+          "elapsed_ms": 11018.623352050781,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false
+          }
+        },
+        "ntp": {
+          "elapsed_ms": 1012.0859146118164,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ntp_response"
+          }
+        },
+        "tcp": {
+          "elapsed_ms": 2057.7969551086426,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "fast_mode": false,
+            "ports_scanned": 22,
+            "ports_open": 0
+          }
+        },
+        "ssdp": {
+          "elapsed_ms": 3001.094102859497,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ssdp_response"
+          }
+        },
+        "http": {
+          "elapsed_ms": 0.5707740783691406,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "dnssd": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "BE-05-0D-A2-02-5F",
+                "name": "BE-05-0D-A2-02-5F",
+                "deviceType": "unknown",
+                "ip": "192.168.1.39",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 0,
+                "signalRank": 0,
+                "wifiMode": 5,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 1,
+                "channel": 40,
+                "rxRate": 6000,
+                "txRate": 65000,
+                "powerSave": true,
+                "rssi": -90,
+                "snr": 5,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 1528687,
+                "trafficUp": 153847,
+                "uptime": 146,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 1386,
+                "upPacket": 978,
+                "multiLink": [],
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
           }
         }
       },
       "correlation": {
         "matched_rules": [
           {
-            "name": "android_xiaomi",
-            "confidence": 70,
-            "reason": "Xiaomi vendor + no HTTP ports (Android firewall)",
-            "priority": 70
+            "name": "linux_ttl_generic",
+            "confidence": 40,
+            "reason": "TTL=55-64 (Linux)",
+            "priority": 40
           }
         ],
         "reasons": [
-          "Xiaomi vendor + no HTTP ports (Android firewall)"
+          "TTL=55-64 (Linux)"
+        ],
+        "breakdown": {
+          "vendor": 0,
+          "ttl": 0,
+          "tcp": 0,
+          "http": 0,
+          "mdns": 0,
+          "dns": 0,
+          "correlation": 40,
+          "hostname": 10,
+          "history": 0,
+          "total": 50
+        },
+        "fingerprint_score": 50,
+        "evidence_items": [
+          {
+            "description": "Hostname = BE-05-0D-A2-02-5F",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller provides telemetry",
+            "contribution": 30,
+            "source": "omada",
+            "details": "type: unknown, hostname: BE-05-0D-A2-02-5F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 40, Radio: 5GHz, TX: 65Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 1.5MB, Up: 0.1MB, PktDown: 1386, PktUp: 978, PowerSave: True, Wireless: True, Guest: False"
+          },
+          {
+            "description": "Rule: linux_ttl_generic",
+            "contribution": 40,
+            "source": "rule:linux_ttl_generic",
+            "details": "TTL=55-64 (Linux)"
+          }
+        ]
+      }
+    },
+    {
+      "ip": "192.168.1.40",
+      "mac": "3A:A6:7E:1B:B0:8D",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-12",
+      "model": "Redmi-12",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 70,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "sources": {
+        "dhcpcisco": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "ip": "192.168.1.40",
+            "mac": "a6:97:8d:f0:bb:e3",
+            "lease_expiration": "Jul 14 2026 10:52 PM",
+            "lease_type": "Automatic"
+          }
+        },
+        "scapyfp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "ttl": {
+          "elapsed_ms": 16.91150665283203,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": 63,
+          "latency_ms": 3.12,
+          "raw_data": {
+            "alive": true,
+            "ttl": 63,
+            "latency_ms": 3.12,
+            "exit_code": 0,
+            "command": "ping -c 1 -W 1 192.168.1.40"
+          }
+        },
+        "lldp_cdp": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "snmp": {
+          "elapsed_ms": 7.362842559814453,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "skipped_no_ping"
+          }
+        },
+        "switchport": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "netbios": {
+          "elapsed_ms": 1001.9595623016357,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_netbios_response"
+          }
+        },
+        "wsd": {
+          "elapsed_ms": 1502.4781227111816,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_wsd_response"
+          }
+        },
+        "ssh": {
+          "elapsed_ms": 252.2423267364502,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_banner"
+          }
+        },
+        "smb": {
+          "elapsed_ms": 402.21166610717773,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_smb_response"
+          }
+        },
+        "banners": {
+          "elapsed_ms": 7897.080183029175,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false
+          }
+        },
+        "ntp": {
+          "elapsed_ms": 1003.2229423522949,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ntp_response"
+          }
+        },
+        "tcp": {
+          "elapsed_ms": 1242.518424987793,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "fast_mode": false,
+            "ports_scanned": 22,
+            "ports_open": 0
+          }
+        },
+        "ssdp": {
+          "elapsed_ms": 3001.094102859497,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": false,
+            "reason": "no_ssdp_response"
+          }
+        },
+        "http": {
+          "elapsed_ms": 0.7855892181396484,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "dnssd": {
+          "elapsed_ms": 0.0,
+          "confidence": 0,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {}
+        },
+        "omada": {
+          "elapsed_ms": 0.0,
+          "confidence": 100,
+          "os": "",
+          "model": "",
+          "device_type": "",
+          "reason": "",
+          "ports": [],
+          "ttl": null,
+          "latency_ms": null,
+          "raw_data": {
+            "responded": true,
+            "entities": [
+              {
+                "mac": "3A-A6-7E-1B-B0-8D",
+                "name": "Redmi-12",
+                "deviceType": "unknown",
+                "ipv6List": [],
+                "connectType": 1,
+                "connectDevType": "ap",
+                "connectedToWirelessRouter": false,
+                "wireless": true,
+                "ssid": "Zefer_Parki",
+                "signalLevel": 67,
+                "signalRank": 4,
+                "wifiMode": 4,
+                "apName": "EC-75-0C-18-6F-F8",
+                "apMac": "EC-75-0C-18-6F-F8",
+                "radioId": 0,
+                "channel": 11,
+                "rxRate": 1000,
+                "txRate": 1000,
+                "powerSave": false,
+                "rssi": -63,
+                "snr": 32,
+                "vid": 20,
+                "dot1xIdentity": "",
+                "activity": 0,
+                "trafficDown": 0,
+                "trafficUp": 1200,
+                "uptime": 1,
+                "lastSeen": 1784111462540,
+                "authStatus": 0,
+                "guest": false,
+                "active": true,
+                "manager": false,
+                "downPacket": 0,
+                "upPacket": 8,
+                "multiLink": [],
+                "_omada_site_name": "Home",
+                "_omada_site_id": "691eafccef05b61d1becd8cd"
+              }
+            ]
+          }
+        }
+      },
+      "correlation": {
+        "matched_rules": [
+          {
+            "name": "android_redmi_poco",
+            "confidence": 75,
+            "reason": "Hostname indicates Xiaomi device",
+            "priority": 75
+          },
+          {
+            "name": "linux_vendor_silent",
+            "confidence": 65,
+            "reason": "Vendor + TTL=64 + no open TCP ports (likely Android)",
+            "priority": 65
+          },
+          {
+            "name": "linux_ttl_generic",
+            "confidence": 40,
+            "reason": "TTL=55-64 (Linux)",
+            "priority": 40
+          }
+        ],
+        "reasons": [
+          "Hostname indicates Xiaomi device",
+          "Omada: Android device (Redmi-12)"
         ],
         "breakdown": {
           "vendor": 10,
@@ -3907,1162 +3206,43 @@
           "http": 0,
           "mdns": 0,
           "dns": 0,
-          "correlation": 70,
-          "hostname": 0,
+          "correlation": 75,
+          "hostname": 10,
           "history": 0,
-          "total": 80
+          "total": 95
         },
-        "fingerprint_score": 80,
+        "fingerprint_score": 95,
         "evidence_items": [
           {
             "description": "Vendor = Xiaomi",
             "contribution": 10,
             "source": "vendor",
-            "details": "MAC: 50:3D:C6"
+            "details": "MAC: 3A:A6:7E"
           },
           {
-            "description": "Rule: android_xiaomi",
+            "description": "Hostname = Redmi-12",
+            "contribution": 10,
+            "source": "hostname",
+            "details": ""
+          },
+          {
+            "description": "Omada Controller identifies device",
             "contribution": 70,
-            "source": "rule:android_xiaomi",
-            "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.188",
-      "mac": "7E:FD:83:BA:5B:4A",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.05745887756347656,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.188",
-            "mac": "7e:fd:83:ba:5b:4a",
-            "lease_expiration": "Jul 14 2026 05:28 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 10.985374450683594,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
-        },
-        "ttl": {
-          "elapsed_ms": 115.89908599853516,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 104.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 104.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.188"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 13684.831619262695,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
-        },
-        "netbios": {
-          "elapsed_ms": 1005.5034160614014,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1505.5599212646484,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 3.9620399475097656,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 75.09708404541016,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 179.42571640014648,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1004.7008991241455,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 1233.1221103668213,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 1.5244483947753906,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 1509.728193283081,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
-          }
-        }
-      },
-      "correlation": {
-        "matched_rules": [
+            "source": "omada",
+            "details": "type: unknown, hostname: Redmi-12, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -63dBm, Signal: 67, Rank: 4, SNR: 32dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 0min, LastSeen: 1784111462540, Active: True, Up: 0.0MB, PktUp: 8, PowerSave: False, Wireless: True, Guest: False"
+          },
           {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
+            "description": "Rule: android_redmi_poco",
+            "contribution": 75,
+            "source": "rule:android_redmi_poco",
+            "details": "Hostname indicates Xiaomi device"
+          },
           {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.189",
-      "mac": "42:2D:47:86:FC:C5",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.05793571472167969,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.189",
-            "mac": "42:2d:47:86:fc:c5",
-            "lease_expiration": "Jul 14 2026 05:28 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 28.01203727722168,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
-        },
-        "ttl": {
-          "elapsed_ms": 1006.9949626922607,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "alive": false,
-            "ttl": null,
-            "latency_ms": null,
-            "exit_code": 1,
-            "command": "ping -c 1 -W 1 192.168.1.189"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 7.502079010009766,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "skipped_no_ping"
-          }
-        },
-        "switchport": {
-          "elapsed_ms": 12277.225732803345,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
-        },
-        "netbios": {
-          "elapsed_ms": 1002.2003650665283,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1502.4778842926025,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 95.95799446105957,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 169.5704460144043,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 164.1678810119629,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1007.103443145752,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 2022.057056427002,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.9875297546386719,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 1508.8403224945068,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
-          }
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "mac_randomization",
-            "confidence": 45,
-            "reason": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)",
-            "priority": 45
-          }
-        ],
-        "reasons": [
-          "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 45,
-          "hostname": 0,
-          "history": 0,
-          "total": 45
-        },
-        "fingerprint_score": 45,
-        "evidence_items": [
-          {
-            "description": "Rule: mac_randomization",
-            "contribution": 45,
-            "source": "rule:mac_randomization",
-            "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.190",
-      "mac": "6A:48:2B:25:19:7F",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.05888938903808594,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.190",
-            "mac": "6a:48:2b:25:19:7f",
-            "lease_expiration": "Jul 14 2026 05:29 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 24.815797805786133,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
-        },
-        "ttl": {
-          "elapsed_ms": 99.80106353759766,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 90.8,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 90.8,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.190"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 11269.160032272339,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
-        },
-        "netbios": {
-          "elapsed_ms": 1004.9846172332764,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1502.0029544830322,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 3.5572052001953125,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 369.00949478149414,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 11015.25330543518,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1004.6195983886719,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 2018.3415412902832,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.1819133758544922,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 1507.246732711792,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
-          }
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
-          {
-            "description": "Rule: linux_ttl_generic",
-            "contribution": 40,
-            "source": "rule:linux_ttl_generic",
-            "details": "TTL=55-64 (Linux)"
-          }
-        ]
-      }
-    },
-    {
-      "ip": "192.168.1.191",
-      "mac": "36:4E:3C:40:91:32",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "sources": {
-        "dhcpcisco": {
-          "elapsed_ms": 0.09179115295410156,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": true,
-            "ip": "192.168.1.191",
-            "mac": "36:4e:3c:40:91:32",
-            "lease_expiration": "Jul 14 2026 05:30 PM",
-            "lease_type": "Automatic"
-          }
-        },
-        "scapyfp": {
-          "elapsed_ms": 25.03180503845215,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_response_or_filtered"
-          }
-        },
-        "ttl": {
-          "elapsed_ms": 241.4536476135254,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": 63,
-          "latency_ms": 234.0,
-          "raw_data": {
-            "alive": true,
-            "ttl": 63,
-            "latency_ms": 234.0,
-            "exit_code": 0,
-            "command": "ping -c 1 -W 1 192.168.1.191"
-          }
-        },
-        "lldp_cdp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "snmp": {
-          "elapsed_ms": 0.0,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "switchport": {
-          "elapsed_ms": 17742.70725250244,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "port_not_found"
-          }
-        },
-        "netbios": {
-          "elapsed_ms": 1003.9114952087402,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_netbios_response"
-          }
-        },
-        "wsd": {
-          "elapsed_ms": 1504.2173862457275,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_wsd_response"
-          }
-        },
-        "ssh": {
-          "elapsed_ms": 1001.6343593597412,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_banner"
-          }
-        },
-        "smb": {
-          "elapsed_ms": 1002.4056434631348,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_smb_response"
-          }
-        },
-        "banners": {
-          "elapsed_ms": 11014.92977142334,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false
-          }
-        },
-        "ntp": {
-          "elapsed_ms": 1005.9592723846436,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ntp_response"
-          }
-        },
-        "tcp": {
-          "elapsed_ms": 2032.6271057128906,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "fast_mode": false,
-            "ports_scanned": 22,
-            "ports_open": 0
-          }
-        },
-        "ssdp": {
-          "elapsed_ms": 3003.7875175476074,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_ssdp_response"
-          }
-        },
-        "http": {
-          "elapsed_ms": 0.5764961242675781,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {}
-        },
-        "dnssd": {
-          "elapsed_ms": 1507.3986053466797,
-          "confidence": 0,
-          "os": "",
-          "model": "",
-          "device_type": "",
-          "reason": "",
-          "ports": [],
-          "ttl": null,
-          "latency_ms": null,
-          "raw_data": {
-            "responded": false,
-            "reason": "no_services_found"
-          }
-        }
-      },
-      "correlation": {
-        "matched_rules": [
-          {
-            "name": "linux_ttl_generic",
-            "confidence": 40,
-            "reason": "TTL=55-64 (Linux)",
-            "priority": 40
-          }
-        ],
-        "reasons": [
-          "TTL=55-64 (Linux)"
-        ],
-        "breakdown": {
-          "vendor": 0,
-          "ttl": 0,
-          "tcp": 0,
-          "http": 0,
-          "mdns": 0,
-          "dns": 0,
-          "correlation": 40,
-          "hostname": 0,
-          "history": 0,
-          "total": 40
-        },
-        "fingerprint_score": 40,
-        "evidence_items": [
+            "description": "Rule: linux_vendor_silent",
+            "contribution": 65,
+            "source": "rule:linux_vendor_silent",
+            "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+          },
           {
             "description": "Rule: linux_ttl_generic",
             "contribution": 40,

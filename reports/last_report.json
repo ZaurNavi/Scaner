@@ -1,55 +1,28 @@
 {
-  "timestamp": "14.07.2026 17:12:31",
+  "timestamp": "15.07.2026 14:31:22",
   "statistics": {
-    "total": 15,
-    "suspects": 5,
+    "total": 5,
+    "suspects": 3,
     "warnings": 0,
-    "normal": 10
+    "normal": 2
   },
   "devices": [
     {
-      "ip": "192.168.1.180",
-      "mac": "32:4A:47:6E:19:CA",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 130,
-      "bytes": 3355437,
-      "megabytes": 3.2,
-      "first_seen": "2026-07-14 17:01:46",
-      "duration_seconds": 1876.28,
-      "hours_online": 0.52,
-      "mb_per_hour": 6.14,
-      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (130) при низком трафике",
-      "evidence_items": [
-        {
-          "description": "Rule: linux_ttl_generic",
-          "contribution": 40,
-          "source": "rule:linux_ttl_generic",
-          "details": "TTL=55-64 (Linux)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.187",
-      "mac": "50:3D:C6:11:10:DA",
+      "ip": "192.168.1.32",
+      "mac": "DE:09:BE:E6:A0:C8",
       "vendor": "Xiaomi",
-      "hostname": "",
-      "model": "",
+      "hostname": "Redmi-Note-9S",
+      "model": "Redmi-Note-9S",
       "os": "Android",
       "device_type": "Smartphone",
-      "confidence": 80,
+      "confidence": 95,
       "flows": 25,
-      "bytes": 107735,
-      "megabytes": 0.1,
-      "first_seen": "2026-07-14 17:06:25",
-      "duration_seconds": 60.73,
-      "hours_online": 0.02,
-      "mb_per_hour": 6.09,
+      "bytes": 1509020,
+      "megabytes": 1.44,
+      "first_seen": "2026-07-15 14:22:48",
+      "duration_seconds": 546.12,
+      "hours_online": 0.15,
+      "mb_per_hour": 9.49,
       "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
       "reason": "Производитель: Xiaomi",
       "evidence_items": [
@@ -57,35 +30,77 @@
           "description": "Vendor = Xiaomi",
           "contribution": 10,
           "source": "vendor",
-          "details": "MAC: 50:3D:C6"
+          "details": "MAC: DE:09:BE"
+        },
+        {
+          "description": "Hostname = Redmi-Note-9S",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-Note-9S, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -72dBm, Signal: 45, Rank: 3, SNR: 23dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 39Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 38min, LastSeen: 1784111462540, Active: True, Down: 314.5MB, Up: 9.9MB, PktDown: 267222, PktUp: 40119, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
         },
         {
           "description": "Rule: android_xiaomi",
           "contribution": 70,
           "source": "rule:android_xiaomi",
           "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: linux_vendor_silent",
+          "contribution": 65,
+          "source": "rule:linux_vendor_silent",
+          "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
         }
       ]
     },
     {
-      "ip": "192.168.1.178",
-      "mac": "A2:43:59:1D:39:63",
+      "ip": "192.168.1.37",
+      "mac": "A6:90:A1:97:FD:A4",
       "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "A6-90-A1-97-FD-A4",
       "model": "",
       "os": "Linux",
       "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 155,
-      "bytes": 1052421,
-      "megabytes": 1.0,
-      "first_seen": "2026-07-14 17:04:37",
-      "duration_seconds": 840.68,
-      "hours_online": 0.23,
-      "mb_per_hour": 4.3,
+      "confidence": 50,
+      "flows": 342,
+      "bytes": 6012515,
+      "megabytes": 5.73,
+      "first_seen": "2026-07-15 14:24:30",
+      "duration_seconds": 2357.9,
+      "hours_online": 0.65,
+      "mb_per_hour": 8.75,
       "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (155) при низком трафике",
+      "reason": "Много flows (342) при низком трафике",
       "evidence_items": [
+        {
+          "description": "Hostname = A6-90-A1-97-FD-A4",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: A6-90-A1-97-FD-A4, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 43Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784111462540, Active: True, Down: 55.9MB, Up: 6.4MB, PktDown: 47135, PktUp: 25821, PowerSave: True, Wireless: True, Guest: False"
+        },
         {
           "description": "Rule: linux_ttl_generic",
           "contribution": 40,
@@ -95,24 +110,60 @@
       ]
     },
     {
-      "ip": "192.168.1.186",
-      "mac": "B6:06:D5:7A:59:37",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 115,
-      "bytes": 640337,
-      "megabytes": 0.61,
-      "first_seen": "2026-07-14 17:04:17",
-      "duration_seconds": 531.77,
-      "hours_online": 0.15,
-      "mb_per_hour": 4.13,
+      "ip": "192.168.1.31",
+      "mac": "8E:58:83:D3:D7:C2",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-Note-14",
+      "model": "Redmi-Note-14",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 152,
+      "bytes": 941028,
+      "megabytes": 0.9,
+      "first_seen": "2026-07-15 14:24:12",
+      "duration_seconds": 863.2,
+      "hours_online": 0.24,
+      "mb_per_hour": 3.74,
       "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (115) при низком трафике",
+      "reason": "Производитель: Xiaomi",
       "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 8E:58:83"
+        },
+        {
+          "description": "Hostname = Redmi-Note-14",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-Note-14, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 40min, LastSeen: 1784111462540, Active: True, Down: 311.0MB, Up: 15.8MB, PktDown: 243559, PktUp: 140180, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: linux_vendor_silent",
+          "contribution": 65,
+          "source": "rule:linux_vendor_silent",
+          "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+        },
         {
           "description": "Rule: linux_ttl_generic",
           "contribution": 40,
@@ -122,132 +173,36 @@
       ]
     },
     {
-      "ip": "192.168.1.182",
-      "mac": "62:06:2F:AF:9A:A7",
+      "ip": "192.168.1.38",
+      "mac": "76:70:A5:D1:ED:2B",
       "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 284,
-      "bytes": 1970873,
-      "megabytes": 1.88,
-      "first_seen": "2026-07-14 17:05:03",
-      "duration_seconds": 2310.72,
-      "hours_online": 0.64,
-      "mb_per_hour": 2.93,
-      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
-      "reason": "Много flows (284) при низком трафике",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.185",
-      "mac": "12:79:08:92:4E:6F",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 82,
-      "bytes": 3999625,
-      "megabytes": 3.81,
-      "first_seen": "2026-07-14 17:06:15",
-      "duration_seconds": 572.1,
-      "hours_online": 0.16,
-      "mb_per_hour": 24.0,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.165",
-      "mac": "1A:B9:88:4E:96:A8",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 3,
-      "bytes": 3913,
-      "megabytes": 0.0,
-      "first_seen": "2026-07-14 17:06:43",
-      "duration_seconds": 1.56,
-      "hours_online": 0.0,
-      "mb_per_hour": 8.59,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.189",
-      "mac": "42:2D:47:86:FC:C5",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 98,
-      "bytes": 394685,
-      "megabytes": 0.38,
-      "first_seen": "2026-07-14 17:08:53",
-      "duration_seconds": 164.98,
-      "hours_online": 0.05,
-      "mb_per_hour": 8.21,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.183",
-      "mac": "AA:B1:DF:FF:FA:4D",
-      "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "Rauf",
       "model": "",
       "os": "Linux",
       "device_type": "Network Device",
       "confidence": 40,
-      "flows": 9,
-      "bytes": 32959,
-      "megabytes": 0.03,
-      "first_seen": "2026-07-14 17:04:33",
-      "duration_seconds": 14.08,
-      "hours_online": 0.0,
-      "mb_per_hour": 8.04,
+      "flows": 67,
+      "bytes": 278201,
+      "megabytes": 0.27,
+      "first_seen": "2026-07-15 14:27:48",
+      "duration_seconds": 148.97,
+      "hours_online": 0.04,
+      "mb_per_hour": 6.41,
       "status": "🟢 НОРМАЛЬНЫЙ",
       "reason": "—",
       "evidence_items": [
+        {
+          "description": "Hostname = Rauf",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: Rauf, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 40, Radio: 5GHz, TX: 130Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 8.1MB, Up: 1.0MB, PktDown: 7828, PktUp: 5376, PowerSave: True, Wireless: True, Guest: False"
+        },
         {
           "description": "Rule: linux_ttl_generic",
           "contribution": 40,
@@ -257,159 +212,36 @@
       ]
     },
     {
-      "ip": "192.168.1.181",
-      "mac": "4A:26:35:8D:AA:81",
+      "ip": "192.168.1.39",
+      "mac": "BE:05:0D:A2:02:5F",
       "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 2,
-      "bytes": 1920,
-      "megabytes": 0.0,
-      "first_seen": "2026-07-14 17:09:24",
-      "duration_seconds": 0.88,
-      "hours_online": 0.0,
-      "mb_per_hour": 7.46,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.179",
-      "mac": "5E:B3:B7:0F:DA:7F",
-      "vendor": "Unknown",
-      "hostname": "",
+      "hostname": "BE-05-0D-A2-02-5F",
       "model": "",
       "os": "Linux",
       "device_type": "Network Device",
       "confidence": 40,
-      "flows": 81,
-      "bytes": 992760,
-      "megabytes": 0.95,
-      "first_seen": "2026-07-14 17:05:25",
-      "duration_seconds": 518.4,
-      "hours_online": 0.14,
-      "mb_per_hour": 6.57,
+      "flows": 31,
+      "bytes": 134406,
+      "megabytes": 0.13,
+      "first_seen": "2026-07-15 14:28:17",
+      "duration_seconds": 139.78,
+      "hours_online": 0.04,
+      "mb_per_hour": 3.3,
       "status": "🟢 НОРМАЛЬНЫЙ",
       "reason": "—",
       "evidence_items": [
         {
-          "description": "Rule: linux_ttl_generic",
-          "contribution": 40,
-          "source": "rule:linux_ttl_generic",
-          "details": "TTL=55-64 (Linux)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.188",
-      "mac": "7E:FD:83:BA:5B:4A",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 76,
-      "bytes": 536196,
-      "megabytes": 0.51,
-      "first_seen": "2026-07-14 17:08:07",
-      "duration_seconds": 450.83,
-      "hours_online": 0.13,
-      "mb_per_hour": 4.08,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
+          "description": "Hostname = BE-05-0D-A2-02-5F",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
         {
-          "description": "Rule: linux_ttl_generic",
-          "contribution": 40,
-          "source": "rule:linux_ttl_generic",
-          "details": "TTL=55-64 (Linux)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.142",
-      "mac": "BE:56:33:51:76:B3",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 17,
-      "bytes": 57563,
-      "megabytes": 0.05,
-      "first_seen": "2026-07-14 17:05:26",
-      "duration_seconds": 67.49,
-      "hours_online": 0.02,
-      "mb_per_hour": 2.93,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: mac_randomization",
-          "contribution": 45,
-          "source": "rule:mac_randomization",
-          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.167",
-      "mac": "E2:F6:E2:C3:43:DE",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 18,
-      "bytes": 62485,
-      "megabytes": 0.06,
-      "first_seen": "2026-07-14 17:04:51",
-      "duration_seconds": 107.09,
-      "hours_online": 0.03,
-      "mb_per_hour": 2.0,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
-        {
-          "description": "Rule: linux_ttl_generic",
-          "contribution": 40,
-          "source": "rule:linux_ttl_generic",
-          "details": "TTL=55-64 (Linux)"
-        }
-      ]
-    },
-    {
-      "ip": "192.168.1.168",
-      "mac": "62:AB:05:59:8E:F1",
-      "vendor": "Unknown",
-      "hostname": "",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 6,
-      "bytes": 107679,
-      "megabytes": 0.1,
-      "first_seen": "2026-07-14 16:54:19",
-      "duration_seconds": 751.86,
-      "hours_online": 0.21,
-      "mb_per_hour": 0.49,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
-      "evidence_items": [
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: BE-05-0D-A2-02-5F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 40, Radio: 5GHz, TX: 65Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784111462540, Active: True, Down: 1.5MB, Up: 0.1MB, PktDown: 1386, PktUp: 978, PowerSave: True, Wireless: True, Guest: False"
+        },
         {
           "description": "Rule: linux_ttl_generic",
           "contribution": 40,
