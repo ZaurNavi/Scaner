@@ -33,40 +33,34 @@ class SessionQuality(Enum):
 @dataclass
 class SessionTimelineEntry:
     timestamp: datetime
-    event_type: str  # 'start', 'end', 'ip_change', 'hostname_change', 'ap_change', 'rssi_change'
+    event_type: str
     description: str
     details: Optional[str] = None
 
 
 @dataclass
 class Session:
-    # Идентификаторы
     id: str
     device_id: str
     schema_version: int = 2
     
-    # Временные характеристики
     start_time: datetime
     last_seen: datetime
     end_time: Optional[datetime] = None
     duration: Optional[float] = None
     
-    # Состояние
     status: SessionStatus = SessionStatus.ACTIVE
     end_reason: Optional[SessionEndReason] = None
     quality: SessionQuality = SessionQuality.PARTIAL
     
-    # Счетчики
     snapshots_count: int = 0
     observations_count: int = 0
     
-    # История (без дубликатов подряд)
     ip_history: List[str] = field(default_factory=list)
     hostname_history: List[str] = field(default_factory=list)
     ap_history: List[str] = field(default_factory=list)
     rssi_history: List[int] = field(default_factory=list)
     
-    # Агрегация трафика
     total_bytes_in: int = 0
     total_bytes_out: int = 0
     total_packets_in: int = 0
@@ -74,21 +68,17 @@ class Session:
     total_flows: int = 0
     traffic_samples_count: int = 0
     
-    # Производные метрики
     peak_speed_bps: float = 0.0
     avg_speed_bps: float = 0.0
     active_time_seconds: float = 0.0
     idle_time_seconds: float = 0.0
     
-    # Таймлайн сессии
     timeline: List[SessionTimelineEntry] = field(default_factory=list)
     
-    # Метаданные
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Сериализация для сохранения в БД (поле metadata)."""
         return {
             "schema_version": self.schema_version,
             "quality": self.quality.value,
