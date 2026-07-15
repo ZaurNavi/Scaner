@@ -48,7 +48,8 @@ from history import HistoryService
 from traffic import traffic_collector
 from session import SessionEngine, SessionEndReason
 from identity import IdentityService, IdentityRepository
-from confidence import ConfidenceService, FactCategory  # <-- v1.5.5: ДОБАВЛЕНО
+from confidence import ConfidenceService, FactCategory
+from behaviour import BehaviourService, BehaviourCategory  # <-- v1.5.6: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -231,7 +232,7 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5: Archivist + Event + Session + Identity + Confidence ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6: Archivist + Event + Session + Identity + Confidence + Behaviour ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -346,7 +347,6 @@ def main() -> int:
                 confidence_service = ConfidenceService(identity_service)
                 print("\n  [CONFIDENCE] Evaluating confidence...")
                 
-                # Оцениваем первое устройство
                 sample_device_id = profiles[0].device_id
                 confidence_profile = confidence_service.get_profile(sample_device_id)
                 
@@ -356,7 +356,6 @@ def main() -> int:
                     print(f"         Total Facts: {confidence_profile.statistics.total_facts}")
                     print(f"         Evaluated: {confidence_profile.statistics.evaluated}")
                     
-                    # Показываем лучшие оценки
                     if confidence_profile.summary.vendor:
                         print(f"         Best Vendor: {confidence_profile.summary.vendor.value} ({confidence_profile.summary.vendor.confidence:.1f}%)")
                     if confidence_profile.summary.os:
@@ -364,7 +363,6 @@ def main() -> int:
                     if confidence_profile.summary.hostname:
                         print(f"         Best Hostname: {confidence_profile.summary.hostname.value} ({confidence_profile.summary.hostname.confidence:.1f}%)")
                     
-                    # Показываем объяснение для Vendor
                     vendor_explain = confidence_service.explain(sample_device_id, FactCategory.VENDOR)
                     if vendor_explain:
                         print(f"         Vendor Explanation:")
@@ -373,7 +371,6 @@ def main() -> int:
                         print(f"            Raw Score: {vendor_explain['raw_score']}")
                         print(f"            Reasons: {', '.join(vendor_explain['reasons'])}")
                     
-                    # Показываем ранжированный список альтернатив для Vendor
                     vendor_ranked = confidence_service.get_ranked(sample_device_id, FactCategory.VENDOR)
                     if vendor_ranked and len(vendor_ranked) > 1:
                         print(f"         Vendor Alternatives:")
@@ -381,6 +378,51 @@ def main() -> int:
                             print(f"            {i}. {alt.value}: {alt.confidence:.1f}%")
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
+        # ===========================================
+
+        # === v1.5.6: Behaviour Engine ===
+        behaviour_service = None
+        if identity_service and profiles:
+            try:
+                behaviour_service = BehaviourService(
+                    history_service,
+                    identity_service,
+                    session_engine
+                )
+                print("\n  [BEHAVIOUR] Analyzing behaviour...")
+                
+                sample_device_id = profiles[0].device_id
+                behaviour_profile = behaviour_service.get_profile(sample_device_id)
+                
+                if behaviour_profile:
+                    print(f"      ✅ Behaviour Profile for {sample_device_id[:8]}...")
+                    print(f"         Feature Coverage: {behaviour_profile.feature_coverage:.1f}%")
+                    print(f"         Behaviour Coverage: {behaviour_profile.behaviour_coverage:.1f}%")
+                    print(f"         Total Facts: {behaviour_profile.summary.facts_total}")
+                    print(f"         High Confidence: {behaviour_profile.summary.high}")
+                    
+                    # Показываем примеры фактов с measured_value
+                    if behaviour_profile.facts:
+                        print(f"         Detected Behaviours:")
+                        for fact in behaviour_profile.facts[:5]:
+                            print(f"            • {fact.category.value}: {fact.measured_value} (threshold: {fact.threshold}) → {fact.confidence:.1f}% [{fact.rule_id}]")
+                    
+                    # Показываем объяснение для первого факта
+                    if behaviour_profile.facts:
+                        first_fact = behaviour_profile.facts[0]
+                        explain = behaviour_service.explain(sample_device_id, first_fact.category)
+                        if explain:
+                            print(f"         Explanation for {explain['category']}:")
+                            print(f"            Feature: {explain['feature']}")
+                            print(f"            Measured: {explain['measured_value']}")
+                            print(f"            Threshold: {explain['threshold']}")
+                            print(f"            Rule ID: {explain['rule_id']}")
+                            print(f"            Confidence: {explain['confidence']:.1f}%")
+                            print(f"            Status: {explain['status']}")
+            except Exception as exc:
+                print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
         # ===========================================
