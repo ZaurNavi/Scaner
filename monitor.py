@@ -160,7 +160,8 @@ def main() -> int:
             traffic_info = traffic_data[ip]
             traffic_result = FingerprintResult(
                 source="traffic",
-                raw_data=traffic_info.to_dict(),
+                # ИСПРАВЛЕНО: добавлен "responded": True, чтобы snapshot_builder гарантированно сохранил это в БД
+                raw_data={"responded": True, **traffic_info.to_dict()},
                 elapsed_ms=0.0,
                 confidence=100,
                 capabilities=["traffic_monitored"]
