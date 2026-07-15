@@ -45,7 +45,8 @@ from storage.archivist import (
 from storage.schema import Scan, ScanStatus
 from events import EventEngine
 from history import HistoryService
-from traffic import traffic_collector  # <-- v1.5.2: ДОБАВЛЕНО
+from traffic import traffic_collector  # <-- v1.5.2
+from session import SessionBuilder  # <-- v1.5.3: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -160,7 +161,6 @@ def main() -> int:
             traffic_info = traffic_data[ip]
             traffic_result = FingerprintResult(
                 source="traffic",
-                # ИСПРАВЛЕНО: добавлен "responded": True, чтобы snapshot_builder гарантированно сохранил это в БД
                 raw_data={"responded": True, **traffic_info.to_dict()},
                 elapsed_ms=0.0,
                 confidence=100,
@@ -183,7 +183,6 @@ def main() -> int:
                 print(f"  [CONTROLLERS] ❌ {collector.name} failed: {controller_data['error']}")
                 continue
 
-            # Маппим данные контроллера на IP-адреса для бесшовной интеграции с Archivist
             omada_entities = {}
             for entity in controller_data.get("clients", []) + controller_data.get("devices", []):
                 entity_ip = entity.get("ip")
@@ -199,7 +198,6 @@ def main() -> int:
                     omada_entities[key] = []
                 omada_entities[key].append(entity)
 
-            # Внедряем данные Omada в существующий collected_data
             merged_count = 0
             for key, entities in omada_entities.items():
                 if key.startswith("mac:"):
@@ -236,10 +234,8 @@ def main() -> int:
         print()
         print("  [ARCHIVIST] Saving bundles...")
 
-        # Инициализация Event Engine (чистый вычислитель)
         event_engine = EventEngine(Repository(db))
 
-        # Инициализация Event Persister (слой сохранения)
         from events import EventRepository, EventPersister
         event_repo = EventRepository(db)
         event_persister = EventPersister(event_repo)
@@ -248,7 +244,6 @@ def main() -> int:
         total_event_elapsed_ms = 0.0
         total_persisted = 0
 
-        # Сохраняем device_id для smoke-test History Service
         first_device_id = None
 
         for device in devices:
@@ -261,7 +256,6 @@ def main() -> int:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 print(f"      [DEBUG] result.device_id = '{result.device_id}'")
                 
-                # Сохраняем device_id первого устройства для smoke-test
                 if first_device_id is None:
                     first_device_id = result.device_id
 
@@ -336,6 +330,41 @@ def main() -> int:
                 
             except Exception as exc:
                 print(f"      ❌ History Service test failed: {exc}")
+        # ===========================================
+
+        # === v1.5.3: Session Engine (MVP Test) ===
+        if history_service and first_device_id:
+            print()
+            print("  [SESSION] Testing Session Engine (MVP)...")
+            try:
+                session_builder = SessionBuilder(history_service)
+                sessions = session_builder.build_sessions(first_device_id)
+                
+                if sessions:
+                    print(f"      ✅ Session Engine is working!")
+                    print(f"         Total sessions: {len(sessions)}")
+                    
+                    for i, session in enumerate(sessions, 1):
+                        duration_str = f"{session.duration:.0f}s" if session.duration else "Active"
+                        print(f"         Session #{i}:")
+                        print(f"            ID: {session.id[:8]}...")
+                        print(f"            Status: {session.status.value}")
+                        print(f"            Start: {session.start_time.strftime('%H:%M')}")
+                        print(f"            End: {session.end_time.strftime('%H:%M') if session.end_time else 'Active'}")
+                        print(f"            Duration: {duration_str}")
+                        print(f"            Snapshots: {session.snapshots_count}")
+                        print(f"            IPs: {', '.join(session.ip_history)}")
+                        if session.hostname_history:
+                            print(f"            Hostnames: {', '.join(session.hostname_history)}")
+                        if session.end_reason:
+                            print(f"            End reason: {session.end_reason.value}")
+                else:
+                    print("      ⚠️ No sessions found.")
+                    
+            except Exception as exc:
+                print(f"      ❌ Session Engine test failed: {exc}")
+                import traceback
+                traceback.print_exc()
         # ===========================================
 
     devices = filter_devices(devices)
