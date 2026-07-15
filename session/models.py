@@ -43,7 +43,7 @@ class Session:
     # Идентификаторы
     id: str
     device_id: str
-    schema_version: int = 2  # Обновлено для v1.5.3 Full
+    schema_version: int = 2
     
     # Временные характеристики
     start_time: datetime
@@ -56,7 +56,7 @@ class Session:
     end_reason: Optional[SessionEndReason] = None
     quality: SessionQuality = SessionQuality.PARTIAL
     
-    # Счетчики снимков
+    # Счетчики
     snapshots_count: int = 0
     observations_count: int = 0
     
@@ -88,7 +88,7 @@ class Session:
     updated_at: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Сериализация для сохранения в БД (metadata)."""
+        """Сериализация для сохранения в БД (поле metadata)."""
         return {
             "schema_version": self.schema_version,
             "quality": self.quality.value,
