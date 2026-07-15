@@ -5,7 +5,7 @@
 """
 
 from dataclasses import dataclass
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Optional
 import operator
 
 from .categories import BehaviourCategory, BehaviourStatus
@@ -34,7 +34,7 @@ class BehaviourRule:
     description: str = ""
 
 
-# Словарь операторов (Замечание №7)
+# Словарь операторов
 OPERATORS: Dict[str, Callable] = {
     "gt": operator.gt,
     "lt": operator.lt,
@@ -57,7 +57,7 @@ def evaluate_condition(rule_operator: str, value: Any, threshold: BehaviourThres
     return False
 
 
-# Все правила вынесены сюда с уникальными ID (Замечание №10)
+# Все правила вынесены сюда с уникальными ID
 BEHAVIOUR_RULES = [
     # Мобильность
     BehaviourRule(
