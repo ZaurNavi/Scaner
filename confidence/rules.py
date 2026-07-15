@@ -14,30 +14,35 @@ CONFIDENCE_RULES = [
     (FactCategory.VENDOR, "oui", 30),
     (FactCategory.VENDOR, "hostname", 15),
     (FactCategory.VENDOR, "http", 10),
+    (FactCategory.VENDOR, "snapshot", 10),  # <-- ДОБАВЛЕНО
     
     # Model
     (FactCategory.MODEL, "omada", 50),
     (FactCategory.MODEL, "mdns", 40),
     (FactCategory.MODEL, "hostname", 20),
     (FactCategory.MODEL, "ssdp", 15),
+    (FactCategory.MODEL, "snapshot", 10),   # <-- ДОБАВЛЕНО
     
     # Hostname
     (FactCategory.HOSTNAME, "omada", 50),
     (FactCategory.HOSTNAME, "mdns", 40),
     (FactCategory.HOSTNAME, "dhcp", 30),
     (FactCategory.HOSTNAME, "dns", 20),
+    (FactCategory.HOSTNAME, "snapshot", 15), # <-- ДОБАВЛЕНО
     
     # OS
     (FactCategory.OS, "omada", 60),
     (FactCategory.OS, "http", 40),
     (FactCategory.OS, "ttl", 30),
     (FactCategory.OS, "tcp", 20),
+    (FactCategory.OS, "snapshot", 10),       # <-- ДОБАВЛЕНО
     
     # Device Type
     (FactCategory.DEVICE_TYPE, "omada", 50),
     (FactCategory.DEVICE_TYPE, "mdns", 40),
     (FactCategory.DEVICE_TYPE, "ssdp", 30),
     (FactCategory.DEVICE_TYPE, "http", 20),
+    (FactCategory.DEVICE_TYPE, "snapshot", 10), # <-- ДОБАВЛЕНО
     
     # SSID
     (FactCategory.SSID, "omada", 70),
