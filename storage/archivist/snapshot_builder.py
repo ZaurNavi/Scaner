@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 from datetime import datetime
 from typing import Dict
 
@@ -190,7 +191,8 @@ def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Obse
                 snapshot_id=snapshot_id,
                 source=source_enum,
                 key=source_name,
-                value=str(result.raw_data),
+                # ИСПРАВЛЕНО: используем json.dumps вместо str() для правильного JSON
+                value=json.dumps(result.raw_data, ensure_ascii=False),
                 obs_type=ObservationType.JSON,
                 confidence=result.confidence,
             ))
