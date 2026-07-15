@@ -70,29 +70,24 @@ class IdentityTimeline:
 @dataclass(frozen=True)
 class IdentityProfile:
     """Полная карточка устройства (Identity). Immutable."""
-    # Идентификаторы
+    
+    # =========================================================================
+    # 1. Поля БЕЗ значений по умолчанию (ОБЯЗАНЫ идти первыми!)
+    # =========================================================================
     identity_id: str
     device_id: str
-    
-    # Версионирование
-    schema_version: int = 1
-    identity_version: int = 1
-    
-    # Основной MAC
     primary_mac: str
-    
-    # Временные характеристики
     timeline: IdentityTimeline
-    
-    # Профили
     network: IdentityNetworkProfile
     device: IdentityDeviceProfile
-    
-    # Статистика
     statistics: IdentityStatistics
     traffic_statistics: TrafficStatistics
     
-    # Метаданные
+    # =========================================================================
+    # 2. Поля СО значениями по умолчанию (ОБЯЗАНЫ идти после)
+    # =========================================================================
+    schema_version: int = 1
+    identity_version: int = 1
     last_updated: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
