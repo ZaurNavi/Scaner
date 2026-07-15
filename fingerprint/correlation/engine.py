@@ -284,7 +284,7 @@ class CorrelationEngine:
                 # Канал и радио
                 if entity.get("channel"):
                     details.append(f"Ch: {entity['channel']}")
-                if entity.get("radioId"):
+                if entity.get("radioId") is not None:
                     radio_name = "5GHz" if entity['radioId'] == 1 else "2.4GHz" if entity['radioId'] == 0 else f"Radio{entity['radioId']}"
                     details.append(f"Radio: {radio_name}")
                 
@@ -297,20 +297,21 @@ class CorrelationEngine:
                     details.append(f"RX: {rx_mbps:.0f}Mbps")
                 
                 # WiFi режим
-                if entity.get("wifiMode"):
+                if entity.get("wifiMode") is not None:
                     wifi_modes = {0: "802.11b", 1: "802.11g", 2: "802.11a", 3: "802.11n", 4: "802.11ac", 5: "802.11ax"}
                     wifi_name = wifi_modes.get(entity['wifiMode'], f"Mode{entity['wifiMode']}")
                     details.append(f"WiFi: {wifi_name}")
                 
                 # Статус подключения
-                if entity.get("connectType"):
+                if entity.get("connectType") is not None:
                     conn_types = {0: "wired", 1: "wireless"}
-                    details.append(f"Conn: {conn_types.get(entity['connectType'], f"Type{entity['connectType']}")}")
+                    conn_type = conn_types.get(entity['connectType'], f"Type{entity['connectType']}")
+                    details.append(f"Conn: {conn_type}")
                 if entity.get("connectDevType"):
                     details.append(f"ConnTo: {entity['connectDevType']}")
                 
                 # Аутентификация
-                if entity.get("authStatus"):
+                if entity.get("authStatus") is not None:
                     auth_status = "authenticated" if entity['authStatus'] == 0 else f"auth:{entity['authStatus']}"
                     details.append(f"Auth: {auth_status}")
                 
@@ -320,29 +321,29 @@ class CorrelationEngine:
                     details.append(f"Uptime: {uptime_min}min")
                 if entity.get("lastSeen"):
                     details.append(f"LastSeen: {entity['lastSeen']}")
-                if entity.get("active"):
+                if entity.get("active") is not None:
                     details.append(f"Active: {entity['active']}")
                 
                 # Трафик (в байтах, конвертируем в MB)
                 if entity.get("trafficDown"):
                     down_mb = entity['trafficDown'] / (1024 * 1024)
-                    details.append(f"↓{down_mb:.1f}MB")
+                    details.append(f"Down: {down_mb:.1f}MB")
                 if entity.get("trafficUp"):
                     up_mb = entity['trafficUp'] / (1024 * 1024)
-                    details.append(f"↑{up_mb:.1f}MB")
+                    details.append(f"Up: {up_mb:.1f}MB")
                 
                 # Пакеты
                 if entity.get("downPacket"):
-                    details.append(f"↓Pkt:{entity['downPacket']}")
+                    details.append(f"PktDown: {entity['downPacket']}")
                 if entity.get("upPacket"):
-                    details.append(f"↑Pkt:{entity['upPacket']}")
+                    details.append(f"PktUp: {entity['upPacket']}")
                 
                 # Дополнительно
-                if entity.get("powerSave"):
+                if entity.get("powerSave") is not None:
                     details.append(f"PowerSave: {entity['powerSave']}")
-                if entity.get("wireless"):
+                if entity.get("wireless") is not None:
                     details.append(f"Wireless: {entity['wireless']}")
-                if entity.get("guest"):
+                if entity.get("guest") is not None:
                     details.append(f"Guest: {entity['guest']}")
                 
                 # Добавляем Evidence Item
