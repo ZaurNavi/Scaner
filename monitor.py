@@ -46,7 +46,8 @@ from storage.schema import Scan, ScanStatus
 from events import EventEngine
 from history import HistoryService
 from traffic import traffic_collector
-from session import SessionEngine, SessionEndReason  # <-- v1.5.3 Full
+from session import SessionEngine, SessionEndReason
+from identity import IdentityService, IdentityRepository  # <-- v1.5.4: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -229,7 +230,7 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3: Archivist + Event + Session Engine ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4: Archivist + Event + Session + Identity ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -289,7 +290,6 @@ def main() -> int:
                 for ip, device_id in ip_to_device_id.items():
                     snapshots = history_service.get_snapshots(device_id)
                     if snapshots:
-                        # Конвертируем SnapshotRecord в dict для engine
                         snap_dicts = [
                             {
                                 "timestamp": s.timestamp.isoformat(),
@@ -299,7 +299,6 @@ def main() -> int:
                         ]
                         session_engine.process_snapshots(device_id, snap_dicts)
                 
-                # Показываем статус активной сессии первого устройства
                 if first_device_id:
                     active_sess = session_engine.get_active_session(first_device_id)
                     if active_sess:
@@ -310,6 +309,35 @@ def main() -> int:
                         print("      ℹ️ No active session (device might be in timeout).")
             except Exception as exc:
                 print(f"  [SESSION] ❌ Initialization/Processing failed: {exc}")
+        # ===========================================
+
+        # === v1.5.4: Identity Engine Processing ===
+        identity_service = None
+        if history_service and db:
+            try:
+                identity_repo = IdentityRepository(db)
+                identity_service = IdentityService(history_service, identity_repo)
+                
+                print("\n  [IDENTITY] Building identities...")
+                profiles = identity_service.refresh_all(list(ip_to_device_id.values()))
+                print(f"      ✅ Built {len(profiles)} identities")
+                
+                # Показываем пример identity
+                if profiles:
+                    sample = profiles[0]
+                    print(f"      Sample Identity:")
+                    print(f"         Device: {sample.device_id[:8]}...")
+                    print(f"         MAC: {sample.primary_mac}")
+                    print(f"         Known IPs: {len(sample.network.known_ips)}")
+                    print(f"         Known Hostnames: {len(sample.device.known_hostnames)}")
+                    print(f"         Known APs: {len(sample.network.known_aps)}")
+                    print(f"         Known SSIDs: {len(sample.network.known_ssids)}")
+                    print(f"         Known Models: {len(sample.device.known_models)}")
+                    print(f"         Known OS: {len(sample.device.known_operating_systems)}")
+            except Exception as exc:
+                print(f"  [IDENTITY] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
         # ===========================================
 
         print()
