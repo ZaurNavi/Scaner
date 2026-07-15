@@ -73,7 +73,6 @@ class SessionEngine:
         if not new_snapshots:
             return
 
-        # Сортируем по времени
         new_snapshots.sort(key=lambda s: datetime.fromisoformat(s["timestamp"]))
         
         session = self._active_sessions.get(device_id)
@@ -81,14 +80,12 @@ class SessionEngine:
         for snap in new_snapshots:
             snap_time = datetime.fromisoformat(snap["timestamp"])
             
-            # 1. Проверка на таймаут
             if session and session.status == SessionStatus.ACTIVE:
                 time_gap = snap_time - session.last_seen
                 if time_gap > SESSION_TIMEOUT:
                     self._close_session(session, SessionEndReason.TIMEOUT)
                     session = None
 
-            # 2. Создание новой сессии
             if session is None:
                 session = Session(
                     id=str(uuid.uuid4()),
@@ -100,10 +97,8 @@ class SessionEngine:
                 self._active_sessions[device_id] = session
                 self.repo.create_session(session)
 
-            # 3. Обогащение сессии
             self._enrich_session(session, snap)
 
-        # 4. Сохранение обновлений
         if session and session.status == SessionStatus.ACTIVE:
             session.last_seen = datetime.fromisoformat(new_snapshots[-1]["timestamp"])
             session.duration = (session.last_seen - session.start_time).total_seconds()
