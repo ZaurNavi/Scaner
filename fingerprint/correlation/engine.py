@@ -237,9 +237,6 @@ class CorrelationEngine:
                 omada_device_type = (entity.get("deviceType") or "").lower()
                 omada_hostname_lower = (entity.get("hostName") or entity.get("name") or "").lower()
                 omada_display_name = entity.get("hostName") or entity.get("name") or ""
-                omada_ap_name = entity.get("apName") or ""
-                omada_ssid = entity.get("ssid") or ""
-                omada_rssi = entity.get("rssi") or entity.get("signalLevel")
                 
                 # Проверяем, распознали ли мы устройство по типу или по ключевым словам в имени
                 is_known = ("android" in omada_device_type or "redmi" in omada_hostname_lower or "xiaomi" in omada_hostname_lower or 
@@ -250,37 +247,110 @@ class CorrelationEngine:
                 # Если устройство распознано (или тип известен и не "unknown") — даём сильный сигнал 70
                 if is_known or (omada_device_type and omada_device_type != "unknown"):
                     b.omada = 70
-                    details = []
-                    details.append(f"type: {omada_device_type or 'inferred'}")
-                    if omada_display_name:
-                        details.append(f"hostname: {omada_display_name}")
-                    if omada_ap_name:
-                        details.append(f"AP: {omada_ap_name}")
-                    if omada_ssid:
-                        details.append(f"SSID: {omada_ssid}")
-                    if omada_rssi:
-                        details.append(f"RSSI: {omada_rssi}dBm")
-                    
-                    items.append(EvidenceItem(
-                        description="Omada Controller identifies device",
-                        contribution=70,
-                        source="omada",
-                        details=", ".join(details),
-                    ))
-                # Если Omada не знает тип, но есть hostname — слабый сигнал 30
                 elif omada_display_name:
                     b.omada = 30
-                    details = [f"hostname: {omada_display_name}"]
-                    if omada_ap_name:
-                        details.append(f"AP: {omada_ap_name}")
-                    if omada_ssid:
-                        details.append(f"SSID: {omada_ssid}")
-                    if omada_rssi:
-                        details.append(f"RSSI: {omada_rssi}dBm")
-                    
+                else:
+                    b.omada = 0
+                
+                # === РАСШИРЕННОЕ ОТОБРАЖЕНИЕ ВСЕХ ПОЛЕЙ ОМАДА ===
+                details = []
+                
+                # Базовая информация
+                if omada_device_type:
+                    details.append(f"type: {omada_device_type}")
+                if omada_display_name:
+                    details.append(f"hostname: {omada_display_name}")
+                
+                # Сетевая инфраструктура
+                if entity.get("apName"):
+                    details.append(f"AP: {entity['apName']}")
+                if entity.get("apMac"):
+                    details.append(f"AP-MAC: {entity['apMac']}")
+                if entity.get("ssid"):
+                    details.append(f"SSID: {entity['ssid']}")
+                if entity.get("vid"):
+                    details.append(f"VLAN: {entity['vid']}")
+                
+                # Радио и сигнал
+                if entity.get("rssi"):
+                    details.append(f"RSSI: {entity['rssi']}dBm")
+                if entity.get("signalLevel"):
+                    details.append(f"Signal: {entity['signalLevel']}")
+                if entity.get("signalRank"):
+                    details.append(f"Rank: {entity['signalRank']}")
+                if entity.get("snr"):
+                    details.append(f"SNR: {entity['snr']}dB")
+                
+                # Канал и радио
+                if entity.get("channel"):
+                    details.append(f"Ch: {entity['channel']}")
+                if entity.get("radioId"):
+                    radio_name = "5GHz" if entity['radioId'] == 1 else "2.4GHz" if entity['radioId'] == 0 else f"Radio{entity['radioId']}"
+                    details.append(f"Radio: {radio_name}")
+                
+                # Скорости (в Kbps из API, конвертируем в Mbps)
+                if entity.get("txRate"):
+                    tx_mbps = entity['txRate'] / 1000 if entity['txRate'] > 100 else entity['txRate']
+                    details.append(f"TX: {tx_mbps:.0f}Mbps")
+                if entity.get("rxRate"):
+                    rx_mbps = entity['rxRate'] / 1000 if entity['rxRate'] > 100 else entity['rxRate']
+                    details.append(f"RX: {rx_mbps:.0f}Mbps")
+                
+                # WiFi режим
+                if entity.get("wifiMode"):
+                    wifi_modes = {0: "802.11b", 1: "802.11g", 2: "802.11a", 3: "802.11n", 4: "802.11ac", 5: "802.11ax"}
+                    wifi_name = wifi_modes.get(entity['wifiMode'], f"Mode{entity['wifiMode']}")
+                    details.append(f"WiFi: {wifi_name}")
+                
+                # Статус подключения
+                if entity.get("connectType"):
+                    conn_types = {0: "wired", 1: "wireless"}
+                    details.append(f"Conn: {conn_types.get(entity['connectType'], f"Type{entity['connectType']}")}")
+                if entity.get("connectDevType"):
+                    details.append(f"ConnTo: {entity['connectDevType']}")
+                
+                # Аутентификация
+                if entity.get("authStatus"):
+                    auth_status = "authenticated" if entity['authStatus'] == 0 else f"auth:{entity['authStatus']}"
+                    details.append(f"Auth: {auth_status}")
+                
+                # Время и активность
+                if entity.get("uptime"):
+                    uptime_min = entity['uptime'] // 60
+                    details.append(f"Uptime: {uptime_min}min")
+                if entity.get("lastSeen"):
+                    details.append(f"LastSeen: {entity['lastSeen']}")
+                if entity.get("active"):
+                    details.append(f"Active: {entity['active']}")
+                
+                # Трафик (в байтах, конвертируем в MB)
+                if entity.get("trafficDown"):
+                    down_mb = entity['trafficDown'] / (1024 * 1024)
+                    details.append(f"↓{down_mb:.1f}MB")
+                if entity.get("trafficUp"):
+                    up_mb = entity['trafficUp'] / (1024 * 1024)
+                    details.append(f"↑{up_mb:.1f}MB")
+                
+                # Пакеты
+                if entity.get("downPacket"):
+                    details.append(f"↓Pkt:{entity['downPacket']}")
+                if entity.get("upPacket"):
+                    details.append(f"↑Pkt:{entity['upPacket']}")
+                
+                # Дополнительно
+                if entity.get("powerSave"):
+                    details.append(f"PowerSave: {entity['powerSave']}")
+                if entity.get("wireless"):
+                    details.append(f"Wireless: {entity['wireless']}")
+                if entity.get("guest"):
+                    details.append(f"Guest: {entity['guest']}")
+                
+                # Добавляем Evidence Item
+                if details:
+                    desc = "Omada Controller identifies device" if (is_known or (omada_device_type and omada_device_type != "unknown")) else "Omada Controller provides telemetry"
                     items.append(EvidenceItem(
-                        description="Omada Controller provides hostname",
-                        contribution=30,
+                        description=desc,
+                        contribution=b.omada,
                         source="omada",
                         details=", ".join(details),
                     ))
