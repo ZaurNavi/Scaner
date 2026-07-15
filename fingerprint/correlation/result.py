@@ -20,6 +20,7 @@ class ConfidenceBreakdown:
     http: int = 0
     mdns: int = 0
     dns: int = 0
+    omada: int = 0
     correlation: int = 0
     hostname: int = 0
     history: int = 0
