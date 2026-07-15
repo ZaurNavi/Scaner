@@ -206,7 +206,8 @@ class Repository:
     
     def get_active_sessions(self) -> List[dict]:
         """Возвращает все сессии со статусом ACTIVE для Recovery."""
-        cursor = self.db.cursor()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             SELECT id, device_id, start_time, end_time, duration, status, end_reason, metadata
             FROM session
@@ -217,7 +218,8 @@ class Repository:
 
     def create_session(self, session: 'Session'):
         """Создает новую запись сессии в БД."""
-        cursor = self.db.cursor()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO session (id, device_id, source, start_time, end_time, duration, bytes_in, bytes_out, flows, status, end_reason, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -231,11 +233,12 @@ class Repository:
             session.end_reason.value if session.end_reason else None,
             json.dumps(session.to_dict())
         ))
-        self.db.commit()
+        conn.commit()
 
     def update_session(self, session: 'Session'):
         """Обновляет активную сессию."""
-        cursor = self.db.cursor()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             UPDATE session 
             SET duration = ?, bytes_in = ?, bytes_out = ?, flows = ?, status = ?, metadata = ?, updated_at = ?
@@ -248,11 +251,12 @@ class Repository:
             session.updated_at.isoformat(),
             session.id
         ))
-        self.db.commit()
+        conn.commit()
 
     def close_session(self, session: 'Session'):
         """Неизменяемо закрывает сессию."""
-        cursor = self.db.cursor()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             UPDATE session 
             SET status = ?, end_time = ?, duration = ?, end_reason = ?, metadata = ?, updated_at = ?
@@ -266,4 +270,4 @@ class Repository:
             session.updated_at.isoformat(),
             session.id
         ))
-        self.db.commit()
+        conn.commit()
