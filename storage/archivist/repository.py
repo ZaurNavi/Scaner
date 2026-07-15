@@ -1,8 +1,9 @@
 from __future__ import annotations
+import json
 import sqlite3
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Any
 from .database import DatabaseManager
 from storage.schema import SnapshotBundle, SaveResult
 
@@ -200,3 +201,69 @@ class Repository:
             "confidence": row[9] or 0,
             "vendor": "",
         }
+
+    # === v1.5.3: Session Engine Methods ===
+    
+    def get_active_sessions(self) -> List[dict]:
+        """Возвращает все сессии со статусом ACTIVE для Recovery."""
+        cursor = self.db.cursor()
+        cursor.execute("""
+            SELECT id, device_id, start_time, end_time, duration, status, end_reason, metadata
+            FROM session
+            WHERE status = 'ACTIVE'
+        """)
+        columns = [desc[0] for desc in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    def create_session(self, session: 'Session'):
+        """Создает новую запись сессии в БД."""
+        cursor = self.db.cursor()
+        cursor.execute("""
+            INSERT INTO session (id, device_id, source, start_time, end_time, duration, bytes_in, bytes_out, flows, status, end_reason, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            session.id, session.device_id, "session_engine",
+            session.start_time.isoformat(),
+            session.end_time.isoformat() if session.end_time else None,
+            session.duration,
+            session.total_bytes_in, session.total_bytes_out, session.total_flows,
+            session.status.value,
+            session.end_reason.value if session.end_reason else None,
+            json.dumps(session.to_dict())
+        ))
+        self.db.commit()
+
+    def update_session(self, session: 'Session'):
+        """Обновляет активную сессию."""
+        cursor = self.db.cursor()
+        cursor.execute("""
+            UPDATE session 
+            SET duration = ?, bytes_in = ?, bytes_out = ?, flows = ?, status = ?, metadata = ?, updated_at = ?
+            WHERE id = ? AND status = 'ACTIVE'
+        """, (
+            session.duration,
+            session.total_bytes_in, session.total_bytes_out, session.total_flows,
+            session.status.value,
+            json.dumps(session.to_dict()),
+            session.updated_at.isoformat(),
+            session.id
+        ))
+        self.db.commit()
+
+    def close_session(self, session: 'Session'):
+        """Неизменяемо закрывает сессию."""
+        cursor = self.db.cursor()
+        cursor.execute("""
+            UPDATE session 
+            SET status = ?, end_time = ?, duration = ?, end_reason = ?, metadata = ?, updated_at = ?
+            WHERE id = ?
+        """, (
+            session.status.value,
+            session.end_time.isoformat() if session.end_time else None,
+            session.duration,
+            session.end_reason.value if session.end_reason else None,
+            json.dumps(session.to_dict()),
+            session.updated_at.isoformat(),
+            session.id
+        ))
+        self.db.commit()
