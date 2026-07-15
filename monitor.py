@@ -47,7 +47,8 @@ from events import EventEngine
 from history import HistoryService
 from traffic import traffic_collector
 from session import SessionEngine, SessionEndReason
-from identity import IdentityService, IdentityRepository  # <-- v1.5.4: ДОБАВЛЕНО
+from identity import IdentityService, IdentityRepository
+from confidence import ConfidenceService, FactCategory  # <-- v1.5.5: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -230,7 +231,7 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4: Archivist + Event + Session + Identity ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5: Archivist + Event + Session + Identity + Confidence ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -313,6 +314,7 @@ def main() -> int:
 
         # === v1.5.4: Identity Engine Processing ===
         identity_service = None
+        profiles = []
         if history_service and db:
             try:
                 identity_repo = IdentityRepository(db)
@@ -322,7 +324,6 @@ def main() -> int:
                 profiles = identity_service.refresh_all(list(ip_to_device_id.values()))
                 print(f"      ✅ Built {len(profiles)} identities")
                 
-                # Показываем пример identity
                 if profiles:
                     sample = profiles[0]
                     print(f"      Sample Identity:")
@@ -332,10 +333,54 @@ def main() -> int:
                     print(f"         Known Hostnames: {len(sample.device.known_hostnames)}")
                     print(f"         Known APs: {len(sample.network.known_aps)}")
                     print(f"         Known SSIDs: {len(sample.network.known_ssids)}")
-                    print(f"         Known Models: {len(sample.device.known_models)}")
-                    print(f"         Known OS: {len(sample.device.known_operating_systems)}")
             except Exception as exc:
                 print(f"  [IDENTITY] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
+        # ===========================================
+
+        # === v1.5.5: Confidence Service ===
+        confidence_service = None
+        if identity_service and profiles:
+            try:
+                confidence_service = ConfidenceService(identity_service)
+                print("\n  [CONFIDENCE] Evaluating confidence...")
+                
+                # Оцениваем первое устройство
+                sample_device_id = profiles[0].device_id
+                confidence_profile = confidence_service.get_profile(sample_device_id)
+                
+                if confidence_profile:
+                    print(f"      ✅ Confidence Profile for {sample_device_id[:8]}...")
+                    print(f"         Coverage: {confidence_profile.coverage:.1f}%")
+                    print(f"         Total Facts: {confidence_profile.statistics.total_facts}")
+                    print(f"         Evaluated: {confidence_profile.statistics.evaluated}")
+                    
+                    # Показываем лучшие оценки
+                    if confidence_profile.summary.vendor:
+                        print(f"         Best Vendor: {confidence_profile.summary.vendor.value} ({confidence_profile.summary.vendor.confidence:.1f}%)")
+                    if confidence_profile.summary.os:
+                        print(f"         Best OS: {confidence_profile.summary.os.value} ({confidence_profile.summary.os.confidence:.1f}%)")
+                    if confidence_profile.summary.hostname:
+                        print(f"         Best Hostname: {confidence_profile.summary.hostname.value} ({confidence_profile.summary.hostname.confidence:.1f}%)")
+                    
+                    # Показываем объяснение для Vendor
+                    vendor_explain = confidence_service.explain(sample_device_id, FactCategory.VENDOR)
+                    if vendor_explain:
+                        print(f"         Vendor Explanation:")
+                        print(f"            Value: {vendor_explain['value']}")
+                        print(f"            Confidence: {vendor_explain['confidence']:.1f}%")
+                        print(f"            Raw Score: {vendor_explain['raw_score']}")
+                        print(f"            Reasons: {', '.join(vendor_explain['reasons'])}")
+                    
+                    # Показываем ранжированный список альтернатив для Vendor
+                    vendor_ranked = confidence_service.get_ranked(sample_device_id, FactCategory.VENDOR)
+                    if vendor_ranked and len(vendor_ranked) > 1:
+                        print(f"         Vendor Alternatives:")
+                        for i, alt in enumerate(vendor_ranked[:3], 1):
+                            print(f"            {i}. {alt.value}: {alt.confidence:.1f}%")
+            except Exception as exc:
+                print(f"  [CONFIDENCE] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
         # ===========================================
