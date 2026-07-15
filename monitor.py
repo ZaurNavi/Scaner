@@ -44,7 +44,8 @@ from storage.archivist import (
 )
 from storage.schema import Scan, ScanStatus
 from events import EventEngine
-from history import HistoryService  # <-- v1.5.1: ДОБАВЛЕНО
+from history import HistoryService
+from traffic import traffic_collector  # <-- v1.5.2: ДОБАВЛЕНО
 
 
 def print_header() -> None:
@@ -146,7 +147,29 @@ def main() -> int:
     collected_data = collect_all(ips, devices)
 
     # ==============================================================================
-    # v1.4.9.1: Infrastructure Controller Integration (Omada)
+    # v1.5.2: Traffic Collector Integration
+    # ==============================================================================
+    print("\n  [TRAFFIC] Initializing Traffic Collector...")
+    traffic_data = traffic_collector.collect_all(ips)
+    
+    for ip in ips:
+        if ip not in collected_data:
+            collected_data[ip] = CollectedData()
+        
+        if ip in traffic_data:
+            traffic_info = traffic_data[ip]
+            traffic_result = FingerprintResult(
+                source="traffic",
+                raw_data=traffic_info.to_dict(),
+                elapsed_ms=0.0,
+                confidence=100,
+                capabilities=["traffic_monitored"]
+            )
+            collected_data[ip].sources["traffic"] = traffic_result
+    # ==============================================================================
+
+    # ==============================================================================
+    # v1.4.9.1: Infrastructure Controller Integration (Omada Metadata)
     # ==============================================================================
     controller_collectors = get_controller_collectors()
     if controller_collectors:
@@ -162,12 +185,11 @@ def main() -> int:
             # Маппим данные контроллера на IP-адреса для бесшовной интеграции с Archivist
             omada_entities = {}
             for entity in controller_data.get("clients", []) + controller_data.get("devices", []):
-                ip = entity.get("ip")
+                entity_ip = entity.get("ip")
                 mac = entity.get("mac", "").replace("-", ":").upper()
                 
-                # Предпочитаем IP, если его нет, ищем по MAC в нашем списке устройств
-                if ip:
-                    key = ip
+                if entity_ip:
+                    key = entity_ip
                 else:
                     target_device = next((d for d in devices if d.mac and d.mac.upper() == mac), None)
                     key = target_device.ip if target_device else f"mac:{mac}"
@@ -284,19 +306,15 @@ def main() -> int:
             print()
             print("  [HISTORY] Testing History Service...")
             try:
-                # Получаем историю первого устройства
                 device_history = history_service.get_device_history(first_device_id)
                 
-                # Показываем базовую статистику (ленивая загрузка)
                 snapshots_count = len(device_history.snapshots)
                 observations_count = len(device_history.observations)
                 events_count = len(device_history.events)
                 
-                # Получаем историю IP (показывает, как устройство меняло IP)
                 ip_history = history_service.get_ip_history(first_device_id)
                 unique_ips = len(set(entry["ip"] for entry in ip_history))
                 
-                # Получаем историю hostname
                 hostname_history = history_service.get_hostname_history(first_device_id)
                 unique_hostnames = len(set(entry["hostname"] for entry in hostname_history))
                 
@@ -310,7 +328,6 @@ def main() -> int:
                 print(f"         Unique IPs: {unique_ips}")
                 print(f"         Unique Hostnames: {unique_hostnames}")
                 
-                # Показываем последние 3 IP из истории
                 if ip_history:
                     recent_ips = ip_history[-3:]
                     ip_list = ", ".join([f"{entry['ip']} ({entry['timestamp'].strftime('%H:%M')})" for entry in recent_ips])
