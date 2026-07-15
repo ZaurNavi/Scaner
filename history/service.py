@@ -10,7 +10,24 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from . import queries
+# ИМПОРТИРУЕМ КОНКРЕТНЫЕ ИМЕНА, чтобы избежать циклического импорта
+from .queries import (
+    GET_DEVICE_INFO,
+    GET_SNAPSHOTS,
+    GET_LAST_SNAPSHOT,
+    GET_FIRST_SEEN,
+    GET_LAST_SEEN,
+    GET_OBSERVATIONS,
+    GET_OBSERVATIONS_FILTERED,
+    GET_IP_HISTORY,
+    GET_MAC_HISTORY,
+    GET_HOSTNAME_HISTORY,
+    GET_VENDOR_HISTORY,
+    GET_EVENTS,
+    GET_EVIDENCE,
+    GET_CAPABILITIES,
+)
+
 from .models import (
     SnapshotRecord,
     ObservationRecord,
@@ -54,7 +71,7 @@ class HistoryService:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        rows = self._execute_query(queries.GET_DEVICE_INFO, (device_id,))
+        rows = self._execute_query(GET_DEVICE_INFO, (device_id,))
         if not rows:
             return None
 
@@ -93,7 +110,7 @@ class HistoryService:
 
     def get_snapshots(self, device_id: str) -> list[SnapshotRecord]:
         """Получить все snapshot'ы устройства."""
-        rows = self._execute_query(queries.GET_SNAPSHOTS, (device_id,))
+        rows = self._execute_query(GET_SNAPSHOTS, (device_id,))
         return [
             SnapshotRecord(
                 id=row[0],
@@ -116,7 +133,7 @@ class HistoryService:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        rows = self._execute_query(queries.GET_LAST_SNAPSHOT, (device_id,))
+        rows = self._execute_query(GET_LAST_SNAPSHOT, (device_id,))
         if not rows:
             return None
 
@@ -139,14 +156,14 @@ class HistoryService:
 
     def get_first_seen(self, device_id: str) -> datetime | None:
         """Когда устройство появилось впервые."""
-        rows = self._execute_query(queries.GET_FIRST_SEEN, (device_id,))
+        rows = self._execute_query(GET_FIRST_SEEN, (device_id,))
         if not rows or not rows[0][0]:
             return None
         return self._parse_timestamp(rows[0][0])
 
     def get_last_seen(self, device_id: str) -> datetime | None:
         """Последнее появление устройства."""
-        rows = self._execute_query(queries.GET_LAST_SEEN, (device_id,))
+        rows = self._execute_query(GET_LAST_SEEN, (device_id,))
         if not rows or not rows[0][0]:
             return None
         return self._parse_timestamp(rows[0][0])
@@ -164,11 +181,11 @@ class HistoryService:
         """Получить все observations устройства с опциональной фильтрацией."""
         if source or key:
             rows = self._execute_query(
-                queries.GET_OBSERVATIONS_FILTERED,
+                GET_OBSERVATIONS_FILTERED,
                 (device_id, source, source, key, key),
             )
         else:
-            rows = self._execute_query(queries.GET_OBSERVATIONS, (device_id,))
+            rows = self._execute_query(GET_OBSERVATIONS, (device_id,))
 
         return [
             ObservationRecord(
@@ -191,7 +208,7 @@ class HistoryService:
 
     def get_ip_history(self, device_id: str) -> list[dict[str, Any]]:
         """История IP-адресов устройства."""
-        rows = self._execute_query(queries.GET_IP_HISTORY, (device_id,))
+        rows = self._execute_query(GET_IP_HISTORY, (device_id,))
         return [
             {
                 "timestamp": self._parse_timestamp(row[0]),
@@ -202,7 +219,7 @@ class HistoryService:
 
     def get_mac_history(self, device_id: str) -> list[dict[str, Any]]:
         """История MAC-адресов."""
-        rows = self._execute_query(queries.GET_MAC_HISTORY, (device_id,))
+        rows = self._execute_query(GET_MAC_HISTORY, (device_id,))
         return [
             {
                 "mac": row[0],
@@ -214,7 +231,7 @@ class HistoryService:
 
     def get_hostname_history(self, device_id: str) -> list[dict[str, Any]]:
         """История hostname'ов устройства."""
-        rows = self._execute_query(queries.GET_HOSTNAME_HISTORY, (device_id,))
+        rows = self._execute_query(GET_HOSTNAME_HISTORY, (device_id,))
         return [
             {
                 "timestamp": self._parse_timestamp(row[0]),
@@ -225,7 +242,7 @@ class HistoryService:
 
     def get_vendor_history(self, device_id: str) -> list[dict[str, Any]]:
         """История vendor'ов (из identity table)."""
-        rows = self._execute_query(queries.GET_VENDOR_HISTORY, (device_id,))
+        rows = self._execute_query(GET_VENDOR_HISTORY, (device_id,))
         return [
             {
                 "vendor": row[0],
@@ -240,7 +257,7 @@ class HistoryService:
 
     def get_events(self, device_id: str) -> list[EventRecord]:
         """Все события устройства."""
-        rows = self._execute_query(queries.GET_EVENTS, (device_id,))
+        rows = self._execute_query(GET_EVENTS, (device_id,))
         return [
             EventRecord(
                 event_id=row[0],
@@ -259,7 +276,7 @@ class HistoryService:
 
     def get_evidence(self, device_id: str) -> list[EvidenceRecord]:
         """Все evidence устройства."""
-        rows = self._execute_query(queries.GET_EVIDENCE, (device_id,))
+        rows = self._execute_query(GET_EVIDENCE, (device_id,))
         return [
             EvidenceRecord(
                 id=row[0],
@@ -275,7 +292,7 @@ class HistoryService:
 
     def get_capabilities(self, device_id: str) -> list[CapabilityRecord]:
         """Все capabilities устройства."""
-        rows = self._execute_query(queries.GET_CAPABILITIES, (device_id,))
+        rows = self._execute_query(GET_CAPABILITIES, (device_id,))
         return [
             CapabilityRecord(
                 id=row[0],
