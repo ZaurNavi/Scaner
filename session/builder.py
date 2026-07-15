@@ -6,9 +6,9 @@ Core Session Builder (MVP).
 
 from __future__ import annotations
 
-import time
+import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Optional
 
 from .models import Session, SessionStatus, SessionEndReason
 from history import HistoryService, SnapshotRecord
@@ -42,7 +42,7 @@ class SessionBuilder:
         if not snapshots:
             return []
 
-        # Сортируем по времени на всякий случай
+        # Сортируем по времени
         snapshots.sort(key=lambda s: s.timestamp)
         
         sessions: List[Session] = []
@@ -52,58 +52,55 @@ class SessionBuilder:
             # Если текущей сессии нет, создаем новую
             if current_session is None:
                 current_session = Session(
-                    id=self._generate_session_id(device_id, snapshot.timestamp),
+                    id=str(uuid.uuid4()),
                     device_id=device_id,
-                    start_time=snapshot.timestamp
+                    start_time=snapshot.timestamp,
+                    last_seen=snapshot.timestamp
                 )
+                self._add_to_session(current_session, snapshot)
+                continue
             
-            # Проверяем, нужно ли закрыть текущую сессию
-            if self._should_close_session(current_session, snapshot.timestamp):
-                self._finalize_session(current_session, snapshot.timestamp, SessionEndReason.TIMEOUT)
+            # Проверяем, нужно ли закрыть текущую сессию из-за разрыва
+            time_gap = snapshot.timestamp - current_session.last_seen
+            if time_gap > SESSION_TIMEOUT:
+                # Закрываем текущую сессию
+                self._finalize_session(current_session, SessionEndReason.TIMEOUT)
                 sessions.append(current_session)
                 # Создаем новую сессию
                 current_session = Session(
-                    id=self._generate_session_id(device_id, snapshot.timestamp),
+                    id=str(uuid.uuid4()),
                     device_id=device_id,
-                    start_time=snapshot.timestamp
+                    start_time=snapshot.timestamp,
+                    last_seen=snapshot.timestamp
                 )
-            
-            # Добавляем данные в текущую сессию
-            self._add_to_session(current_session, snapshot)
+                self._add_to_session(current_session, snapshot)
+            else:
+                # Продолжаем текущую сессию
+                current_session.last_seen = snapshot.timestamp
+                self._add_to_session(current_session, snapshot)
         
-        # Завершаем последнюю сессию, если она активна
-        if current_session and current_session.status == SessionStatus.ACTIVE:
-            # Для активной сессии end_time = last_seen
-            last_seen = self.history_service.get_last_seen(device_id)
-            if last_seen:
-                self._finalize_session(current_session, last_seen, SessionEndReason.UNKNOWN)
+        # Завершаем последнюю сессию (она остаётся активной, но фиксируем last_seen)
+        if current_session:
+            # Для MVP: последняя сессия считается ENDED с причиной UNKNOWN
+            # В полной версии она будет ACTIVE до следующего запуска
+            self._finalize_session(current_session, SessionEndReason.UNKNOWN)
             sessions.append(current_session)
         
         return sessions
 
-    def _should_close_session(self, session: Session, current_timestamp: datetime) -> bool:
-        """Проверяет, нужно ли закрыть сессию из-за таймаута."""
-        if session.end_time is not None:
-            return False
-        return current_timestamp - session.start_time > SESSION_TIMEOUT
-
-    def _finalize_session(self, session: Session, end_time: datetime, reason: SessionEndReason):
+    def _finalize_session(self, session: Session, reason: SessionEndReason):
         """Завершает сессию и делает ее неизменяемой."""
-        session.end_time = end_time
-        session.duration = (end_time - session.start_time).total_seconds()
+        session.end_time = session.last_seen
+        session.duration = (session.end_time - session.start_time).total_seconds()
         session.status = SessionStatus.ENDED
         session.end_reason = reason
         session.updated_at = datetime.now()
 
     def _add_to_session(self, session: Session, snapshot: SnapshotRecord):
         """Добавляет данные из snapshot в сессию."""
-        if snapshot.ip and snapshot.ip not in session.ip_history:
+        session.snapshots_count += 1
+        if snapshot.ip and (not session.ip_history or session.ip_history[-1] != snapshot.ip):
             session.ip_history.append(snapshot.ip)
-        if snapshot.hostname and snapshot.hostname not in session.hostname_history:
+        if snapshot.hostname and (not session.hostname_history or session.hostname_history[-1] != snapshot.hostname):
             session.hostname_history.append(snapshot.hostname)
         session.updated_at = datetime.now()
-
-    def _generate_session_id(self, device_id: str, timestamp: datetime) -> str:
-        """Генерирует уникальный ID для сессии."""
-        import uuid
-        return str(uuid.uuid4())
