@@ -45,8 +45,8 @@ from storage.archivist import (
 from storage.schema import Scan, ScanStatus
 from events import EventEngine
 from history import HistoryService
-from traffic import traffic_collector  # <-- v1.5.2
-from session import SessionBuilder  # <-- v1.5.3: ДОБАВЛЕНО
+from traffic import traffic_collector
+from session import SessionEngine, SessionEndReason  # <-- v1.5.3 Full
 
 
 def print_header() -> None:
@@ -229,13 +229,12 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1: Archivist + Event Engine + Event Persister ===
+    # === v1.4.0 + v1.4.1 + v1.5.3: Archivist + Event + Session Engine ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
 
         event_engine = EventEngine(Repository(db))
-
         from events import EventRepository, EventPersister
         event_repo = EventRepository(db)
         event_persister = EventPersister(event_repo)
@@ -243,8 +242,8 @@ def main() -> int:
         all_events = []
         total_event_elapsed_ms = 0.0
         total_persisted = 0
-
         first_device_id = None
+        ip_to_device_id = {}
 
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
@@ -254,7 +253,7 @@ def main() -> int:
 
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
-                print(f"      [DEBUG] result.device_id = '{result.device_id}'")
+                ip_to_device_id[device.ip] = result.device_id
                 
                 if first_device_id is None:
                     first_device_id = result.device_id
@@ -279,6 +278,40 @@ def main() -> int:
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
+        # === v1.5.3: Session Engine Processing ===
+        session_engine = None
+        if history_service and db:
+            try:
+                session_engine = SessionEngine(history_service, Repository(db))
+                print("\n  [SESSION] ✅ Session Engine initialized (with Recovery)")
+                
+                print("  [SESSION] Processing new snapshots...")
+                for ip, device_id in ip_to_device_id.items():
+                    snapshots = history_service.get_snapshots(device_id)
+                    if snapshots:
+                        # Конвертируем SnapshotRecord в dict для engine
+                        snap_dicts = [
+                            {
+                                "timestamp": s.timestamp.isoformat(),
+                                "ip": s.ip,
+                                "hostname": s.hostname
+                            } for s in snapshots
+                        ]
+                        session_engine.process_snapshots(device_id, snap_dicts)
+                
+                # Показываем статус активной сессии первого устройства
+                if first_device_id:
+                    active_sess = session_engine.get_active_session(first_device_id)
+                    if active_sess:
+                        print(f"      ✅ Active Session for {first_device_id[:8]}...")
+                        print(f"         Duration: {active_sess.duration or 0:.0f}s")
+                        print(f"         Snapshots: {active_sess.snapshots_count}")
+                    else:
+                        print("      ℹ️ No active session (device might be in timeout).")
+            except Exception as exc:
+                print(f"  [SESSION] ❌ Initialization/Processing failed: {exc}")
+        # ===========================================
+
         print()
         archivist.print_summary()
 
@@ -302,70 +335,12 @@ def main() -> int:
             print("  [HISTORY] Testing History Service...")
             try:
                 device_history = history_service.get_device_history(first_device_id)
-                
-                snapshots_count = len(device_history.snapshots)
-                observations_count = len(device_history.observations)
-                events_count = len(device_history.events)
-                
-                ip_history = history_service.get_ip_history(first_device_id)
-                unique_ips = len(set(entry["ip"] for entry in ip_history))
-                
-                hostname_history = history_service.get_hostname_history(first_device_id)
-                unique_hostnames = len(set(entry["hostname"] for entry in hostname_history))
-                
                 print(f"      ✅ History Service is working!")
                 print(f"         Device: {device_history.mac}")
-                print(f"         First seen: {device_history.first_seen.strftime('%Y-%m-%d %H:%M')}")
-                print(f"         Last seen: {device_history.last_seen.strftime('%Y-%m-%d %H:%M')}")
-                print(f"         Snapshots: {snapshots_count}")
-                print(f"         Observations: {observations_count}")
-                print(f"         Events: {events_count}")
-                print(f"         Unique IPs: {unique_ips}")
-                print(f"         Unique Hostnames: {unique_hostnames}")
-                
-                if ip_history:
-                    recent_ips = ip_history[-3:]
-                    ip_list = ", ".join([f"{entry['ip']} ({entry['timestamp'].strftime('%H:%M')})" for entry in recent_ips])
-                    print(f"         Recent IPs: {ip_list}")
-                
+                print(f"         Snapshots: {len(device_history.snapshots)}")
+                print(f"         Observations: {len(device_history.observations)}")
             except Exception as exc:
                 print(f"      ❌ History Service test failed: {exc}")
-        # ===========================================
-
-        # === v1.5.3: Session Engine (MVP Test) ===
-        if history_service and first_device_id:
-            print()
-            print("  [SESSION] Testing Session Engine (MVP)...")
-            try:
-                session_builder = SessionBuilder(history_service)
-                sessions = session_builder.build_sessions(first_device_id)
-                
-                if sessions:
-                    print(f"      ✅ Session Engine is working!")
-                    print(f"         Total sessions: {len(sessions)}")
-                    
-                    for i, session in enumerate(sessions, 1):
-                        duration_str = f"{session.duration:.0f}s" if session.duration else "Active"
-                        print(f"         Session #{i}:")
-                        print(f"            ID: {session.id[:8]}...")
-                        print(f"            Status: {session.status.value}")
-                        print(f"            Start: {session.start_time.strftime('%H:%M')}")
-                        print(f"            End: {session.end_time.strftime('%H:%M') if session.end_time else 'Active'}")
-                        print(f"            Duration: {duration_str}")
-                        print(f"            Snapshots: {session.snapshots_count}")
-                        print(f"            IPs: {', '.join(session.ip_history)}")
-                        if session.hostname_history:
-                            print(f"            Hostnames: {', '.join(session.hostname_history)}")
-                        if session.end_reason:
-                            print(f"            End reason: {session.end_reason.value}")
-                else:
-                    print("      ⚠️ No sessions found.")
-                    
-            except Exception as exc:
-                print(f"      ❌ Session Engine test failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
     devices = filter_devices(devices)
     devices = sort_devices(devices)
@@ -376,6 +351,9 @@ def main() -> int:
     save_report(devices, collected_data)
 
     if db:
+        # === v1.5.3: Корректное закрытие сессий перед выходом ===
+        if session_engine:
+            session_engine.close_all_active_sessions(SessionEndReason.PROGRAM_SHUTDOWN)
         db.close()
 
     elapsed = time.time() - start
