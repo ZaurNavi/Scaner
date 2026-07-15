@@ -6,14 +6,11 @@ Traffic Collector — единая точка входа для получени
 from __future__ import annotations
 
 import time
-import logging
 from datetime import datetime
 from typing import Dict, List
 
 from .models import TrafficInfo
 from .registry import get_traffic_sources
-
-logger = logging.getLogger(__name__)
 
 
 class TrafficCollector:
@@ -23,13 +20,13 @@ class TrafficCollector:
         """
         start_time = time.time()
         sources = get_traffic_sources()
-        cycle_timestamp = datetime.now()  # (Пункт 4)
+        cycle_timestamp = datetime.now()
         
-        logger.info(f"Traffic Collector initialized. Sources: {len(sources)}")
+        print(f"\n  [TRAFFIC] Collector initialized. Sources: {len(sources)}")
         
         merged_traffic: Dict[str, TrafficInfo] = {}
 
-        # (Пункт 11) Инициализация
+        # Инициализация
         for source in sources:
             source.initialize()
 
@@ -37,7 +34,7 @@ class TrafficCollector:
             for source in sources:
                 source_name = source.get_name()
                 try:
-                    # (Пункт 4) Передаем единый timestamp
+                    # Передаем единый timestamp
                     source_data = source.collect_all(cycle_timestamp, target_ips)
                     
                     for ip, traffic_info in source_data.items():
@@ -48,25 +45,23 @@ class TrafficCollector:
                                 cycle_timestamp=cycle_timestamp
                             )
                         
-                        # (Пункт 5) Строгий merge: никогда не перезаписывать
+                        # Строгий merge: никогда не перезаписывать
                         self._merge_info(merged_traffic[ip], traffic_info, source_name)
                         
                 except Exception as e:
-                    logger.error(f"Source '{source_name}' failed: {e}")
+                    print(f"      [TRAFFIC] ❌ Source '{source_name}' failed: {e}")
                     source.stats["errors"] += 1
 
-            # Логирование статистики (Пункт 12 и 13)
+            # Вывод статистики в консоль (вместо logger)
             for source in sources:
-                logger.info(
-                    f"Traffic {source.get_name().capitalize()}: "
-                    f"{source.stats['devices']} devices, "
-                    f"{source.stats['elapsed_ms']:.1f} ms, "
-                    f"errors: {source.stats['errors']}"
-                )
-            logger.info(f"Traffic Merged: {len(merged_traffic)} devices")
+                print(f"      [TRAFFIC] {source.get_name().capitalize()}: "
+                      f"{source.stats['devices']} devices, "
+                      f"{source.stats['elapsed_ms']:.1f} ms, "
+                      f"errors: {source.stats['errors']}")
+            print(f"      [TRAFFIC] Merged: {len(merged_traffic)} devices")
             
         finally:
-            # (Пункт 11) Завершение
+            # Завершение
             for source in sources:
                 source.shutdown()
 
@@ -74,7 +69,7 @@ class TrafficCollector:
 
     def _merge_info(self, target: TrafficInfo, source_info: TrafficInfo, source_name: str):
         """
-        (Пункт 5) Инвариант: никогда не перезаписывать существующие данные.
+        Инвариант: никогда не перезаписывать существующие данные.
         """
         # Обновляем статус источника
         target.source_status[source_name] = "ok" if source_info else "empty"
@@ -93,7 +88,7 @@ class TrafficCollector:
                     target.raw_data.update(value)
                 continue
                 
-            # (Пункт 5) Если в target уже есть значение, или в source None — пропускаем
+            # Если в target уже есть значение, или в source None — пропускаем
             if getattr(target, key) is not None:
                 continue
             if value is None:
