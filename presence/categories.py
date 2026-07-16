@@ -19,7 +19,7 @@ class PresenceStatus(Enum):
     HIGH = "HIGH"
     CONFIRMED = "CONFIRMED"
 
-# EventType enum (Замечание №6)
+# EventType enum (Замечание №8: убраны APPEARED/DISAPPEARED)
 class EventType(Enum):
     FIRST_SEEN = "first_seen"
     LAST_SEEN = "last_seen"
@@ -27,5 +27,3 @@ class EventType(Enum):
     SESSION_ENDED = "session_ended"
     RETURNED = "returned"
     LONG_ABSENCE = "long_absence"
-    APPEARED = "appeared"
-    DISAPPEARED = "disappeared"
