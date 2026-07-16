@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluator работает ТОЛЬКО с PresenceFeatureSet (без проверки providers)."""
+"""Evaluator работает ТОЛЬКО с PresenceFeatureSet."""
 from typing import List, Dict, Any, Tuple
 from .models import PresenceFeatureSet, PresenceFact
 from .categories import PresenceStatus
@@ -13,7 +13,6 @@ class PresenceEvaluator:
         debug_info = {"evaluated": [], "matched": [], "skipped": [], "all_rules": rules}
 
         for rule in rules:
-            # Rule знает только Features (Замечание №9)
             missing_features = [
                 f for f in rule.required_features 
                 if f not in feature_set or not feature_set[f].availability.available
