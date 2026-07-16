@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Session Metric Builders для Behaviour Engine."""
 from datetime import datetime
+from typing import Dict  # <-- ДОБАВЛЕНО
 from ...timeline.models import Timeline, EventType
 
 def build_appearance_frequency(timeline: Timeline) -> int:
