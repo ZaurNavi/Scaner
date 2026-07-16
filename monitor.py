@@ -111,81 +111,155 @@ def init_archivist():
         return None, None, None
 
 
+def _safe_get(obj, attr, default=None):
+    """Безопасное получение атрибута объекта."""
+    return getattr(obj, attr, default)
+
+
+def _safe_get_metric_value(metrics, metric_id):
+    """Безопасное извлечение значения метрики из разных типов контейнеров."""
+    if not metrics:
+        return 0
+    
+    # PresenceMetricSet (dataclass с полем metrics)
+    if hasattr(metrics, 'metrics') and isinstance(metrics.metrics, dict):
+        metric = metrics.metrics.get(metric_id)
+        if metric and hasattr(metric, 'value'):
+            return metric.value
+    
+    # Обычный dict
+    if isinstance(metrics, dict):
+        metric = metrics.get(metric_id)
+        if metric:
+            if hasattr(metric, 'value'):
+                return metric.value
+            return metric
+    
+    return 0
+
+
 def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
     """
-    Единый форматтер вывода для всех аналитических движков (Замечание №6).
+    Единый форматтер вывода для всех аналитических движков (Защищённая версия).
+    Безопасно извлекает атрибуты через getattr, не падает при отсутствии полей.
     """
     print(f"\n  [{engine_name}] Analyzing {engine_type}...")
     if not profile:
         print(f"      ❌ {engine_name} Profile not generated.")
         return
 
-    print(f"      ✅ {engine_name} Profile for {profile.identity_id[:8]}...")
+    identity_id = _safe_get(profile, 'identity_id', 'unknown')
+    print(f"      ✅ {engine_name} Profile for {identity_id[:8]}...")
     
-    # 1. Coverage (Замечание №6)
+    # 1. Coverage (Безопасное извлечение)
     print("         Coverage:")
-    print(f"            • Metric Coverage: {profile.metric_coverage:.1f}%")
-    print(f"            • Feature Coverage: {profile.feature_coverage:.1f}%")
+    metric_coverage = _safe_get(profile, 'metric_coverage')
+    if metric_coverage is not None:
+        print(f"            • Metric Coverage: {metric_coverage:.1f}%")
+    
+    feature_coverage = _safe_get(profile, 'feature_coverage', 0.0)
+    print(f"            • Feature Coverage: {feature_coverage:.1f}%")
+    
     ratio_name = "Rule Match Ratio" if hasattr(profile, 'rule_match_ratio') else "Engine Coverage"
-    ratio_val = profile.rule_match_ratio if hasattr(profile, 'rule_match_ratio') else profile.feature_coverage
+    ratio_val = _safe_get(profile, 'rule_match_ratio', feature_coverage)
     print(f"            • {ratio_name}: {ratio_val:.1f}%")
 
-    # 2. Timeline (Замечание №4)
-    if hasattr(profile, 'timeline') and profile.timeline:
-        events_count = len(profile.timeline.events)
-        sessions_count = profile.timeline.count_by_type(EventType.SESSION_STARTED) if hasattr(profile.timeline, 'count_by_type') else 0
-        # Для простоты используем visit_count из метрик как Days Covered, если есть
-        days_covered = profile.metrics.get("visit_count").value if hasattr(profile, 'metrics') and profile.metrics.get("visit_count") else 0
-        completeness = profile.feature_coverage # Упрощенная метрика полноты
+    # 2. Timeline (Безопасное извлечение)
+    timeline = _safe_get(profile, 'timeline')
+    if timeline and hasattr(timeline, 'events'):
+        events_count = len(timeline.events)
+        sessions_count = 0
+        if hasattr(timeline, 'count_by_type'):
+            try:
+                sessions_count = timeline.count_by_type(EventType.SESSION_STARTED)
+            except Exception:
+                sessions_count = 0
+        
+        metrics = _safe_get(profile, 'metrics')
+        days_covered = _safe_get_metric_value(metrics, 'visit_count')
         
         print("         Timeline:")
         print(f"            • Events: {events_count}")
         print(f"            • Days Covered: {days_covered}")
         print(f"            • Sessions: {sessions_count}")
-        print(f"            • Completeness: {completeness:.1f}%")
+        print(f"            • Completeness: {feature_coverage:.1f}%")
 
-    # 3. Detected Facts (Замечание №1, №2, №3)
-    facts_count = len(profile.facts)
-    print(f"         Detected Facts ({facts_count}):")
-    if profile.facts:
-        for fact in profile.facts:
-            # Получаем детали фичи для красивого вывода (Замечание №2)
-            feature_detail = profile.features.get(fact.feature)
-            if feature_detail:
-                val = feature_detail.value
-                unit = feature_detail.unit
-                name = feature_detail.name
-                print(f"            • {fact.category.value}: {name} = {val} {unit} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
-            else:
-                print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
+    # 3. Detected Facts (Безопасное извлечение)
+    facts = _safe_get(profile, 'facts', [])
+    features = _safe_get(profile, 'features', {})
+    
+    print(f"         Detected Facts ({len(facts)}):")
+    
+    for fact in facts:
+        category_value = _safe_get(fact, 'category')
+        if hasattr(category_value, 'value'):
+            category_value = category_value.value
+        
+        fact_feature = _safe_get(fact, 'feature', '')
+        feature_detail = features.get(fact_feature) if isinstance(features, dict) else None
+        
+        if feature_detail and hasattr(feature_detail, 'name'):
+            name = _safe_get(feature_detail, 'name', '')
+            value = _safe_get(feature_detail, 'value', 'N/A')
+            unit = _safe_get(feature_detail, 'unit', '')
+            score = _safe_get(fact, 'score', 0)
+            matched_rules = _safe_get(fact, 'matched_rules', [])
+            print(f"            • {category_value}: {name} = {value} {unit} (Score: {score}, Rule: {', '.join(matched_rules)})")
+        else:
+            measured_value = _safe_get(fact, 'measured_value', 'N/A')
+            score = _safe_get(fact, 'score', 0)
+            matched_rules = _safe_get(fact, 'matched_rules', [])
+            print(f"            • {category_value}: {measured_value} (Score: {score}, Rule: {', '.join(matched_rules)})")
 
-        # Explain Summary (Замечание №3)
+    # Explain Summary
+    if facts:
         print("         Explain Summary:")
-        for fact in profile.facts:
-            feature_detail = profile.features.get(fact.feature)
-            if feature_detail:
-                print(f"            • {fact.category.value} because {feature_detail.name} = {feature_detail.value} {feature_detail.unit}, matched: {', '.join(fact.matched_rules)}")
+        for fact in facts:
+            category_value = _safe_get(fact, 'category')
+            if hasattr(category_value, 'value'):
+                category_value = category_value.value
+            
+            fact_feature = _safe_get(fact, 'feature', '')
+            feature_detail = features.get(fact_feature) if isinstance(features, dict) else None
+            matched_rules = _safe_get(fact, 'matched_rules', [])
+            
+            if feature_detail and hasattr(feature_detail, 'name'):
+                name = _safe_get(feature_detail, 'name', '')
+                value = _safe_get(feature_detail, 'value', 'N/A')
+                unit = _safe_get(feature_detail, 'unit', '')
+                print(f"            • {category_value} because {name} = {value} {unit}, matched: {', '.join(matched_rules)}")
 
-    # 4. Performance & Debug (Замечание №5)
+    # 4. Performance & Debug (Безопасное извлечение)
     if debug_info:
         print("         Performance & Debug:")
-        print(f"            [Cache] Hit: {debug_info.cache_hit} | Key: {debug_info.cache_key}")
-        print(f"            [Versions] Engine: {debug_info.engine_version} | Feature: {debug_info.feature_version} | Provider: {debug_info.provider_version}")
+        cache_hit = _safe_get(debug_info, 'cache_hit', 'N/A')
+        cache_key = _safe_get(debug_info, 'cache_key', 'N/A')
+        print(f"            [Cache] Hit: {cache_hit} | Key: {cache_key}")
         
-        timing_parts = [f"Total: {debug_info.computation_time_ms:.2f}ms"]
-        if hasattr(debug_info, 'provider_times') and debug_info.provider_times:
-            prov_str = ", ".join([f"{k}={v:.2f}ms" for k, v in debug_info.provider_times.items()])
-            timing_parts.append(f"Providers: {prov_str}")
-        if hasattr(debug_info, 'builder_times') and debug_info.builder_times:
-            build_str = ", ".join([f"{k}={v:.2f}ms" for k, v in debug_info.builder_times.items()])
-            timing_parts.append(f"Builders: {build_str}")
+        eng_v = _safe_get(debug_info, 'engine_version', 'N/A')
+        feat_v = _safe_get(debug_info, 'feature_version', 'N/A')
+        prov_v = _safe_get(debug_info, 'provider_version', 'N/A')
+        print(f"            [Versions] Engine: {eng_v} | Feature: {feat_v} | Provider: {prov_v}")
+        
+        timing_parts = [f"Total: {_safe_get(debug_info, 'computation_time_ms', 0):.2f}ms"]
+        prov_times = _safe_get(debug_info, 'provider_times', {})
+        if prov_times:
+            timing_parts.append(f"Providers: {', '.join([f'{k}={v:.2f}ms' for k, v in prov_times.items()])}")
+        build_times = _safe_get(debug_info, 'builder_times', {})
+        if build_times:
+            timing_parts.append(f"Builders: {', '.join([f'{k}={v:.2f}ms' for k, v in build_times.items()])}")
+        feat_times = _safe_get(debug_info, 'feature_times', {})
+        if feat_times:
+            timing_parts.append(f"Features: {', '.join([f'{k}={v:.2f}ms' for k, v in list(feat_times.items())[:2]])}")
             
         print(f"            [Timing] {' | '.join(timing_parts)}")
         
-        if hasattr(debug_info, 'skipped_rules') and debug_info.skipped_rules:
-            print(f"            [Skipped] Rules: {', '.join(debug_info.skipped_rules[:2])}{'...' if len(debug_info.skipped_rules) > 2 else ''}")
-        if hasattr(debug_info, 'missing_features') and debug_info.missing_features:
-            print(f"            [Missing] Features: {', '.join(debug_info.missing_features)}")
+        skipped = _safe_get(debug_info, 'skipped_rules', [])
+        if skipped:
+            print(f"            [Skipped] Rules: {', '.join(skipped[:2])}{'...' if len(skipped) > 2 else ''}")
+        missing = _safe_get(debug_info, 'missing_features', [])
+        if missing:
+            print(f"            [Missing] Features: {', '.join(missing)}")
 
 
 def main() -> int:
@@ -416,7 +490,13 @@ def main() -> int:
             try:
                 behaviour_service = BehaviourService(history_service, identity_service, session_engine)
                 bp = behaviour_service.get_profile(profiles[0].device_id)
-                bd = behaviour_service.debug(profiles[0].device_id)
+                # Безопасный вызов debug - может отсутствовать в старых версиях
+                bd = None
+                if hasattr(behaviour_service, 'debug'):
+                    try:
+                        bd = behaviour_service.debug(profiles[0].device_id)
+                    except Exception:
+                        bd = None
                 _format_engine_output("BEHAVIOUR", bp, bd, engine_type="behavioural patterns")
             except Exception as exc:
                 print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
@@ -428,7 +508,13 @@ def main() -> int:
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
                 mobility_service = MobilityService(behaviour_service, session_engine, history_service)
                 mp = mobility_service.get_profile(profiles[0].device_id)
-                md = mobility_service.debug(profiles[0].device_id)
+                # Безопасный вызов debug
+                md = None
+                if hasattr(mobility_service, 'debug'):
+                    try:
+                        md = mobility_service.debug(profiles[0].device_id)
+                    except Exception:
+                        md = None
                 _format_engine_output("MOBILITY", mp, md, engine_type="movement patterns")
             except Exception as exc:
                 print(f"  [MOBILITY] ❌ Failed: {exc}")
@@ -440,7 +526,12 @@ def main() -> int:
                 PresenceProviderRegistry.register("history_provider", HistoryProvider, version="1.0.0", priority=10, dependencies=[])
                 presence_service = PresenceService(history_service)
                 pp = presence_service.get_profile(profiles[0].device_id)
-                pd = presence_service.debug(profiles[0].device_id)
+                pd = None
+                if hasattr(presence_service, 'debug'):
+                    try:
+                        pd = presence_service.debug(profiles[0].device_id)
+                    except Exception:
+                        pd = None
                 _format_engine_output("PRESENCE", pp, pd, engine_type="temporal presence")
             except Exception as exc:
                 print(f"  [PRESENCE] ❌ Failed: {exc}")
@@ -452,7 +543,7 @@ def main() -> int:
         if all_events:
             print()
             print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms, persisted: {total_persisted}):")
-            for event in all_events[:5]:  # Ограничим вывод 5 событиями для чистоты
+            for event in all_events[:5]:
                 severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "CRITICAL": "🚨"}.get(event.severity.value, "•")
                 print(f"      {severity_icon} [{event.severity.value}] {event.title}")
         else:
