@@ -6,7 +6,7 @@
 
 import sys
 from pathlib import Path
-from storage.archivist import DatabaseManager
+from storage.archivist import DatabaseManager, Repository
 from history import HistoryService
 from identity import IdentityService, IdentityRepository
 from session import SessionEngine
@@ -25,9 +25,9 @@ def main():
 
     db = DatabaseManager(db_path)
     conn = db.get_connection()
-    cursor = conn.cursor()
-
+    
     # Берем первый попавшийся device_id из таблицы identity для теста
+    cursor = conn.cursor()
     cursor.execute("SELECT device_id FROM identity LIMIT 1")
     row = cursor.fetchone()
     if not row:
@@ -38,11 +38,13 @@ def main():
     print(f"\n🎯 Тестируем устройство: {device_id}")
     print("-" * 60)
 
-    # 2. Инициализация зависимостей
+    # 2. Инициализация зависимостей (ИСПРАВЛЕНО: используем правильный Repository)
     history_service = HistoryService(conn)
     identity_repo = IdentityRepository(db)
     identity_service = IdentityService(history_service, identity_repo)
-    session_engine = SessionEngine(history_service, identity_repo) # Используем тот же repo для простоты
+    
+    repo = Repository(db)
+    session_engine = SessionEngine(history_service, repo)
     
     # 3. Запуск Behaviour Engine
     print("⚙️  Запуск Behaviour Engine...")
@@ -80,7 +82,7 @@ def main():
     # 6. Вывод пропущенных правил (Skipped Rules)
     print(f"\n🚫 3. Пропущенные правила (Skipped Rules: {len(debug_info.skipped_rules)}):")
     if debug_info.skipped_rules:
-        for skipped in debug_info.skipped_rules[:5]: # Показываем первые 5, чтобы не засорять вывод
+        for skipped in debug_info.skipped_rules[:5]: # Показываем первые 5
             print(f"   • {skipped}")
         if len(debug_info.skipped_rules) > 5:
             print(f"   ... и ещё {len(debug_info.skipped_rules) - 5} правил")
