@@ -62,6 +62,11 @@ from presence.providers.history_provider import HistoryProvider
 from presence.features.visit_feature import build_history_depth_days
 from presence.categories import EventType
 
+# v1.6.2: Usage Engine импорты
+from usage import UsageService
+from usage.registry import ProviderRegistry as UsageProviderRegistry
+from usage.providers.traffic_provider import TrafficProvider
+
 
 def print_header() -> None:
     print()
@@ -119,13 +124,13 @@ def _safe_get(obj, attr, default=None):
 def _safe_get_feature_value(features, feature_id):
     """
     Безопасное извлечение значения фичи из разных типов контейнеров:
-    - dict (Mobility, Presence)
+    - dict (Mobility, Presence, Usage)
     - dataclass FeatureSet (Behaviour)
     """
     if not features:
         return None
     
-    # Словарь (Mobility, Presence)
+    # Словарь (Mobility, Presence, Usage)
     if isinstance(features, dict):
         feature = features.get(feature_id)
         if feature and hasattr(feature, 'value'):
@@ -171,7 +176,7 @@ def _safe_get_metric_value(metrics, metric_id):
     if not metrics:
         return 0
     
-    # PresenceMetricSet (dataclass с полем metrics)
+    # PresenceMetricSet/UsageMetricSet (dataclass с полем metrics)
     if hasattr(metrics, 'metrics') and isinstance(metrics.metrics, dict):
         metric = metrics.metrics.get(metric_id)
         if metric and hasattr(metric, 'value'):
@@ -191,7 +196,7 @@ def _safe_get_metric_value(metrics, metric_id):
 def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
     """
     Единый форматтер вывода для всех аналитических движков.
-    Работает с унифицированными моделями Behaviour, Mobility и Presence.
+    Работает с унифицированными моделями Behaviour, Mobility, Presence и Usage.
     """
     print(f"\n  [{engine_name}] Analyzing {engine_type}...")
     if not profile:
@@ -214,7 +219,7 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
     ratio_val = _safe_get(profile, 'rule_match_ratio', feature_coverage)
     print(f"            • {ratio_name}: {ratio_val:.1f}%")
 
-    # 2. Timeline (есть только в Mobility и Presence)
+    # 2. Timeline (есть в Mobility, Presence и Usage)
     timeline = _safe_get(profile, 'timeline')
     if timeline and hasattr(timeline, 'events') and timeline.events:
         events_count = len(timeline.events)
@@ -436,7 +441,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -573,6 +578,21 @@ def main() -> int:
                 _format_engine_output("PRESENCE", pp, pd, engine_type="temporal presence")
             except Exception as exc:
                 print(f"  [PRESENCE] ❌ Failed: {exc}")
+
+        # === v1.6.2: Usage Engine ===
+        usage_service = None
+        if history_service and profiles:
+            try:
+                UsageProviderRegistry.register("traffic_provider", TrafficProvider, version="1.0.0", priority=10, dependencies=[])
+                usage_service = UsageService(history_service)
+                sample_device_id = profiles[0].device_id
+                up = usage_service.get_profile(sample_device_id)
+                ud = usage_service.debug(sample_device_id) if hasattr(usage_service, 'debug') else None
+                _format_engine_output("USAGE", up, ud, engine_type="network usage patterns")
+            except Exception as exc:
+                print(f"  [USAGE] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
 
         # === Archivist Summary & Events ===
         print()
