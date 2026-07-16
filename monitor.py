@@ -67,6 +67,9 @@ from usage import UsageService
 from usage.registry import ProviderRegistry as UsageProviderRegistry
 from usage.providers.traffic_provider import TrafficProvider
 
+# v1.6.3: Scanner Platform Core импорты
+from scanner_platform import Pipeline, PlatformValidator, VersionSnapshot, DeviceState
+
 
 def print_header() -> None:
     print()
@@ -323,6 +326,21 @@ def main() -> int:
     start = time.time()
     print_header()
 
+    # === v1.6.3: Scanner Platform Validation ===
+    print("\n  [PLATFORM] Validating Scanner Platform Core...")
+    try:
+        validation_errors = PlatformValidator.validate_all()
+        if validation_errors:
+            print("  [PLATFORM] ❌ Validation failed:")
+            for err in validation_errors:
+                print(f"      • {err}")
+            print("  [PLATFORM] ⚠️ Continuing without platform features...")
+        else:
+            print("  [PLATFORM] ✅ Scanner Platform Core validated successfully!")
+    except Exception as exc:
+        print(f"  [PLATFORM] ❌ Validation error: {exc}")
+        print("  [PLATFORM] ⚠️ Continuing without platform features...")
+
     archivist, db, scan = init_archivist()
     
     # === v1.5.1: Инициализация History Service ===
@@ -441,7 +459,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 + v1.6.3 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
