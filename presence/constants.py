@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """Константы и версии для Presence Engine."""
 
-# Версии (Замечание №13)
 ENGINE_VERSION = "1.0.0"
 RULES_VERSION = "1.0.0"
 FEATURE_VERSION = "1.0.0"
 PROVIDER_VERSION = "1.0.0"
 
-# Пороги для правил
 NEW_DEVICE_HISTORY_DAYS = 7
 RETURNING_DEVICE_MIN_VISITS = 2
 REGULAR_VISITOR_MIN_VISITS = 10
