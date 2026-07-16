@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Модели данных Mobility Engine v2.0"""
+"""Модели данных Mobility Engine v2.0 (Унифицированная версия v1.6.1)"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -59,19 +59,24 @@ class MobilityFact:
     status: MobilityStatus
     matched_rules: List[str] = field(default_factory=list)
     sources: List[str] = field(default_factory=list)
-    reasons: List[str] = field(default_factory=list) # <-- ИСПРАВЛЕНО: список причин
+    reasons: List[str] = field(default_factory=list)
 
 @dataclass
 class MobilityProfile:
+    """Главный объект Mobility Engine (Унифицированный)."""
     identity_id: str
     generated_at: datetime = field(default_factory=datetime.now)
     engine_version: str = "1.0.0"
     rules_version: str = "1.0.0"
+    feature_version: str = "1.0.0"  # ДОБАВЛЕНО
+    provider_version: str = "1.0.0"  # ДОБАВЛЕНО
     identity_version: int = 1
     history_version: int = 1
     session_version: int = 1
     behaviour_version: int = 1
+    metric_coverage: float = 0.0  # ДОБАВЛЕНО
     feature_coverage: float = 0.0
+    rule_match_ratio: float = 0.0  # ДОБАВЛЕНО (алиас для mobility_coverage)
     mobility_coverage: float = 0.0
     features: MobilityFeatureSet = field(default_factory=dict)
     facts: List[MobilityFact] = field(default_factory=list)
@@ -79,7 +84,7 @@ class MobilityProfile:
 
 @dataclass
 class MobilityExplanation:
-    metrics: Dict[str, Any] # <-- ИСПРАВЛЕНО: реальные метрики, а не {}
+    metrics: Dict[str, Any]
     features: MobilityFeatureSet
     matched_rules: List[str]
     skipped_rules: List[str]
@@ -91,12 +96,18 @@ class MobilityExplanation:
 
 @dataclass
 class DebugInfo:
+    """Отладочная информация для Mobility Engine (Унифицированная)."""
     computation_time_ms: float
-    provider_times: Dict[str, float] = field(default_factory=dict) # <-- ДОБАВЛЕНО
-    feature_times: Dict[str, float] = field(default_factory=dict)  # <-- ДОБАВЛЕНО
-    evaluated_rules: List[str] = field(default_factory=list)       # <-- ДОБАВЛЕНО
-    matched_rules: List[str] = field(default_factory=list)         # <-- ДОБАВЛЕНО
-    skipped_rules: List[str] = field(default_factory=list)         # <-- ДОБАВЛЕНО
+    provider_times: Dict[str, float] = field(default_factory=dict)
+    feature_times: Dict[str, float] = field(default_factory=dict)
+    evaluated_rules: List[str] = field(default_factory=list)
+    matched_rules: List[str] = field(default_factory=list)
+    skipped_rules: List[str] = field(default_factory=list)
     missing_features: List[str] = field(default_factory=list)
     cache_invalidated: bool = False
     cache_reason: str = ""
+    cache_hit: bool = False  # ДОБАВЛЕНО
+    cache_key: tuple = field(default_factory=tuple)  # ДОБАВЛЕНО
+    engine_version: str = "1.0.0"  # ДОБАВЛЕНО
+    feature_version: str = "1.0.0"  # ДОБАВЛЕНО
+    provider_version: str = "1.0.0"  # ДОБАВЛЕНО
