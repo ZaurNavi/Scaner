@@ -50,10 +50,16 @@ from session import SessionEngine, SessionEndReason
 from identity import IdentityService, IdentityRepository
 from confidence import ConfidenceService, FactCategory
 from behaviour import BehaviourService, BehaviourCategory
-from mobility import MobilityService, ProviderRegistry  # <-- v1.5.7: ДОБАВЛЕНО
-# Импорты триггерят авто-регистрацию через @register_feature
+from mobility import MobilityService
+from mobility.registry import ProviderRegistry as MobilityProviderRegistry  # <-- v1.5.7
 from mobility.providers.session_provider import SessionMetricsProvider
 from mobility.features.roaming_feature import build_roaming_rate
+
+# v1.6.1: Presence Engine импорты
+from presence import PresenceService
+from presence.registry import ProviderRegistry as PresenceProviderRegistry
+from presence.providers.history_provider import HistoryProvider
+from presence.features.visit_feature import build_history_depth_days  # Триггерит @register_feature
 
 
 def print_header() -> None:
@@ -236,7 +242,7 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7: Archivist + Event + Session + Identity + Confidence + Behaviour + Mobility ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1: Archivist + Event + Session + Identity + Confidence + Behaviour + Mobility + Presence ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -434,7 +440,7 @@ def main() -> int:
         if behaviour_service and session_engine and history_service:
             try:
                 # Регистрация провайдеров (Open/Closed Principle)
-                ProviderRegistry.register("session_provider", SessionMetricsProvider)
+                MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
                 
                 mobility_service = MobilityService(
                     behaviour_service=behaviour_service,
@@ -478,6 +484,75 @@ def main() -> int:
                             
             except Exception as exc:
                 print(f"  [MOBILITY] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
+        # ===========================================
+
+        # === v1.6.1: Presence Engine ===
+        presence_service = None
+        if history_service and profiles:
+            try:
+                # Регистрация провайдеров через PresenceProviderRegistry (Замечание №3: с version)
+                PresenceProviderRegistry.register(
+                    "history_provider", 
+                    HistoryProvider, 
+                    version="1.0.0",
+                    priority=10,
+                    dependencies=[]
+                )
+                
+                presence_service = PresenceService(history_service)
+                print("\n  [PRESENCE] Analyzing temporal presence...")
+                
+                sample_device_id = profiles[0].device_id
+                presence_profile = presence_service.get_profile(sample_device_id)
+                debug_info = presence_service.debug(sample_device_id)
+                
+                if presence_profile:
+                    print(f"      ✅ Presence Profile for {sample_device_id[:8]}...")
+                    print(f"         Metric Coverage: {presence_profile.metric_coverage:.1f}%")
+                    print(f"         Feature Coverage: {presence_profile.feature_coverage:.1f}%")
+                    print(f"         Rule Match Ratio: {presence_profile.rule_match_ratio:.1f}%")  # Замечание №5
+                    print(f"         Facts Detected: {len(presence_profile.facts)}")
+                    print(f"         Timeline Events: {len(presence_profile.timeline.events)}")
+                    
+                    # Показываем Presence Patterns
+                    if presence_profile.facts:
+                        print(f"         Presence Patterns:")
+                        for fact in presence_profile.facts:
+                            print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
+                    
+                    # Показываем Execution Order (Замечание №10)
+                    if debug_info:
+                        print(f"         Debug:")
+                        print(f"            Computation Time: {debug_info.computation_time_ms:.2f}ms")
+                        print(f"            Cache Hit: {debug_info.cache_hit}")  # Замечание №14
+                        print(f"            Cache Key: {debug_info.cache_key}")  # Замечание №14
+                        print(f"            Engine Version: {debug_info.engine_version}")  # Замечание №14
+                        print(f"            Feature Version: {debug_info.feature_version}")  # Замечание №14
+                        print(f"            Provider Version: {debug_info.provider_version}")  # Замечание №14
+                        
+                        if debug_info.provider_times:
+                            print(f"            Provider Times:")
+                            for provider, time_ms in debug_info.provider_times.items():
+                                print(f"               • {provider}: {time_ms:.2f}ms")
+                        if debug_info.builder_times:  # Замечание №12
+                            print(f"            Builder Times:")
+                            for builder, time_ms in debug_info.builder_times.items():
+                                print(f"               • {builder}: {time_ms:.2f}ms")
+                        if debug_info.feature_times:
+                            print(f"            Feature Builder Times:")
+                            for feature, time_ms in list(debug_info.feature_times.items())[:3]:
+                                print(f"               • {feature}: {time_ms:.2f}ms")
+                        if debug_info.skipped_rules:
+                            print(f"            Skipped Rules:")
+                            for rule in debug_info.skipped_rules[:2]:
+                                print(f"               • {rule}")
+                        if debug_info.missing_features:
+                            print(f"            Missing Features: {', '.join(debug_info.missing_features)}")
+                            
+            except Exception as exc:
+                print(f"  [PRESENCE] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
         # ===========================================
