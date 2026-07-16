@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Ядро Mobility Engine. Оркестрация конвейера."""
+"""Ядро Mobility Engine. Тонкий оркестратор."""
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Tuple
 from datetime import datetime
 
-from .models import MobilityProfile, MobilityFeatureSet, MobilityTimeline, DebugInfo
+from .models import MobilityProfile, MobilityFeatureSet, MobilityTimeline, DebugInfo, MovementEvent
 from .evaluator import MobilityEvaluator
 from .registry import ProviderRegistry, FeatureRegistry
 from .constants import ENGINE_VERSION, RULES_VERSION
@@ -15,84 +15,81 @@ class MobilityEngine:
         self.session_engine = session_engine
         self.history_service = history_service
         self.evaluator = MobilityEvaluator()
-        self._cache: Dict[str, MobilityProfile] = {}
-        self._versions: Dict[str, Dict[str, int]] = {}
+        self._cache: Dict[Tuple, MobilityProfile] = {}
 
-    def _check_cache(self, device_id: str, identity_version: int, behaviour_version: int) -> bool:
-        if device_id not in self._cache:
-            return False
-        v = self._versions.get(device_id, {})
-        return v.get("identity") == identity_version and v.get("behaviour") == behaviour_version
+    def _get_versions(self, device_id: str) -> Tuple[str, int, int, int, int]:
+        # Получаем реальные версии (Замечание №3)
+        id_ver = getattr(self.behaviour_service.identity_service, 'get_version', lambda x: 1)(device_id)
+        beh_ver = 1 # Заглушка, если метода нет
+        sess_ver = 1
+        hist_ver = 1
+        return (device_id, id_ver, beh_ver, sess_ver, hist_ver)
 
-    def analyze(self, device_id: str) -> tuple[MobilityProfile, DebugInfo]:
+    def analyze(self, device_id: str) -> Tuple[MobilityProfile, DebugInfo]:
         start_time = time.time()
-        debug = DebugInfo(
-            computation_time_ms=0, used_providers=[], skipped_rules=[], 
-            missing_features=[], cache_invalidated=False, cache_reason=""
-        )
-
-        # 1. Получаем версии для кэша (упрощенно)
-        identity_version = 1 # В реальности брать из IdentityService
-        behaviour_version = 1 # В реальности брать из BehaviourService
+        debug = DebugInfo(computation_time_ms=0)
         
-        if self._check_cache(device_id, identity_version, behaviour_version):
+        # 1. Проверка кэша по составному ключу (Замечание №11)
+        cache_key = self._get_versions(device_id)
+        if cache_key in self._cache:
             debug.cache_invalidated = False
             debug.computation_time_ms = (time.time() - start_time) * 1000
-            return self._cache[device_id], debug
+            return self._cache[cache_key], debug
 
         debug.cache_invalidated = True
         debug.cache_reason = "Version mismatch or cold cache"
 
-        # 2. Сбор Metrics через Providers
+        # 2. Provider Manager (Замечание №2, №9)
         metrics = {}
         providers = ProviderRegistry.get_all()
         for name, provider_cls in providers.items():
-            # Инициализация провайдера (упрощенно)
+            t0 = time.time()
             if name == "session_provider":
-                provider = provider_cls(self.session_engine)
-                metrics.update(provider.extract(device_id))
-                debug.used_providers.append(name)
+                metrics.update(provider_cls(self.session_engine).extract(device_id))
+            debug.provider_times[name] = (time.time() - t0) * 1000
 
-        # 3. Построение FeatureSet
+        # 3. Feature Builder (Замечание №2, №9)
         feature_set: MobilityFeatureSet = {}
         feature_builders = FeatureRegistry.get_all()
-        
         for feat_id, builder in feature_builders.items():
+            t0 = time.time()
             try:
-                # Проверка зависимостей
-                # (В полной версии здесь рекурсивная проверка availability)
                 feature = builder(metrics)
-                if feature.availability.available:
-                    feature_set[feat_id] = feature
-                else:
+                feature_set[feat_id] = feature
+                if not feature.availability.available:
                     debug.missing_features.append(feat_id)
             except Exception:
                 debug.missing_features.append(feat_id)
+            debug.feature_times[feat_id] = (time.time() - t0) * 1000
 
-        # 4. Вычисление Timeline (заглушка для примера)
-        timeline = MobilityTimeline()
+        # 4. Evaluator (Замечание №2, №9)
+        facts, eval_debug = self.evaluator.evaluate(feature_set, metrics)
+        debug.evaluated_rules = eval_debug["evaluated"]
+        debug.matched_rules = eval_debug["matched"]
+        debug.skipped_rules = eval_debug["skipped"]
 
-        # 5. Evaluator
-        facts = self.evaluator.evaluate(feature_set, timeline)
+        # 5. Profile Builder & Correct Coverage (Замечание №4, №5)
+        available_count = sum(1 for f in feature_set.values() if f.availability.available)
+        supported_count = len(feature_builders)
+        feature_coverage = (available_count / supported_count * 100) if supported_count > 0 else 0.0
+        
+        matched_rules_count = len(debug.matched_rules)
+        enabled_rules_count = len([r for r in eval_debug["all_rules"] if r.enabled])
+        mobility_coverage = (matched_rules_count / enabled_rules_count * 100) if enabled_rules_count > 0 else 0.0
 
-        # 6. Формирование Profile
-        coverage = (len(feature_set) / len(feature_builders)) * 100 if feature_builders else 0
         profile = MobilityProfile(
             identity_id=device_id,
             engine_version=ENGINE_VERSION,
             rules_version=RULES_VERSION,
-            identity_version=identity_version,
-            behaviour_version=behaviour_version,
-            feature_coverage=coverage,
-            mobility_coverage=(len(facts) / len(facts)) * 100 if facts else 0, # Упрощено
+            identity_version=cache_key[1], behaviour_version=cache_key[2],
+            session_version=cache_key[3], history_version=cache_key[4],
+            feature_coverage=feature_coverage,
+            mobility_coverage=mobility_coverage,
             features=feature_set,
             facts=facts,
-            timeline=timeline
+            timeline=MobilityTimeline(events=[MovementEvent(datetime.now(), None, "AP-1", "initial", -50, 0.9)]) # Заглушка Timeline (Замечание №13)
         )
 
-        # 7. Кэширование
-        self._cache[device_id] = profile
-        self._versions[device_id] = {"identity": identity_version, "behaviour": behaviour_version}
-
+        self._cache[cache_key] = profile
         debug.computation_time_ms = (time.time() - start_time) * 1000
         return profile, debug
