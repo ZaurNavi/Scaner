@@ -69,7 +69,7 @@ class RuleRegistry:
         """Проверяет зависимости правил."""
         errors = []
         
-        from platform.registry.feature_registry import FeatureRegistry
+        from .feature_registry import FeatureRegistry
         
         for rule_id, descriptor in cls._rules.items():
             for condition in descriptor.expression:
