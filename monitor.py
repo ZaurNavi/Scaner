@@ -67,8 +67,9 @@ from usage import UsageService
 from usage.registry import ProviderRegistry as UsageProviderRegistry
 from usage.providers.traffic_provider import TrafficProvider
 
-# v1.6.3: Scanner Platform Core импорты
+# v1.6.3 + v1.6.4: Scanner Platform Core импорты
 from scanner_platform import Pipeline, PlatformValidator, VersionSnapshot, DeviceState
+from scanner_platform.core.platform import Platform
 
 
 def print_header() -> None:
@@ -127,24 +128,21 @@ def _safe_get(obj, attr, default=None):
 def _safe_get_feature_value(features, feature_id):
     """
     Безопасное извлечение значения фичи из разных типов контейнеров:
-    - dict (Mobility, Presence, Usage)
+    - dict (Mobility, Presence, Usage, Platform Adapter)
     - dataclass FeatureSet (Behaviour)
     """
     if not features:
         return None
     
-    # Словарь (Mobility, Presence, Usage)
     if isinstance(features, dict):
         feature = features.get(feature_id)
         if feature and hasattr(feature, 'value'):
             return feature
         return feature
     
-    # FeatureSet как dataclass (Behaviour)
     if hasattr(features, feature_id):
         value = getattr(features, feature_id)
         if value is not None:
-            # Возвращаем как объект с name/value/unit
             return type('FeatureWrapper', (), {
                 'name': feature_id,
                 'value': value,
@@ -155,7 +153,7 @@ def _safe_get_feature_value(features, feature_id):
 
 
 def _get_unit_for_feature(feature_id: str) -> str:
-    """Возвращает единицу измерения для известных фич Behaviour."""
+    """Возвращает единицу измерения для известных фич."""
     units = {
         'average_session_duration': 'sec',
         'session_count': 'sessions',
@@ -170,22 +168,23 @@ def _get_unit_for_feature(feature_id: str) -> str:
         'rssi_variance': 'dB',
         'snr_variance': 'dB',
         'lifetime_seconds': 'sec',
+        'daily_presence': 'ratio',
+        'active_hours': 'hours',
+        'appearance_frequency': 'visits'
     }
     return units.get(feature_id, '')
 
 
 def _safe_get_metric_value(metrics, metric_id):
-    """Безопасное извлечение значения метрики из разных типов контейнеров."""
+    """Безопасное извлечение значения метрики."""
     if not metrics:
         return 0
     
-    # PresenceMetricSet/UsageMetricSet (dataclass с полем metrics)
     if hasattr(metrics, 'metrics') and isinstance(metrics.metrics, dict):
         metric = metrics.metrics.get(metric_id)
         if metric and hasattr(metric, 'value'):
             return metric.value
     
-    # Обычный dict
     if isinstance(metrics, dict):
         metric = metrics.get(metric_id)
         if metric:
@@ -199,7 +198,6 @@ def _safe_get_metric_value(metrics, metric_id):
 def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
     """
     Единый форматтер вывода для всех аналитических движков.
-    Работает с унифицированными моделями Behaviour, Mobility, Presence и Usage.
     """
     print(f"\n  [{engine_name}] Analyzing {engine_type}...")
     if not profile:
@@ -209,7 +207,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
     identity_id = _safe_get(profile, 'identity_id', 'unknown')
     print(f"      ✅ {engine_name} Profile for {identity_id[:8]}...")
     
-    # 1. Coverage
     print("         Coverage:")
     metric_coverage = _safe_get(profile, 'metric_coverage')
     if metric_coverage is not None:
@@ -222,7 +219,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
     ratio_val = _safe_get(profile, 'rule_match_ratio', feature_coverage)
     print(f"            • {ratio_name}: {ratio_val:.1f}%")
 
-    # 2. Timeline (есть в Mobility, Presence и Usage)
     timeline = _safe_get(profile, 'timeline')
     if timeline and hasattr(timeline, 'events') and timeline.events:
         events_count = len(timeline.events)
@@ -242,7 +238,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
         print(f"            • Sessions: {sessions_count}")
         print(f"            • Completeness: {feature_coverage:.1f}%")
 
-    # 3. Detected Facts
     facts = _safe_get(profile, 'facts', [])
     features = _safe_get(profile, 'features')
     
@@ -268,7 +263,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
             score = _safe_get(fact, 'score', _safe_get(fact, 'raw_score', 0))
             print(f"            • {category_value}: {measured_value} (Score: {score}, Rule: {', '.join(matched_rules)})")
 
-    # Explain Summary
     if facts:
         print("         Explain Summary:")
         for fact in facts:
@@ -289,7 +283,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
                 measured_value = _safe_get(fact, 'measured_value', 'N/A')
                 print(f"            • {category_value} because measured = {measured_value}, matched: {', '.join(matched_rules)}")
 
-    # 4. Performance & Debug
     if debug_info:
         print("         Performance & Debug:")
         cache_hit = _safe_get(debug_info, 'cache_hit', 'N/A')
@@ -459,7 +452,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 + v1.6.3 ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 + v1.6.3 + v1.6.4 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -559,24 +552,123 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
-        # === v1.5.6: Behaviour Engine ===
-        behaviour_service = None
+        # === v1.6.4: Behaviour Engine (Platform Core) ===
         if identity_service and profiles:
             try:
-                behaviour_service = BehaviourService(history_service, identity_service, session_engine)
+                from scanner_platform.core.platform_context import PlatformContext
+                from scanner_platform.core.bundles import MetricBundle, FeatureBundle, RuleBundle
+                from scanner_platform.behaviour.engine import BehaviourEngine
+                from scanner_platform.timeline.models import Timeline, TimelineEvent, EventType
+                from scanner_platform.registry.metric_registry import MetricRegistry
+                from scanner_platform.registry.feature_registry import FeatureRegistry
+                from scanner_platform.registry.rule_registry import RuleRegistry
+
+                # 1. Инициализация Platform (регистрирует все движки)
+                Platform.start()
+                
                 sample_device_id = profiles[0].device_id
-                bp = behaviour_service.get_profile(sample_device_id)
-                bd = behaviour_service.debug(sample_device_id) if hasattr(behaviour_service, 'debug') else None
-                _format_engine_output("BEHAVIOUR", bp, bd, engine_type="behavioural patterns")
+                
+                # 2. Строим минимальный Timeline из History для демонстрации
+                history = history_service.get_device_history(sample_device_id)
+                events = []
+                
+                first_seen = getattr(history, 'first_seen', None)
+                if first_seen:
+                    events.append(TimelineEvent(
+                        id=str(uuid.uuid4()),
+                        timestamp=first_seen,
+                        device_id=sample_device_id,
+                        event_type=EventType.FIRST_SEEN,
+                        source="history"
+                    ))
+                
+                snapshots = getattr(history, 'snapshots', [])
+                for snap in snapshots:
+                    events.append(TimelineEvent(
+                        id=str(uuid.uuid4()),
+                        timestamp=getattr(snap, 'timestamp', datetime.now()),
+                        device_id=sample_device_id,
+                        event_type=EventType.SESSION_STARTED,
+                        source="history",
+                        payload={
+                            "ip": getattr(snap, 'ip', ''), 
+                            "hostname": getattr(snap, 'hostname', '')
+                        }
+                    ))
+                
+                timeline = Timeline(events=events, device_id=sample_device_id)
+                
+                # 3. Вычисляем метрики и фичи через Platform Registry
+                metrics_dict = MetricRegistry.build(timeline)
+                features_dict = FeatureRegistry.build(metrics_dict)
+                rules_list = list(RuleRegistry.get_by_engine("behaviour").values())
+                
+                context = PlatformContext(
+                    device_id=sample_device_id,
+                    timeline=timeline,
+                    metrics=MetricBundle(metrics=metrics_dict),
+                    features=FeatureBundle(features=features_dict),
+                    rules=RuleBundle(rules=rules_list)
+                )
+                
+                # 4. Запускаем Behaviour Engine
+                behaviour_engine = BehaviourEngine()
+                result = behaviour_engine.run(context)
+                
+                # 5. Адаптер для совместимости с _format_engine_output
+                class BehaviourResultAdapter:
+                    def __init__(self, res, tl, feats_dict):
+                        self.identity_id = res.device_id
+                        self.metric_coverage = res.coverage.metric_coverage
+                        self.feature_coverage = res.coverage.feature_coverage
+                        self.rule_match_ratio = res.coverage.rule_coverage
+                        self.timeline = tl
+                        self.metrics = type('obj', (object,), {'metrics': metrics_dict})()
+                        
+                        self.features = {}
+                        for fact in res.facts:
+                            for feat_name in fact.matched_features:
+                                if feat_name not in self.features:
+                                    val = feats_dict.get(feat_name, 'N/A')
+                                    unit = 'ratio' if isinstance(val, float) else ('visits' if isinstance(val, int) else 'bool')
+                                    self.features[feat_name] = type('FeatureObj', (object,), {
+                                        'name': feat_name,
+                                        'value': val,
+                                        'unit': unit
+                                    })()
+                        
+                        self.facts = res.facts
+
+                adapter = BehaviourResultAdapter(result, timeline, features_dict)
+                
+                # Формируем debug_info
+                debug_info = type('obj', (object,), {
+                    'cache_hit': result.statistics.get('cache_hit', False),
+                    'cache_key': behaviour_engine._get_cache_key(context),
+                    'engine_version': result.version,
+                    'feature_version': "1.0.0",
+                    'provider_version': "1.0.0",
+                    'computation_time_ms': result.statistics.get('computation_time_ms', 0.0),
+                    'provider_times': {},
+                    'builder_times': {},
+                    'feature_times': {},
+                    'skipped_rules': [],
+                    'missing_features': []
+                })()
+                
+                _format_engine_output("BEHAVIOUR", adapter, debug_info, engine_type="behavioural patterns (Platform Core)")
+                
             except Exception as exc:
                 print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
 
         # === v1.5.7: Mobility Engine ===
         mobility_service = None
-        if behaviour_service and session_engine and history_service:
+        if identity_service and profiles: # Упростили условие, т.к. behaviour теперь в platform
             try:
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
-                mobility_service = MobilityService(behaviour_service, session_engine, history_service)
+                mobility_service = MobilityService(None, session_engine, history_service) # behaviour_service больше не нужен напрямую
                 sample_device_id = profiles[0].device_id
                 mp = mobility_service.get_profile(sample_device_id)
                 md = mobility_service.debug(sample_device_id) if hasattr(mobility_service, 'debug') else None
