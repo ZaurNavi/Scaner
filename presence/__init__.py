@@ -2,14 +2,16 @@
 from .service import PresenceService
 from .models import (
     PresenceProfile, PresenceExplanation, DebugInfo, PresenceFeature, 
-    PresenceMetric, BaseAnalyticalValue, PresenceTimeline
+    PresenceMetric, BaseAnalyticalValue, Timeline, PresenceMetricSet, BaseProfile
 )
-from .registry import ProviderRegistry, FeatureRegistry, register_feature
+from .registry import ProviderRegistry, FeatureRegistry, register_feature, ProviderDescriptor, FeatureDescriptor
 from .categories import PresenceCategory, PresenceStatus, EventType
 
 __all__ = [
     "PresenceService", "PresenceProfile", "PresenceExplanation", 
     "DebugInfo", "PresenceFeature", "PresenceMetric", "BaseAnalyticalValue",
-    "PresenceTimeline", "ProviderRegistry", "FeatureRegistry", "register_feature",
+    "Timeline", "PresenceMetricSet", "BaseProfile",
+    "ProviderRegistry", "FeatureRegistry", "register_feature",
+    "ProviderDescriptor", "FeatureDescriptor",
     "PresenceCategory", "PresenceStatus", "EventType"
 ]
