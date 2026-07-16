@@ -29,38 +29,48 @@ class BehaviourEvaluator:
         )
 
         for rule in rules:
-            # В Behaviour правило имеет поле 'metric' (строка), а не 'required_features'
-            metric_name = rule.metric
+            # Безопасно получаем ID правила (может быть 'id' или 'rule_id')
+            rule_id = getattr(rule, 'rule_id', getattr(rule, 'id', 'UNKNOWN'))
+            
+            # Получаем имя метрики
+            metric_name = getattr(rule, 'metric', None)
+            if not metric_name:
+                continue
+                
             feature_value = getattr(feature_set, metric_name, None)
             
             if feature_value is None:
-                debug_info.skipped_rules.append(f"{rule.id} (Missing metric: {metric_name})")
+                debug_info.skipped_rules.append(f"{rule_id} (Missing metric: {metric_name})")
                 continue
 
-            debug_info.evaluated_rules.append(rule.id)
+            debug_info.evaluated_rules.append(rule_id)
             
-            # В Behaviour правило использует 'condition', а не 'operator'
+            # Безопасно получаем остальные атрибуты правила
             condition = getattr(rule, 'condition', None) or getattr(rule, 'operator', None)
+            threshold = getattr(rule, 'threshold', None)
+            weight = getattr(rule, 'weight', 0)
+            category = getattr(rule, 'category', None)
+            name = getattr(rule, 'name', 'Unknown Rule')
             
-            if evaluate_condition(condition, feature_value, rule.threshold):
-                debug_info.matched_rules.append(rule.id)
-                confidence = min((rule.weight / 100.0) * 100, 100.0)
+            if condition and evaluate_condition(condition, feature_value, threshold):
+                debug_info.matched_rules.append(rule_id)
+                confidence = min((weight / 100.0) * 100, 100.0)
                 status = BehaviourStatus.HIGH if confidence >= 60 else BehaviourStatus.MEDIUM
                 
                 facts.append(BehaviourFact(
-                    category=rule.category,
+                    category=category,
                     feature=metric_name,
                     value=feature_value,
                     measured_value=feature_value,
-                    threshold=rule.threshold,
-                    score=rule.weight,
-                    raw_score=rule.weight,
+                    threshold=threshold,
+                    score=weight,
+                    raw_score=weight,
                     confidence=confidence,
                     status=status,
-                    rule_id=rule.id,
-                    matched_rules=[rule.id],
+                    rule_id=rule_id,
+                    matched_rules=[rule_id],
                     sources=["behaviour_engine"],
-                    reasons=[f"{rule.name}: {feature_value} {condition} {rule.threshold}"]
+                    reasons=[f"{name}: {feature_value} {condition} {threshold}"]
                 ))
                 
         return facts, debug_info
