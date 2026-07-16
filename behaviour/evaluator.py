@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Evaluator работает ТОЛЬКО с BehaviourFeatureSet."""
+"""Evaluator работает ТОЛЬКО с FeatureSet."""
 from typing import List, Dict, Any, Tuple
-from .models import BehaviourFeatureSet, BehaviourFact, DebugInfo
+from .models import BehaviourFact, DebugInfo  # <-- ИСПРАВЛЕНО: убран BehaviourFeatureSet
 from .categories import BehaviourStatus
 from .rules import get_enabled_rules, evaluate_condition
 
@@ -50,10 +50,10 @@ class BehaviourEvaluator:
                 facts.append(BehaviourFact(
                     category=rule.category,
                     feature=target_feature,
-                    value=feature_value,  # ДОБАВЛЕНО: для совместимости с форматтером
+                    value=feature_value,
                     measured_value=feature_value,
                     threshold=rule.threshold,
-                    score=rule.weight,  # ДОБАВЛЕНО: алиас для raw_score
+                    score=rule.weight,
                     raw_score=rule.weight,
                     confidence=confidence,
                     status=status,
