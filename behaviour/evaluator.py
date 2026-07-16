@@ -1,127 +1,66 @@
 #!/usr/bin/env python3
-"""
-Evaluator — применение правил к FeatureSet.
-Хранит measured_value, threshold, rule_id в BehaviourFact.
-"""
-
-from __future__ import annotations
-
-from datetime import datetime
-from typing import List
-
-from .categories import BehaviourCategory, BehaviourStatus
-from .models import (
-    BehaviourFact, BehaviourProfile, BehaviourSummary,
-    FeatureSet, SourceVersions
-)
+"""Evaluator работает ТОЛЬКО с BehaviourFeatureSet."""
+from typing import List, Dict, Any, Tuple
+from .models import BehaviourFeatureSet, BehaviourFact, DebugInfo
+from .categories import BehaviourStatus
 from .rules import get_enabled_rules, evaluate_condition
-from .normalizer import normalize_score
-from .constants import ENGINE_VERSION, RULES_VERSION
-
 
 class BehaviourEvaluator:
-    """Применяет правила к FeatureSet и формирует BehaviourProfile."""
-    
-    def evaluate(self, device_id: str, features: FeatureSet, source_versions: SourceVersions = None) -> BehaviourProfile:
-        """
-        Оценивает поведение устройства на основе признаков.
-        """
-        profile = BehaviourProfile(
-            identity_id=device_id,
-            generated_at=datetime.now(),
-            engine_version=ENGINE_VERSION,
-            rules_version=RULES_VERSION,
-            features=features,
-            source_versions=source_versions or SourceVersions()
-        )
-        
-        # Применяем все правила
+    def evaluate(self, feature_set, metrics: Dict[str, Any] = None) -> Tuple[List[BehaviourFact], DebugInfo]:
+        facts = []
         rules = get_enabled_rules()
+        
+        debug_info = DebugInfo(
+            computation_time_ms=0.0,
+            provider_times={},
+            builder_times={},
+            feature_times={},
+            evaluated_rules=[],
+            matched_rules=[],
+            skipped_rules=[],
+            missing_features=[],
+            cache_invalidated=False,
+            cache_reason="",
+            cache_hit=False,
+            cache_key=(),
+            engine_version="1.0.0",
+            feature_version="1.0.0",
+            provider_version="1.0.0"
+        )
+
         for rule in rules:
-            metric_value = getattr(features, rule.metric, None)
+            # Rule знает только Features
+            missing_features = [
+                f for f in rule.required_features 
+                if not hasattr(feature_set, f) or getattr(feature_set, f) is None
+            ]
+            if missing_features:
+                debug_info.skipped_rules.append(f"{rule.id} (Missing features: {missing_features})")
+                continue
+
+            debug_info.evaluated_rules.append(rule.id)
+            target_feature = rule.required_features[0]
+            feature_value = getattr(feature_set, target_feature, None)
             
-            if evaluate_condition(rule.operator, metric_value, rule.threshold):
-                # Правило сработало — создаём факт с measured_value
-                threshold_display = rule.threshold.value if rule.threshold.value else f"{rule.threshold.min}-{rule.threshold.max}"
+            if evaluate_condition(rule.operator, feature_value, rule.threshold):
+                debug_info.matched_rules.append(rule.id)
+                confidence = min((rule.weight / 100.0) * 100, 100.0)
+                status = BehaviourStatus.HIGH if confidence >= 60 else BehaviourStatus.MEDIUM
                 
-                profile.facts.append(
-                    BehaviourFact(
-                        category=rule.category,
-                        feature=rule.metric,
-                        measured_value=metric_value,
-                        threshold=threshold_display,
-                        raw_score=rule.weight,
-                        rule_id=rule.rule_id,
-                        matched_rules=[rule.rule_id],
-                        reasons=[f"+{rule.weight} {rule.description}"]
-                    )
-                )
-        
-        # Нормализуем все факты
-        for fact in profile.facts:
-            fact.confidence = normalize_score(fact.raw_score)
-            fact.status = self._determine_status(fact.confidence)
-        
-        # Вычисляем coverage
-        profile.feature_coverage = self._calculate_feature_coverage(features)
-        profile.behaviour_coverage = self._calculate_behaviour_coverage(profile.facts)
-        
-        # Формируем summary
-        profile.summary = self._build_summary(profile.facts)
-        
-        return profile
-    
-    def _determine_status(self, confidence: float) -> BehaviourStatus:
-        """Определяет статус на основе confidence."""
-        if confidence >= 80.0:
-            return BehaviourStatus.CONFIRMED
-        elif confidence >= 60.0:
-            return BehaviourStatus.HIGH
-        elif confidence >= 40.0:
-            return BehaviourStatus.MEDIUM
-        elif confidence >= 20.0:
-            return BehaviourStatus.LOW
-        else:
-            return BehaviourStatus.UNKNOWN
-    
-    def _calculate_feature_coverage(self, features: FeatureSet) -> float:
-        """Вычисляет процент успешно вычисленных признаков."""
-        total_features = 10
-        filled_features = sum([
-            features.average_session_duration is not None,
-            features.session_count > 0,
-            features.peak_speed is not None,
-            features.average_speed is not None,
-            features.total_traffic > 0,
-            features.idle_ratio > 0,
-            features.active_ratio > 0,
-            features.ap_changes > 0,
-            features.ssid_changes > 0,
-            features.lifetime_seconds is not None
-        ])
-        
-        return (filled_features / total_features) * 100.0
-    
-    def _calculate_behaviour_coverage(self, facts: List[BehaviourFact]) -> float:
-        """Вычисляет процент определённых моделей поведения."""
-        total_categories = len(BehaviourCategory)
-        filled_categories = len(set(f.category for f in facts))
-        
-        return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
-    
-    def _build_summary(self, facts: List[BehaviourFact]) -> BehaviourSummary:
-        """Формирует краткую сводку."""
-        summary = BehaviourSummary(generated_at=datetime.now())
-        
-        for fact in facts:
-            summary.facts_total += 1
-            if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
-                summary.high += 1
-            elif fact.status == BehaviourStatus.MEDIUM:
-                summary.medium += 1
-            elif fact.status == BehaviourStatus.LOW:
-                summary.low += 1
-            else:
-                summary.unknown += 1
-        
-        return summary
+                facts.append(BehaviourFact(
+                    category=rule.category,
+                    feature=target_feature,
+                    value=feature_value,  # ДОБАВЛЕНО: для совместимости с форматтером
+                    measured_value=feature_value,
+                    threshold=rule.threshold,
+                    score=rule.weight,  # ДОБАВЛЕНО: алиас для raw_score
+                    raw_score=rule.weight,
+                    confidence=confidence,
+                    status=status,
+                    rule_id=rule.id,
+                    matched_rules=[rule.id],
+                    sources=["behaviour_engine"],
+                    reasons=[f"{rule.name}: {feature_value} {rule.operator} {rule.threshold}"]
+                ))
+                
+        return facts, debug_info
