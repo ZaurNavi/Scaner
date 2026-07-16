@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Feature Builder: вычисляет Presence Features из Metrics (авто-регистрация)."""
+"""Feature Builder: вычисляет Presence Features из Metrics."""
 from datetime import datetime
 from ..registry import register_feature
 from ..models import PresenceFeature, Availability
 
-@register_feature("history_depth_days")
-def build_history_depth_days(metrics: dict) -> PresenceFeature:
+@register_feature("history_depth_days", version="1.0.0", dependencies=[])
+def build_history_depth_days(metrics) -> PresenceFeature:
     metric = metrics.get("history_depth_days")
     if not metric:
         return PresenceFeature(
-            id="history_depth_days", name="History Depth", value=0,
+            id="history_depth_days", name="History Depth", value=0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -18,6 +18,7 @@ def build_history_depth_days(metrics: dict) -> PresenceFeature:
         name="History Depth (Days)",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
@@ -27,12 +28,12 @@ def build_history_depth_days(metrics: dict) -> PresenceFeature:
         availability=Availability(available=True, reason="")
     )
 
-@register_feature("visit_count")
-def build_visit_count(metrics: dict) -> PresenceFeature:
+@register_feature("visit_count", version="1.0.0", dependencies=["history_depth_days"])
+def build_visit_count(metrics) -> PresenceFeature:
     metric = metrics.get("visit_count")
     if not metric:
         return PresenceFeature(
-            id="visit_count", name="Visit Count", value=0,
+            id="visit_count", name="Visit Count", value=0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -41,6 +42,7 @@ def build_visit_count(metrics: dict) -> PresenceFeature:
         name="Visit Count",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
@@ -50,12 +52,12 @@ def build_visit_count(metrics: dict) -> PresenceFeature:
         availability=Availability(available=True, reason="")
     )
 
-@register_feature("active_days_ratio")
-def build_active_days_ratio(metrics: dict) -> PresenceFeature:
+@register_feature("active_days_ratio", version="1.0.0", dependencies=["visit_count", "history_depth_days"])
+def build_active_days_ratio(metrics) -> PresenceFeature:
     metric = metrics.get("active_days_ratio")
     if not metric:
         return PresenceFeature(
-            id="active_days_ratio", name="Active Days Ratio", value=0.0,
+            id="active_days_ratio", name="Active Days Ratio", value=0.0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -64,6 +66,7 @@ def build_active_days_ratio(metrics: dict) -> PresenceFeature:
         name="Active Days Ratio",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
@@ -73,12 +76,12 @@ def build_active_days_ratio(metrics: dict) -> PresenceFeature:
         availability=Availability(available=True, reason="")
     )
 
-@register_feature("night_activity_ratio")
-def build_night_activity_ratio(metrics: dict) -> PresenceFeature:
+@register_feature("night_activity_ratio", version="1.0.0", dependencies=["visit_count"])
+def build_night_activity_ratio(metrics) -> PresenceFeature:
     metric = metrics.get("night_activity_ratio")
     if not metric:
         return PresenceFeature(
-            id="night_activity_ratio", name="Night Activity Ratio", value=0.0,
+            id="night_activity_ratio", name="Night Activity Ratio", value=0.0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -87,6 +90,7 @@ def build_night_activity_ratio(metrics: dict) -> PresenceFeature:
         name="Night Activity Ratio",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
@@ -96,12 +100,12 @@ def build_night_activity_ratio(metrics: dict) -> PresenceFeature:
         availability=Availability(available=True, reason="")
     )
 
-@register_feature("weekend_activity_ratio")
-def build_weekend_activity_ratio(metrics: dict) -> PresenceFeature:
+@register_feature("weekend_activity_ratio", version="1.0.0", dependencies=["visit_count"])
+def build_weekend_activity_ratio(metrics) -> PresenceFeature:
     metric = metrics.get("weekend_activity_ratio")
     if not metric:
         return PresenceFeature(
-            id="weekend_activity_ratio", name="Weekend Activity Ratio", value=0.0,
+            id="weekend_activity_ratio", name="Weekend Activity Ratio", value=0.0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -110,6 +114,7 @@ def build_weekend_activity_ratio(metrics: dict) -> PresenceFeature:
         name="Weekend Activity Ratio",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
@@ -119,12 +124,12 @@ def build_weekend_activity_ratio(metrics: dict) -> PresenceFeature:
         availability=Availability(available=True, reason="")
     )
 
-@register_feature("business_hours_ratio")
-def build_business_hours_ratio(metrics: dict) -> PresenceFeature:
+@register_feature("business_hours_ratio", version="1.0.0", dependencies=["visit_count"])
+def build_business_hours_ratio(metrics) -> PresenceFeature:
     metric = metrics.get("business_hours_ratio")
     if not metric:
         return PresenceFeature(
-            id="business_hours_ratio", name="Business Hours Ratio", value=0.0,
+            id="business_hours_ratio", name="Business Hours Ratio", value=0.0, version="1.0.0",
             availability=Availability(available=False, reason="Metric unavailable")
         )
     
@@ -133,6 +138,7 @@ def build_business_hours_ratio(metrics: dict) -> PresenceFeature:
         name="Business Hours Ratio",
         value=metric.value,
         unit=metric.unit,
+        version=metric.version,
         confidence=metric.confidence,
         coverage=metric.quality.coverage,
         samples=metric.quality.samples,
