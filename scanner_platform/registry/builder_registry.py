@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Builder Registry."""
 from dataclasses import dataclass
-from typing import Dict, Type
-from platform.builders.base import Builder
+from typing import Dict, Type, List
+from ..builders.base import Builder  # <-- ИСПРАВЛЕНО на относительный импорт
 
 @dataclass
 class BuilderDescriptor:
@@ -10,7 +10,7 @@ class BuilderDescriptor:
     id: str
     builder_class: Type[Builder]
     version: str
-    dependencies: list
+    dependencies: List[str]
 
 class BuilderRegistry:
     """Централизованный реестр Builder'ов."""
@@ -19,7 +19,7 @@ class BuilderRegistry:
     
     @classmethod
     def register(cls, name: str, builder_class: Type[Builder], version: str = "1.0.0", 
-                 dependencies: list = None):
+                 dependencies: List[str] = None):
         """Регистрирует Builder."""
         cls._builders[name] = BuilderDescriptor(
             id=name,
