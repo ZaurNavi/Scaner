@@ -51,7 +51,7 @@ from identity import IdentityService, IdentityRepository
 from confidence import ConfidenceService, FactCategory
 from behaviour import BehaviourService, BehaviourCategory
 from mobility import MobilityService
-from mobility.registry import ProviderRegistry as MobilityProviderRegistry  # <-- v1.5.7
+from mobility.registry import ProviderRegistry as MobilityProviderRegistry
 from mobility.providers.session_provider import SessionMetricsProvider
 from mobility.features.roaming_feature import build_roaming_rate
 
@@ -59,7 +59,8 @@ from mobility.features.roaming_feature import build_roaming_rate
 from presence import PresenceService
 from presence.registry import ProviderRegistry as PresenceProviderRegistry
 from presence.providers.history_provider import HistoryProvider
-from presence.features.visit_feature import build_history_depth_days  # Триггерит @register_feature
+from presence.features.visit_feature import build_history_depth_days
+from presence.categories import EventType
 
 
 def print_header() -> None:
@@ -110,6 +111,83 @@ def init_archivist():
         return None, None, None
 
 
+def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
+    """
+    Единый форматтер вывода для всех аналитических движков (Замечание №6).
+    """
+    print(f"\n  [{engine_name}] Analyzing {engine_type}...")
+    if not profile:
+        print(f"      ❌ {engine_name} Profile not generated.")
+        return
+
+    print(f"      ✅ {engine_name} Profile for {profile.identity_id[:8]}...")
+    
+    # 1. Coverage (Замечание №6)
+    print("         Coverage:")
+    print(f"            • Metric Coverage: {profile.metric_coverage:.1f}%")
+    print(f"            • Feature Coverage: {profile.feature_coverage:.1f}%")
+    ratio_name = "Rule Match Ratio" if hasattr(profile, 'rule_match_ratio') else "Engine Coverage"
+    ratio_val = profile.rule_match_ratio if hasattr(profile, 'rule_match_ratio') else profile.feature_coverage
+    print(f"            • {ratio_name}: {ratio_val:.1f}%")
+
+    # 2. Timeline (Замечание №4)
+    if hasattr(profile, 'timeline') and profile.timeline:
+        events_count = len(profile.timeline.events)
+        sessions_count = profile.timeline.count_by_type(EventType.SESSION_STARTED) if hasattr(profile.timeline, 'count_by_type') else 0
+        # Для простоты используем visit_count из метрик как Days Covered, если есть
+        days_covered = profile.metrics.get("visit_count").value if hasattr(profile, 'metrics') and profile.metrics.get("visit_count") else 0
+        completeness = profile.feature_coverage # Упрощенная метрика полноты
+        
+        print("         Timeline:")
+        print(f"            • Events: {events_count}")
+        print(f"            • Days Covered: {days_covered}")
+        print(f"            • Sessions: {sessions_count}")
+        print(f"            • Completeness: {completeness:.1f}%")
+
+    # 3. Detected Facts (Замечание №1, №2, №3)
+    facts_count = len(profile.facts)
+    print(f"         Detected Facts ({facts_count}):")
+    if profile.facts:
+        for fact in profile.facts:
+            # Получаем детали фичи для красивого вывода (Замечание №2)
+            feature_detail = profile.features.get(fact.feature)
+            if feature_detail:
+                val = feature_detail.value
+                unit = feature_detail.unit
+                name = feature_detail.name
+                print(f"            • {fact.category.value}: {name} = {val} {unit} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
+            else:
+                print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
+
+        # Explain Summary (Замечание №3)
+        print("         Explain Summary:")
+        for fact in profile.facts:
+            feature_detail = profile.features.get(fact.feature)
+            if feature_detail:
+                print(f"            • {fact.category.value} because {feature_detail.name} = {feature_detail.value} {feature_detail.unit}, matched: {', '.join(fact.matched_rules)}")
+
+    # 4. Performance & Debug (Замечание №5)
+    if debug_info:
+        print("         Performance & Debug:")
+        print(f"            [Cache] Hit: {debug_info.cache_hit} | Key: {debug_info.cache_key}")
+        print(f"            [Versions] Engine: {debug_info.engine_version} | Feature: {debug_info.feature_version} | Provider: {debug_info.provider_version}")
+        
+        timing_parts = [f"Total: {debug_info.computation_time_ms:.2f}ms"]
+        if hasattr(debug_info, 'provider_times') and debug_info.provider_times:
+            prov_str = ", ".join([f"{k}={v:.2f}ms" for k, v in debug_info.provider_times.items()])
+            timing_parts.append(f"Providers: {prov_str}")
+        if hasattr(debug_info, 'builder_times') and debug_info.builder_times:
+            build_str = ", ".join([f"{k}={v:.2f}ms" for k, v in debug_info.builder_times.items()])
+            timing_parts.append(f"Builders: {build_str}")
+            
+        print(f"            [Timing] {' | '.join(timing_parts)}")
+        
+        if hasattr(debug_info, 'skipped_rules') and debug_info.skipped_rules:
+            print(f"            [Skipped] Rules: {', '.join(debug_info.skipped_rules[:2])}{'...' if len(debug_info.skipped_rules) > 2 else ''}")
+        if hasattr(debug_info, 'missing_features') and debug_info.missing_features:
+            print(f"            [Missing] Features: {', '.join(debug_info.missing_features)}")
+
+
 def main() -> int:
     start = time.time()
     print_header()
@@ -124,7 +202,6 @@ def main() -> int:
             print("  [HISTORY] ✅ History Service initialized")
         except Exception as exc:
             print(f"  [HISTORY] ❌ History Service initialization failed: {exc}")
-    # ===============================================
 
     print("  [1/4]  Получение ARP-таблицы через SNMP...")
     try:
@@ -169,7 +246,6 @@ def main() -> int:
     for ip in ips:
         if ip not in collected_data:
             collected_data[ip] = CollectedData()
-        
         if ip in traffic_data:
             traffic_info = traffic_data[ip]
             traffic_result = FingerprintResult(
@@ -180,7 +256,6 @@ def main() -> int:
                 capabilities=["traffic_monitored"]
             )
             collected_data[ip].sources["traffic"] = traffic_result
-    # ==============================================================================
 
     # ==============================================================================
     # v1.4.9.1: Infrastructure Controller Integration (Omada Metadata)
@@ -215,7 +290,6 @@ def main() -> int:
             for key, entities in omada_entities.items():
                 if key.startswith("mac:"):
                     continue
-                
                 if key not in collected_data:
                     collected_data[key] = CollectedData()
                 
@@ -230,19 +304,13 @@ def main() -> int:
                 merged_count += 1
                 
             print(f"  [CONTROLLERS] ✅ {collector.name.capitalize()} data merged into {merged_count} entities.")
-    # ==============================================================================
 
     devices = fingerprint_all(devices, collected_data)
-    
-    # === v1.5.0: Обогащение метаданных устройств из коллекторов ===
     enrich_device_metadata(devices, collected_data)
-    # ===============================================================
-    
     analyze_all(devices)
-
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1: Archivist + Event + Session + Identity + Confidence + Behaviour + Mobility + Presence ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -261,13 +329,11 @@ def main() -> int:
         for device in devices:
             collected = collected_data.get(device.ip, CollectedData())
             bundle = build_snapshot_bundle(device, scan, collected)
-
             result = archivist.save(bundle)
 
             if result.success:
                 print(f"      💾 Saved bundle: {device.ip} ({result.observations_saved} obs, {result.evidence_saved} ev)")
                 ip_to_device_id[device.ip] = result.device_id
-                
                 if first_device_id is None:
                     first_device_id = result.device_id
 
@@ -291,288 +357,107 @@ def main() -> int:
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
-        # === v1.5.3: Session Engine Processing ===
+        # === v1.5.3: Session Engine ===
         session_engine = None
         if history_service and db:
             try:
                 session_engine = SessionEngine(history_service, Repository(db))
                 print("\n  [SESSION] ✅ Session Engine initialized (with Recovery)")
-                
                 print("  [SESSION] Processing new snapshots...")
                 for ip, device_id in ip_to_device_id.items():
                     snapshots = history_service.get_snapshots(device_id)
                     if snapshots:
-                        snap_dicts = [
-                            {
-                                "timestamp": s.timestamp.isoformat(),
-                                "ip": s.ip,
-                                "hostname": s.hostname
-                            } for s in snapshots
-                        ]
+                        snap_dicts = [{"timestamp": s.timestamp.isoformat(), "ip": s.ip, "hostname": s.hostname} for s in snapshots]
                         session_engine.process_snapshots(device_id, snap_dicts)
                 
                 if first_device_id:
                     active_sess = session_engine.get_active_session(first_device_id)
                     if active_sess:
-                        print(f"      ✅ Active Session for {first_device_id[:8]}...")
-                        print(f"         Duration: {active_sess.duration or 0:.0f}s")
-                        print(f"         Snapshots: {active_sess.snapshots_count}")
+                        print(f"      ✅ Active Session for {first_device_id[:8]}... (Duration: {active_sess.duration or 0:.0f}s, Snapshots: {active_sess.snapshots_count})")
                     else:
                         print("      ℹ️ No active session (device might be in timeout).")
             except Exception as exc:
                 print(f"  [SESSION] ❌ Initialization/Processing failed: {exc}")
-        # ===========================================
 
-        # === v1.5.4: Identity Engine Processing ===
+        # === v1.5.4: Identity Engine ===
         identity_service = None
         profiles = []
         if history_service and db:
             try:
                 identity_repo = IdentityRepository(db)
                 identity_service = IdentityService(history_service, identity_repo)
-                
                 print("\n  [IDENTITY] Building identities...")
                 profiles = identity_service.refresh_all(list(ip_to_device_id.values()))
                 print(f"      ✅ Built {len(profiles)} identities")
-                
                 if profiles:
                     sample = profiles[0]
-                    print(f"      Sample Identity:")
-                    print(f"         Device: {sample.device_id[:8]}...")
-                    print(f"         MAC: {sample.primary_mac}")
-                    print(f"         Known IPs: {len(sample.network.known_ips)}")
-                    print(f"         Known Hostnames: {len(sample.device.known_hostnames)}")
-                    print(f"         Known APs: {len(sample.network.known_aps)}")
-                    print(f"         Known SSIDs: {len(sample.network.known_ssids)}")
+                    print(f"      Sample Identity: {sample.device_id[:8]}... | MAC: {sample.primary_mac} | IPs: {len(sample.network.known_ips)} | APs: {len(sample.network.known_aps)}")
             except Exception as exc:
                 print(f"  [IDENTITY] ❌ Failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
         # === v1.5.5: Confidence Service ===
-        confidence_service = None
         if identity_service and profiles:
             try:
                 confidence_service = ConfidenceService(identity_service)
-                print("\n  [CONFIDENCE] Evaluating confidence...")
-                
                 sample_device_id = profiles[0].device_id
-                confidence_profile = confidence_service.get_profile(sample_device_id)
-                
-                if confidence_profile:
+                cp = confidence_service.get_profile(sample_device_id)
+                if cp:
+                    print(f"\n  [CONFIDENCE] Evaluating confidence...")
                     print(f"      ✅ Confidence Profile for {sample_device_id[:8]}...")
-                    print(f"         Coverage: {confidence_profile.coverage:.1f}%")
-                    print(f"         Total Facts: {confidence_profile.statistics.total_facts}")
-                    print(f"         Evaluated: {confidence_profile.statistics.evaluated}")
-                    
-                    if confidence_profile.summary.vendor:
-                        print(f"         Best Vendor: {confidence_profile.summary.vendor.value} ({confidence_profile.summary.vendor.confidence:.1f}%)")
-                    if confidence_profile.summary.os:
-                        print(f"         Best OS: {confidence_profile.summary.os.value} ({confidence_profile.summary.os.confidence:.1f}%)")
-                    if confidence_profile.summary.hostname:
-                        print(f"         Best Hostname: {confidence_profile.summary.hostname.value} ({confidence_profile.summary.hostname.confidence:.1f}%)")
-                    
-                    vendor_explain = confidence_service.explain(sample_device_id, FactCategory.VENDOR)
-                    if vendor_explain:
-                        print(f"         Vendor Explanation:")
-                        print(f"            Value: {vendor_explain['value']}")
-                        print(f"            Confidence: {vendor_explain['confidence']:.1f}%")
-                        print(f"            Raw Score: {vendor_explain['raw_score']}")
-                        print(f"            Reasons: {', '.join(vendor_explain['reasons'])}")
-                    
-                    vendor_ranked = confidence_service.get_ranked(sample_device_id, FactCategory.VENDOR)
-                    if vendor_ranked and len(vendor_ranked) > 1:
-                        print(f"         Vendor Alternatives:")
-                        for i, alt in enumerate(vendor_ranked[:3], 1):
-                            print(f"            {i}. {alt.value}: {alt.confidence:.1f}%")
+                    print(f"         Coverage: {cp.coverage:.1f}% | Facts: {cp.statistics.total_facts} | Evaluated: {cp.statistics.evaluated}")
+                    if cp.summary.vendor:
+                        print(f"         Best Vendor: {cp.summary.vendor.value} ({cp.summary.vendor.confidence:.1f}%)")
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
-        # === v1.5.6: Behaviour Engine ===
+        # === v1.5.6: Behaviour Engine (Унифицированный вывод) ===
         behaviour_service = None
         if identity_service and profiles:
             try:
-                behaviour_service = BehaviourService(
-                    history_service,
-                    identity_service,
-                    session_engine
-                )
-                print("\n  [BEHAVIOUR] Analyzing behaviour...")
-                
-                sample_device_id = profiles[0].device_id
-                behaviour_profile = behaviour_service.get_profile(sample_device_id)
-                
-                if behaviour_profile:
-                    print(f"      ✅ Behaviour Profile for {sample_device_id[:8]}...")
-                    print(f"         Feature Coverage: {behaviour_profile.feature_coverage:.1f}%")
-                    print(f"         Behaviour Coverage: {behaviour_profile.behaviour_coverage:.1f}%")
-                    print(f"         Total Facts: {behaviour_profile.summary.facts_total}")
-                    print(f"         High Confidence: {behaviour_profile.summary.high}")
-                    
-                    if behaviour_profile.facts:
-                        print(f"         Detected Behaviours:")
-                        for fact in behaviour_profile.facts[:5]:
-                            print(f"            • {fact.category.value}: {fact.measured_value} (threshold: {fact.threshold}) → {fact.confidence:.1f}% [{fact.rule_id}]")
-                    
-                    if behaviour_profile.facts:
-                        first_fact = behaviour_profile.facts[0]
-                        explain = behaviour_service.explain(sample_device_id, first_fact.category)
-                        if explain:
-                            print(f"         Explanation for {explain['category']}:")
-                            print(f"            Feature: {explain['feature']}")
-                            print(f"            Measured: {explain['measured_value']}")
-                            print(f"            Threshold: {explain['threshold']}")
-                            print(f"            Rule ID: {explain['rule_id']}")
-                            print(f"            Confidence: {explain['confidence']:.1f}%")
-                            print(f"            Status: {explain['status']}")
+                behaviour_service = BehaviourService(history_service, identity_service, session_engine)
+                bp = behaviour_service.get_profile(profiles[0].device_id)
+                bd = behaviour_service.debug(profiles[0].device_id)
+                _format_engine_output("BEHAVIOUR", bp, bd, engine_type="behavioural patterns")
             except Exception as exc:
                 print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
-        # === v1.5.7: Mobility Engine ===
+        # === v1.5.7: Mobility Engine (Унифицированный вывод) ===
         mobility_service = None
         if behaviour_service and session_engine and history_service:
             try:
-                # Регистрация провайдеров (Open/Closed Principle)
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
-                
-                mobility_service = MobilityService(
-                    behaviour_service=behaviour_service,
-                    session_engine=session_engine,
-                    history_service=history_service
-                )
-                print("\n  [MOBILITY] Analyzing movement patterns...")
-                
-                sample_device_id = profiles[0].device_id
-                mobility_profile = mobility_service.get_profile(sample_device_id)
-                debug_info = mobility_service.debug(sample_device_id)
-                
-                if mobility_profile:
-                    print(f"      ✅ Mobility Profile for {sample_device_id[:8]}...")
-                    print(f"         Feature Coverage: {mobility_profile.feature_coverage:.1f}% (Available/Supported)")
-                    print(f"         Mobility Coverage: {mobility_profile.mobility_coverage:.1f}% (Matched/Enabled Rules)")
-                    print(f"         Facts Detected: {len(mobility_profile.facts)}")
-                    
-                    if mobility_profile.facts:
-                        print(f"         Detected Mobility Patterns:")
-                        for fact in mobility_profile.facts:
-                            print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
-                    
-                    if debug_info:
-                        print(f"         Debug:")
-                        print(f"            Computation Time: {debug_info.computation_time_ms:.2f}ms")
-                        if debug_info.provider_times:
-                            print(f"            Provider Times:")
-                            for provider, time_ms in debug_info.provider_times.items():
-                                print(f"               • {provider}: {time_ms:.2f}ms")
-                        if debug_info.feature_times:
-                            print(f"            Feature Builder Times:")
-                            for feature, time_ms in list(debug_info.feature_times.items())[:3]:
-                                print(f"               • {feature}: {time_ms:.2f}ms")
-                        if debug_info.skipped_rules:
-                            print(f"            Skipped Rules:")
-                            for rule in debug_info.skipped_rules[:2]:
-                                print(f"               • {rule}")
-                        if debug_info.missing_features:
-                            print(f"            Missing Features: {', '.join(debug_info.missing_features)}")
-                            
+                mobility_service = MobilityService(behaviour_service, session_engine, history_service)
+                mp = mobility_service.get_profile(profiles[0].device_id)
+                md = mobility_service.debug(profiles[0].device_id)
+                _format_engine_output("MOBILITY", mp, md, engine_type="movement patterns")
             except Exception as exc:
                 print(f"  [MOBILITY] ❌ Failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
-        # === v1.6.1: Presence Engine ===
+        # === v1.6.1: Presence Engine (Унифицированный вывод) ===
         presence_service = None
         if history_service and profiles:
             try:
-                # Регистрация провайдеров через PresenceProviderRegistry (Замечание №3: с version)
-                PresenceProviderRegistry.register(
-                    "history_provider", 
-                    HistoryProvider, 
-                    version="1.0.0",
-                    priority=10,
-                    dependencies=[]
-                )
-                
+                PresenceProviderRegistry.register("history_provider", HistoryProvider, version="1.0.0", priority=10, dependencies=[])
                 presence_service = PresenceService(history_service)
-                print("\n  [PRESENCE] Analyzing temporal presence...")
-                
-                sample_device_id = profiles[0].device_id
-                presence_profile = presence_service.get_profile(sample_device_id)
-                debug_info = presence_service.debug(sample_device_id)
-                
-                if presence_profile:
-                    print(f"      ✅ Presence Profile for {sample_device_id[:8]}...")
-                    print(f"         Metric Coverage: {presence_profile.metric_coverage:.1f}%")
-                    print(f"         Feature Coverage: {presence_profile.feature_coverage:.1f}%")
-                    print(f"         Rule Match Ratio: {presence_profile.rule_match_ratio:.1f}%")  # Замечание №5
-                    print(f"         Facts Detected: {len(presence_profile.facts)}")
-                    print(f"         Timeline Events: {len(presence_profile.timeline.events)}")
-                    
-                    # Показываем Presence Patterns
-                    if presence_profile.facts:
-                        print(f"         Presence Patterns:")
-                        for fact in presence_profile.facts:
-                            print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
-                    
-                    # Показываем Execution Order (Замечание №10)
-                    if debug_info:
-                        print(f"         Debug:")
-                        print(f"            Computation Time: {debug_info.computation_time_ms:.2f}ms")
-                        print(f"            Cache Hit: {debug_info.cache_hit}")  # Замечание №14
-                        print(f"            Cache Key: {debug_info.cache_key}")  # Замечание №14
-                        print(f"            Engine Version: {debug_info.engine_version}")  # Замечание №14
-                        print(f"            Feature Version: {debug_info.feature_version}")  # Замечание №14
-                        print(f"            Provider Version: {debug_info.provider_version}")  # Замечание №14
-                        
-                        if debug_info.provider_times:
-                            print(f"            Provider Times:")
-                            for provider, time_ms in debug_info.provider_times.items():
-                                print(f"               • {provider}: {time_ms:.2f}ms")
-                        if debug_info.builder_times:  # Замечание №12
-                            print(f"            Builder Times:")
-                            for builder, time_ms in debug_info.builder_times.items():
-                                print(f"               • {builder}: {time_ms:.2f}ms")
-                        if debug_info.feature_times:
-                            print(f"            Feature Builder Times:")
-                            for feature, time_ms in list(debug_info.feature_times.items())[:3]:
-                                print(f"               • {feature}: {time_ms:.2f}ms")
-                        if debug_info.skipped_rules:
-                            print(f"            Skipped Rules:")
-                            for rule in debug_info.skipped_rules[:2]:
-                                print(f"               • {rule}")
-                        if debug_info.missing_features:
-                            print(f"            Missing Features: {', '.join(debug_info.missing_features)}")
-                            
+                pp = presence_service.get_profile(profiles[0].device_id)
+                pd = presence_service.debug(profiles[0].device_id)
+                _format_engine_output("PRESENCE", pp, pd, engine_type="temporal presence")
             except Exception as exc:
                 print(f"  [PRESENCE] ❌ Failed: {exc}")
-                import traceback
-                traceback.print_exc()
-        # ===========================================
 
+        # === Archivist Summary & Events ===
         print()
         archivist.print_summary()
 
         if all_events:
             print()
             print(f"  📢 Events ({len(all_events)}, {total_event_elapsed_ms:.1f} ms, persisted: {total_persisted}):")
-            for event in all_events:
+            for event in all_events[:5]:  # Ограничим вывод 5 событиями для чистоты
                 severity_icon = {"INFO": "ℹ️", "WARNING": "⚠️", "CRITICAL": "🚨"}.get(event.severity.value, "•")
                 print(f"      {severity_icon} [{event.severity.value}] {event.title}")
-                if event.old_value and event.new_value:
-                    print(f"         {event.old_value} → {event.new_value}")
-                else:
-                    print(f"         {event.description}")
         else:
             print()
-            print(f"  📢 Events: Нет изменений (состояние устройств не изменилось, {total_event_elapsed_ms:.1f} ms)")
+            print(f"  📢 Events: Нет изменений ({total_event_elapsed_ms:.1f} ms)")
 
         # === v1.5.1: Smoke-test History Service ===
         if history_service and first_device_id:
@@ -580,10 +465,7 @@ def main() -> int:
             print("  [HISTORY] Testing History Service...")
             try:
                 device_history = history_service.get_device_history(first_device_id)
-                print(f"      ✅ History Service is working!")
-                print(f"         Device: {device_history.mac}")
-                print(f"         Snapshots: {len(device_history.snapshots)}")
-                print(f"         Observations: {len(device_history.observations)}")
+                print(f"      ✅ History Service is working! Device: {device_history.mac} | Snapshots: {len(device_history.snapshots)} | Observations: {len(device_history.observations)}")
             except Exception as exc:
                 print(f"      ❌ History Service test failed: {exc}")
 
@@ -596,7 +478,6 @@ def main() -> int:
     save_report(devices, collected_data)
 
     if db:
-        # === v1.5.3: Корректное закрытие сессий перед выходом ===
         if session_engine:
             session_engine.close_all_active_sessions(SessionEndReason.PROGRAM_SHUTDOWN)
         db.close()
