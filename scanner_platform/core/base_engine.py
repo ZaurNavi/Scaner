@@ -82,7 +82,24 @@ class BaseEngine(ABC):
         # === 1. Проверка кэша ===
         cache_key = self._get_cache_key(context)
         if cache_key in self._cache:
-            return self._cache[cache_key]
+            # ИСПРАВЛЕНО: при возврате из кэша создаём новый EngineResult
+            # с обнулённым computation_time_ms
+            cached = self._cache[cache_key]
+            cached_stats = dict(cached.statistics)
+            cached_stats["computation_time_ms"] = 0.0
+            cached_stats["cache_hit"] = True
+            
+            return EngineResult(
+                device_id=cached.device_id,
+                engine=cached.engine,
+                facts=cached.facts,
+                coverage=cached.coverage,
+                statistics=cached_stats,
+                debug=cached.debug,
+                explain=cached.explain,
+                dependencies=cached.dependencies,
+                version=cached.version
+            )
         
         # === 2. Оценка правил ===
         matched_rules = []
@@ -107,7 +124,8 @@ class BaseEngine(ABC):
             "rules_evaluated": len(self.engine_rules),
             "rules_matched": len(matched_rules),
             "facts_generated": len(facts),
-            "computation_time_ms": (time.time() - start_time) * 1000
+            "computation_time_ms": (time.time() - start_time) * 1000,
+            "cache_hit": False
         }
         
         # === 7. Debug ===
