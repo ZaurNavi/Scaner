@@ -38,26 +38,10 @@ from .state.device_state import DeviceState
 from .validation.platform import PlatformValidator
 
 __all__ = [
-    # Builders
     "Builder", "TimelineBuilder", "MetricsBuilder", "FeaturesBuilder", "FactsBuilder",
-    # Registry
-    "ProviderRegistry", "ProviderDescriptor",
-    "MetricRegistry", "MetricDescriptor",
-    "FeatureRegistry", "FeatureDescriptor",
-    "RuleRegistry", "RuleDescriptor", "RuleCondition", "RuleOperator",
+    "ProviderRegistry", "ProviderDescriptor", "MetricRegistry", "MetricDescriptor",
+    "FeatureRegistry", "FeatureDescriptor", "RuleRegistry", "RuleDescriptor", "RuleCondition", "RuleOperator",
     "BuilderRegistry", "BuilderDescriptor",
-    # Timeline
     "Timeline", "TimelineEvent", "EventType", "TimelineProvider", "ProviderResult",
-    # Facts
-    "Fact", "FactStatus", "FactExplain",
-    # Pipeline
-    "Pipeline",
-    # Coverage
-    "Coverage",
-    # Cache
-    "VersionSnapshot",
-    # State
-    "DeviceState",
-    # Validation
-    "PlatformValidator",
+    "Fact", "FactStatus", "FactExplain", "Pipeline", "Coverage", "VersionSnapshot", "DeviceState", "PlatformValidator",
 ]
