@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Optional, List, Dict
 
 from .categories import BehaviourCategory
-from .models import BehaviourProfile, BehaviourFact, BehaviourExplanation, DebugInfo  # ИСПРАВЛЕНО: добавлен DebugInfo
+from .models import BehaviourProfile, BehaviourFact, BehaviourExplanation, DebugInfo
 from .engine import BehaviourEngine
 from history import HistoryService
 from identity import IdentityService
@@ -37,7 +37,9 @@ class BehaviourService:
         if device_id in self._cache and self._identity_versions.get(device_id) == current_version:
             return self._cache[device_id]
         
-        profile = self.engine.analyze(device_id)
+        # 👇 ИСПРАВЛЕНИЕ ЗДЕСЬ: добавляем ", _" для распаковки кортежа
+        profile, _ = self.engine.analyze(device_id)
+        
         self._cache[device_id] = profile
         self._identity_versions[device_id] = current_version
         
