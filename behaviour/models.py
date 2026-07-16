@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Модели данных для Behaviour Engine.
-Разделение: FeatureSet (измерения) vs BehaviourFact (интерпретация).
+Модели данных для Behaviour Engine (Унифицированная версия v1.6.1).
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ from .categories import BehaviourCategory, BehaviourStatus
 
 @dataclass
 class BehaviourFeature:
-    """Объективный измеренный признак поведения (сырой факт)."""
+    """Объективный измеренный признак поведения."""
     name: str
     value: Any
     unit: str = ""
@@ -26,41 +25,27 @@ class BehaviourFeature:
 
 @dataclass
 class FeatureSet:
-    """Набор всех вычисленных признаков для устройства (измерения)."""
-    # Сессии
-    average_session_duration: Optional[float] = None  # секунды
+    """Набор всех вычисленных признаков для устройства."""
+    average_session_duration: Optional[float] = None
     session_count: int = 0
-    total_session_duration: float = 0.0  # секунды
-    
-    # Трафик
-    peak_speed: Optional[float] = None  # Mbps
-    average_speed: Optional[float] = None  # Mbps
-    total_traffic: int = 0  # байты
-    total_download: int = 0  # байты
-    total_upload: int = 0  # байты
-    
-    # Активность
-    idle_ratio: float = 0.0  # 0.0 - 1.0
-    active_ratio: float = 0.0  # 0.0 - 1.0
-    
-    # Мобильность
+    total_session_duration: float = 0.0
+    peak_speed: Optional[float] = None
+    average_speed: Optional[float] = None
+    total_traffic: int = 0
+    total_download: int = 0
+    total_upload: int = 0
+    idle_ratio: float = 0.0
+    active_ratio: float = 0.0
     ap_changes: int = 0
     ssid_changes: int = 0
-    
-    # Сигнал
-    rssi_variance: Optional[float] = None  # dB
-    snr_variance: Optional[float] = None  # dB
-    
-    # Время
+    rssi_variance: Optional[float] = None
+    snr_variance: Optional[float] = None
     first_seen: Optional[datetime] = None
     last_seen: Optional[datetime] = None
-    lifetime_seconds: Optional[float] = None  # секунды
-    
-    # Метаданные
+    lifetime_seconds: Optional[float] = None
     generated_at: datetime = field(default_factory=datetime.now)
     
     def to_dict(self) -> Dict[str, Any]:
-        """Сериализация для отладки."""
         result = {}
         for key, value in self.__dict__.items():
             if isinstance(value, datetime):
@@ -72,15 +57,17 @@ class FeatureSet:
 
 @dataclass
 class BehaviourFact:
-    """Вывод о поведении на основе признаков (интерпретация)."""
+    """Вывод о поведении на основе признаков."""
     category: BehaviourCategory
-    feature: str  # Имя признака, на основе которого сделан вывод
-    measured_value: Any  # Измеренное значение
-    threshold: Any  # Порог из правила
+    feature: str
+    value: Any  # ДОБАВЛЕНО: для совместимости с форматтером
+    measured_value: Any
+    threshold: Any
+    score: int = 0  # ДОБАВЛЕНО: алиас для raw_score
     raw_score: int = 0
     confidence: float = 0.0
     status: BehaviourStatus = BehaviourStatus.UNKNOWN
-    rule_id: str = ""  # ID правила (RULE-0001)
+    rule_id: str = ""
     matched_rules: List[str] = field(default_factory=list)
     sources: List[str] = field(default_factory=list)
     reasons: List[str] = field(default_factory=list)
@@ -98,7 +85,7 @@ class BehaviourExplanation:
     confidence: float
     rule_id: str
     matched_rules: List[str]
-    matched_features: List[str]  # Все признаки, участвовавшие в выводе
+    matched_features: List[str]
     sources: List[str]
     reasons: List[str]
 
@@ -116,35 +103,63 @@ class BehaviourSummary:
 
 @dataclass
 class SourceVersions:
-    """Версии источников данных для воспроизводимости."""
+    """Версии источников данных."""
     identity_version: int = 1
     session_version: int = 1
     confidence_version: int = 1
     generated_from_timestamp: Optional[datetime] = None
 
 
+# ДОБАВЛЕНО: DebugInfo для совместимости с форматтером
+@dataclass
+class DebugInfo:
+    """Отладочная информация для Behaviour Engine."""
+    computation_time_ms: float
+    provider_times: Dict[str, float] = field(default_factory=dict)
+    builder_times: Dict[str, float] = field(default_factory=dict)
+    feature_times: Dict[str, float] = field(default_factory=dict)
+    evaluated_rules: List[str] = field(default_factory=list)
+    matched_rules: List[str] = field(default_factory=list)
+    skipped_rules: List[str] = field(default_factory=list)
+    missing_features: List[str] = field(default_factory=list)
+    cache_invalidated: bool = False
+    cache_reason: str = ""
+    cache_hit: bool = False
+    cache_key: tuple = field(default_factory=tuple)
+    engine_version: str = "1.0.0"
+    feature_version: str = "1.0.0"
+    provider_version: str = "1.0.0"
+
+
 @dataclass
 class BehaviourProfile:
-    """Главный объект модуля Behaviour Engine."""
+    """Главный объект модуля Behaviour Engine (Унифицированный)."""
     identity_id: str
     generated_at: datetime = field(default_factory=datetime.now)
     engine_version: str = "1.0.0"
     rules_version: str = "1.0.0"
+    feature_version: str = "1.0.0"  # ДОБАВЛЕНО
+    provider_version: str = "1.0.0"  # ДОБАВЛЕНО
+    metric_coverage: float = 0.0  # ДОБАВЛЕНО
     feature_coverage: float = 0.0
+    rule_match_ratio: float = 0.0  # ДОБАВЛЕНО (алиас для behaviour_coverage)
     behaviour_coverage: float = 0.0
     features: FeatureSet = field(default_factory=FeatureSet)
-    facts: List[BehaviourFact] = field(default_factory=list)  # Изменено с Dict на List
+    facts: List[BehaviourFact] = field(default_factory=list)
     summary: BehaviourSummary = field(default_factory=BehaviourSummary)
     source_versions: SourceVersions = field(default_factory=SourceVersions)
     
     def to_dict(self) -> Dict[str, Any]:
-        """Сериализация для вывода."""
         return {
             "identity_id": self.identity_id,
             "generated_at": self.generated_at.isoformat(),
             "engine_version": self.engine_version,
             "rules_version": self.rules_version,
+            "feature_version": self.feature_version,
+            "provider_version": self.provider_version,
+            "metric_coverage": self.metric_coverage,
             "feature_coverage": self.feature_coverage,
+            "rule_match_ratio": self.rule_match_ratio,
             "behaviour_coverage": self.behaviour_coverage,
             "source_versions": {
                 "identity_version": self.source_versions.identity_version,
