@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Модели данных Mobility Engine."""
+"""Модели данных Mobility Engine v2.0"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 from .categories import MobilityCategory, MobilityStatus
 
@@ -11,8 +11,8 @@ from .categories import MobilityCategory, MobilityStatus
 class DataQuality:
     coverage: float = 0.0
     samples: int = 0
-    freshness: float = 0.0  # 0.0 - 1.0
-    continuity: float = 0.0 # 0.0 - 1.0
+    freshness: float = 0.0
+    continuity: float = 0.0
     confidence: float = 0.0
 
 @dataclass
@@ -33,21 +33,20 @@ class MobilityFeature:
     generated_at: datetime = field(default_factory=datetime.now)
     dependencies: List[str] = field(default_factory=list)
 
-# FeatureSet - это dict, как требовалось в ТЗ
 MobilityFeatureSet = Dict[str, MobilityFeature]
 
 @dataclass
-class MovementSegment:
+class MovementEvent:
+    timestamp: datetime
     from_ap: Optional[str]
     to_ap: Optional[str]
-    stay_time: float  # seconds
-    signal_before: Optional[float]
-    signal_after: Optional[float]
-    transition_reason: str
+    reason: str
+    signal: Optional[float]
+    confidence: float
 
 @dataclass
 class MobilityTimeline:
-    segments: List[MovementSegment] = field(default_factory=list)
+    events: List[MovementEvent] = field(default_factory=list)
 
 @dataclass
 class MobilityFact:
@@ -60,7 +59,7 @@ class MobilityFact:
     status: MobilityStatus
     matched_rules: List[str] = field(default_factory=list)
     sources: List[str] = field(default_factory=list)
-    reason: str = ""
+    reasons: List[str] = field(default_factory=list) # <-- ИСПРАВЛЕНО: список причин
 
 @dataclass
 class MobilityProfile:
@@ -80,7 +79,7 @@ class MobilityProfile:
 
 @dataclass
 class MobilityExplanation:
-    metrics: Dict[str, Any]
+    metrics: Dict[str, Any] # <-- ИСПРАВЛЕНО: реальные метрики, а не {}
     features: MobilityFeatureSet
     matched_rules: List[str]
     skipped_rules: List[str]
@@ -93,8 +92,11 @@ class MobilityExplanation:
 @dataclass
 class DebugInfo:
     computation_time_ms: float
-    used_providers: List[str]
-    skipped_rules: List[str]
-    missing_features: List[str]
-    cache_invalidated: bool
-    cache_reason: str
+    provider_times: Dict[str, float] = field(default_factory=dict) # <-- ДОБАВЛЕНО
+    feature_times: Dict[str, float] = field(default_factory=dict)  # <-- ДОБАВЛЕНО
+    evaluated_rules: List[str] = field(default_factory=list)       # <-- ДОБАВЛЕНО
+    matched_rules: List[str] = field(default_factory=list)         # <-- ДОБАВЛЕНО
+    skipped_rules: List[str] = field(default_factory=list)         # <-- ДОБАВЛЕНО
+    missing_features: List[str] = field(default_factory=list)
+    cache_invalidated: bool = False
+    cache_reason: str = ""
