@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-"""
-Behaviour Engine — координация FeatureBuilder, DerivedFeatureCalculator и Evaluator.
-"""
-
+"""Behaviour Engine — координация FeatureBuilder и Evaluator."""
 from __future__ import annotations
-
-from typing import List, Optional
-
-from .models import BehaviourProfile, FeatureSet, SourceVersions
-from .features import FeatureBuilder, DerivedFeatureCalculator
+import time
+from typing import List, Optional, Tuple
+from .models import BehaviourProfile, FeatureSet, BehaviourSummary, SourceVersions, DebugInfo
+from .features import FeatureBuilder
 from .evaluator import BehaviourEvaluator
 from history import HistoryService
 from identity import IdentityService
 from session import SessionEngine
-
 
 class BehaviourEngine:
     """Координирует вычисление признаков и оценку поведения."""
@@ -25,29 +20,96 @@ class BehaviourEngine:
         session_engine: Optional[SessionEngine] = None
     ):
         self.feature_builder = FeatureBuilder(history_service, identity_service, session_engine)
-        self.derived_calculator = DerivedFeatureCalculator()
         self.evaluator = BehaviourEvaluator()
     
-    def analyze(self, device_id: str) -> BehaviourProfile:
-        """Анализирует поведение устройства."""
-        # Вычисляем сырые признаки
+    def analyze(self, device_id: str) -> Tuple[BehaviourProfile, DebugInfo]:
+        """
+        Анализирует поведение устройства.
+        
+        Returns:
+            Tuple[BehaviourProfile, DebugInfo]
+        """
+        start_time = time.time()
+        
+        # 1. Вычисляем сырые признаки
         features = self.feature_builder.build(device_id)
         
-        # Вычисляем производные признаки
-        features = self.derived_calculator.calculate(features)
+        # 2. Применяем правила (БЕЗ лишних аргументов!)
+        facts, debug_info = self.evaluator.evaluate(features)
         
-        # Получаем source_versions
-        identity_profile = self.feature_builder.identity.get_identity(device_id)
-        source_versions = SourceVersions(
-            identity_version=identity_profile.identity_version if identity_profile else 1,
-            generated_from_timestamp=identity_profile.last_updated if identity_profile else None
+        # 3. Вычисляем coverage
+        feature_coverage = self._calculate_feature_coverage(features)
+        behaviour_coverage = self._calculate_behaviour_coverage(facts)
+        
+        # 4. Формируем summary
+        summary = self._build_summary(facts)
+        
+        # 5. Создаём profile
+        profile = BehaviourProfile(
+            identity_id=device_id,
+            generated_at=features.generated_at,
+            engine_version="1.0.0",
+            rules_version="1.0.0",
+            feature_version="1.0.0",
+            provider_version="1.0.0",
+            metric_coverage=0.0,  # Behaviour не имеет метрик
+            feature_coverage=feature_coverage,
+            rule_match_ratio=behaviour_coverage,
+            behaviour_coverage=behaviour_coverage,
+            features=features,
+            facts=facts,
+            summary=summary,
+            source_versions=SourceVersions()
         )
         
-        # Применяем правила
-        profile = self.evaluator.evaluate(device_id, features, source_versions)
+        # 6. Заполняем debug_info
+        debug_info.computation_time_ms = (time.time() - start_time) * 1000
+        debug_info.cache_hit = False
+        debug_info.cache_key = ()
         
-        return profile
+        return profile, debug_info
     
-    def analyze_all(self, device_ids: List[str]) -> List[BehaviourProfile]:
-        """Анализирует поведение всех устройств."""
-        return [self.analyze(device_id) for device_id in device_ids]
+    def _calculate_feature_coverage(self, features: FeatureSet) -> float:
+        """Вычисляет процент успешно вычисленных признаков."""
+        total_features = 10
+        filled_features = sum([
+            features.average_session_duration is not None,
+            features.session_count > 0,
+            features.peak_speed is not None,
+            features.average_speed is not None,
+            features.total_traffic > 0,
+            features.idle_ratio > 0,
+            features.active_ratio > 0,
+            features.ap_changes > 0,
+            features.ssid_changes > 0,
+            features.lifetime_seconds is not None
+        ])
+        
+        return (filled_features / total_features) * 100.0
+    
+    def _calculate_behaviour_coverage(self, facts: List) -> float:
+        """Вычисляет процент определённых моделей поведения."""
+        from .categories import BehaviourCategory
+        total_categories = len(BehaviourCategory)
+        unique_categories = set(f.category for f in facts)
+        filled_categories = len(unique_categories)
+        
+        return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
+    
+    def _build_summary(self, facts: List) -> BehaviourSummary:
+        """Формирует краткую сводку."""
+        from .categories import BehaviourStatus
+        summary = BehaviourSummary()
+        
+        for fact in facts:
+            summary.facts_total += 1
+            if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
+                summary.high += 1
+            elif fact.status == BehaviourStatus.MEDIUM:
+                summary.medium += 1
+            elif fact.status == BehaviourStatus.LOW:
+                summary.low += 1
+            else:
+                summary.unknown += 1
+        
+        return summary
