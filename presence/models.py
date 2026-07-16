@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Модели данных Presence Engine с BaseAnalyticalValue (Замечание №4)."""
+"""Модели данных Presence Engine с BaseAnalyticalValue и BaseProfile (Замечание №1, №15)."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional, Tuple
 
 from .categories import PresenceCategory, PresenceStatus, EventType
 
-# Базовый класс для всех аналитических значений (Замечание №4)
+# Базовый класс для всех аналитических значений (Замечание №9: добавлен version)
 @dataclass
 class BaseAnalyticalValue:
     """Базовая модель для Metric и Feature. Используется всей платформой."""
@@ -15,16 +15,18 @@ class BaseAnalyticalValue:
     name: str
     value: Any
     unit: str = ""
+    version: str = "1.0.0"  # Замечание №9
     confidence: float = 0.0
     sources: List[str] = field(default_factory=list)
     generated_at: datetime = field(default_factory=datetime.now)
 
 @dataclass
 class PresenceQuality:
-    """Специфичное качество данных для Presence (Замечание №5)."""
+    """Специфичное качество данных для Presence (Замечание №5, №6: добавлен freshness)."""
     coverage: float = 0.0
     samples: int = 0
-    history_depth: int = 0  # дней
+    history_depth: int = 0
+    freshness: float = 0.0  # Замечание №6
     confidence: float = 0.0
     reason: str = ""
 
@@ -39,28 +41,47 @@ class PresenceMetric(BaseAnalyticalValue):
     quality: PresenceQuality = field(default_factory=PresenceQuality)
     availability: Availability = field(default_factory=Availability)
 
-PresenceMetricSet = Dict[str, PresenceMetric]
+# PresenceMetricSet как dataclass (Замечание №1)
+@dataclass
+class PresenceMetricSet:
+    """Контейнер для метрик с метаданными."""
+    metrics: Dict[str, PresenceMetric] = field(default_factory=dict)
+    generated_at: datetime = field(default_factory=datetime.now)
+    coverage: float = 0.0
+    quality: PresenceQuality = field(default_factory=PresenceQuality)
+    
+    def get(self, metric_id: str) -> Optional[PresenceMetric]:
+        return self.metrics.get(metric_id)
+    
+    def __getitem__(self, key: str) -> PresenceMetric:
+        return self.metrics[key]
+    
+    def __contains__(self, key: str) -> bool:
+        return key in self.metrics
+    
+    def values(self):
+        return self.metrics.values()
+    
+    def items(self):
+        return self.metrics.items()
 
 @dataclass
-class PresenceEvent:
-    """Событие в Timeline (Замечание №6 — EventType enum)."""
+class TimelineEvent:  # Замечание №7: универсальный Timeline
+    """Событие в Timeline. Переиспользуется всеми движками."""
     timestamp: datetime
     event_type: EventType
     confidence: float
     details: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
-class PresenceTimeline:
-    """
-    Общая модель Timeline (Замечание №15).
-    Переиспользуется Presence, Behaviour, Mobility, Role.
-    """
-    events: List[PresenceEvent] = field(default_factory=list)
+class Timeline:  # Замечание №7: универсальный Timeline
+    """Универсальная модель Timeline для всех движков."""
+    events: List[TimelineEvent] = field(default_factory=list)
     
     def is_immutable(self) -> bool:
         return True
     
-    def get_by_type(self, event_type: EventType) -> List[PresenceEvent]:
+    def get_by_type(self, event_type: EventType) -> List[TimelineEvent]:
         return [e for e in self.events if e.event_type == event_type]
     
     def count_by_type(self, event_type: EventType) -> int:
@@ -89,8 +110,10 @@ class PresenceFact:
     sources: List[str] = field(default_factory=list)
     reasons: List[str] = field(default_factory=list)
 
+# BaseProfile для унификации (Замечание №15)
 @dataclass
-class PresenceProfile:
+class BaseProfile:
+    """Базовый класс для всех Profile движков."""
     identity_id: str
     generated_at: datetime = field(default_factory=datetime.now)
     engine_version: str = "1.0.0"
@@ -99,19 +122,23 @@ class PresenceProfile:
     provider_version: str = "1.0.0"
     history_version: int = 1
     session_version: int = 1
-    presence_version: int = 1
     metric_coverage: float = 0.0
     feature_coverage: float = 0.0
-    fact_coverage: float = 0.0  # На самом деле Rule Match Ratio (Замечание №8)
-    timeline: PresenceTimeline = field(default_factory=PresenceTimeline)
-    metrics: PresenceMetricSet = field(default_factory=dict)  # Замечание №3: сохраняем
+    rule_match_ratio: float = 0.0  # Замечание №5: переименовано
+    timeline: Timeline = field(default_factory=Timeline)
+    metrics: PresenceMetricSet = field(default_factory=PresenceMetricSet)
     features: PresenceFeatureSet = field(default_factory=dict)
-    facts: List[PresenceFact] = field(default_factory=list)
+    facts: List[Any] = field(default_factory=list)
+
+@dataclass
+class PresenceProfile(BaseProfile):  # Замечание №15: наследуется от BaseProfile
+    """Профиль Presence. Добавляет специфичные поля."""
+    presence_version: int = 1
 
 @dataclass
 class PresenceExplanation:
-    timeline: PresenceTimeline
-    metrics: PresenceMetricSet  # Замечание №14: реальные метрики
+    timeline: Timeline
+    metrics: PresenceMetricSet
     features: PresenceFeatureSet
     matched_rules: List[str]
     skipped_rules: List[str]
@@ -120,6 +147,7 @@ class PresenceExplanation:
     missing_features: List[str]
     providers: List[str]
     sources: List[str]
+    execution_order: List[str] = field(default_factory=list)  # Замечание №10
 
 @dataclass
 class DebugInfo:
@@ -133,3 +161,8 @@ class DebugInfo:
     missing_features: List[str] = field(default_factory=list)
     cache_invalidated: bool = False
     cache_reason: str = ""
+    cache_hit: bool = False  # Замечание №14
+    cache_key: Tuple = field(default_factory=tuple)  # Замечание №14
+    engine_version: str = ""  # Замечание №14
+    feature_version: str = ""  # Замечание №14
+    provider_version: str = ""  # Замечание №14
