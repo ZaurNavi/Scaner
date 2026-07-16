@@ -1,33 +1,33 @@
 {
-  "timestamp": "16.07.2026 11:40:36",
+  "timestamp": "16.07.2026 17:30:30",
   "statistics": {
-    "total": 3,
-    "suspects": 0,
+    "total": 29,
+    "suspects": 15,
     "warnings": 0,
-    "normal": 3
+    "normal": 14
   },
   "devices": [
     {
-      "ip": "192.168.1.87",
-      "mac": "5A:CA:B0:6B:7B:B4",
+      "ip": "192.168.1.224",
+      "mac": "7E:3A:1D:A7:91:3C",
       "vendor": "Unknown",
-      "hostname": "Nuray-adli-kisiye-ait-A13",
+      "hostname": "7E-3A-1D-A7-91-3C",
       "model": "",
-      "os": "Unknown",
-      "device_type": "Mobile Device",
-      "confidence": 45,
-      "flows": 66,
-      "bytes": 462331,
-      "megabytes": 0.44,
-      "first_seen": "2026-07-16 11:37:28",
-      "duration_seconds": 276.47,
-      "hours_online": 0.08,
-      "mb_per_hour": 5.74,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 322,
+      "bytes": 3596415,
+      "megabytes": 3.43,
+      "first_seen": "2026-07-16 17:19:09",
+      "duration_seconds": 2402.03,
+      "hours_online": 0.67,
+      "mb_per_hour": 5.14,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (322) при низком трафике",
       "evidence_items": [
         {
-          "description": "Hostname = Nuray-adli-kisiye-ait-A13",
+          "description": "Hostname = 7E-3A-1D-A7-91-3C",
           "contribution": 10,
           "source": "hostname",
           "details": ""
@@ -36,7 +36,148 @@
           "description": "Omada Controller provides telemetry",
           "contribution": 30,
           "source": "omada",
-          "details": "type: unknown, hostname: Nuray-adli-kisiye-ait-A13, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -93dBm, SNR: 2dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 2Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784187613119, Active: True, Down: 0.6MB, Up: 0.4MB, PktDown: 1066, PktUp: 1169, PowerSave: False, Wireless: True, Guest: False"
+          "details": "type: unknown, hostname: 7E-3A-1D-A7-91-3C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -66dBm, Signal: 60, Rank: 3, SNR: 29dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 18min, LastSeen: 1784208597997, Active: True, Down: 180.8MB, Up: 36.1MB, PktDown: 148105, PktUp: 74516, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.198",
+      "mac": "BE:05:0D:A2:02:5F",
+      "vendor": "Unknown",
+      "hostname": "BE-05-0D-A2-02-5F",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 209,
+      "bytes": 2405008,
+      "megabytes": 2.29,
+      "first_seen": "2026-07-16 17:18:30",
+      "duration_seconds": 2709.45,
+      "hours_online": 0.75,
+      "mb_per_hour": 3.05,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (209) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Hostname = BE-05-0D-A2-02-5F",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: BE-05-0D-A2-02-5F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 40, Radio: 5GHz, TX: 27Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 38min, LastSeen: 1784208597997, Active: True, Down: 168.2MB, Up: 11.2MB, PktDown: 138933, PktUp: 84270, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.209",
+      "mac": "D6:33:D1:78:A3:28",
+      "vendor": "Unknown",
+      "hostname": "Android-nin-A16",
+      "model": "",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 80,
+      "flows": 309,
+      "bytes": 2206709,
+      "megabytes": 2.1,
+      "first_seen": "2026-07-16 17:18:42",
+      "duration_seconds": 2664.83,
+      "hours_online": 0.74,
+      "mb_per_hour": 2.84,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (309) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Hostname = Android-nin-A16",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: Android-nin-A16, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -70dBm, Signal: 50, Rank: 3, SNR: 25dB, Ch: 11, Radio: 2.4GHz, TX: 39Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 15min, LastSeen: 1784208597997, Active: True, Down: 48.1MB, Up: 5.6MB, PktDown: 45059, PktUp: 35355, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_generic",
+          "contribution": 70,
+          "source": "rule:android_generic",
+          "details": "Hostname contains 'android'"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.237",
+      "mac": "9E:A4:C9:17:99:FD",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-Note-11S",
+      "model": "Redmi-Note-11S",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 70,
+      "flows": 6,
+      "bytes": 4239,
+      "megabytes": 0.0,
+      "first_seen": "2026-07-16 17:20:51",
+      "duration_seconds": 5.36,
+      "hours_online": 0.0,
+      "mb_per_hour": 2.72,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 9E:A4:C9"
+        },
+        {
+          "description": "Hostname = Redmi-Note-11S",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-Note-11S, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784208597997, Active: True, Down: 0.0MB, Up: 0.0MB, PktDown: 96, PktUp: 90, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
         },
         {
           "description": "Rule: mac_randomization",
@@ -47,35 +188,59 @@
       ]
     },
     {
-      "ip": "192.168.1.89",
-      "mac": "62:86:A8:81:9B:4C",
-      "vendor": "Unknown",
-      "hostname": "62-86-A8-81-9B-4C",
-      "model": "",
-      "os": "Linux",
-      "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 60,
-      "bytes": 155453,
-      "megabytes": 0.15,
-      "first_seen": "2026-07-16 11:38:51",
-      "duration_seconds": 153.89,
-      "hours_online": 0.04,
-      "mb_per_hour": 3.47,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
+      "ip": "192.168.1.222",
+      "mac": "3A:BE:49:CB:34:B3",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-A3",
+      "model": "Redmi-A3",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 303,
+      "bytes": 2283557,
+      "megabytes": 2.18,
+      "first_seen": "2026-07-16 17:18:44",
+      "duration_seconds": 3043.46,
+      "hours_online": 0.85,
+      "mb_per_hour": 2.58,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
       "evidence_items": [
         {
-          "description": "Hostname = 62-86-A8-81-9B-4C",
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 3A:BE:49"
+        },
+        {
+          "description": "Hostname = Redmi-A3",
           "contribution": 10,
           "source": "hostname",
           "details": ""
         },
         {
-          "description": "Omada Controller provides telemetry",
-          "contribution": 30,
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
           "source": "omada",
-          "details": "type: unknown, hostname: 62-86-A8-81-9B-4C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -91dBm, SNR: 4dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 1min, LastSeen: 1784187613119, Active: True, Down: 1.9MB, Up: 0.2MB, PktDown: 2148, PktUp: 1308, PowerSave: False, Wireless: True, Guest: False"
+          "details": "type: unknown, hostname: Redmi-A3, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -82dBm, Signal: 20, Rank: 1, SNR: 13dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784208597997, Active: True, Down: 14.1MB, Up: 3.5MB, PktDown: 15992, PktUp: 16461, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: linux_vendor_silent",
+          "contribution": 65,
+          "source": "rule:linux_vendor_silent",
+          "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
         },
         {
           "description": "Rule: linux_ttl_generic",
@@ -86,26 +251,26 @@
       ]
     },
     {
-      "ip": "192.168.1.86",
-      "mac": "52:6A:CB:2B:D2:83",
+      "ip": "192.168.1.197",
+      "mac": "76:70:A5:D1:ED:2B",
       "vendor": "Unknown",
-      "hostname": "52-6A-CB-2B-D2-83",
+      "hostname": "Rauf",
       "model": "",
       "os": "Linux",
       "device_type": "Network Device",
-      "confidence": 40,
-      "flows": 48,
-      "bytes": 220435,
-      "megabytes": 0.21,
-      "first_seen": "2026-07-16 11:36:04",
-      "duration_seconds": 237.03,
-      "hours_online": 0.07,
-      "mb_per_hour": 3.19,
-      "status": "🟢 НОРМАЛЬНЫЙ",
-      "reason": "—",
+      "confidence": 50,
+      "flows": 293,
+      "bytes": 1366222,
+      "megabytes": 1.3,
+      "first_seen": "2026-07-16 17:18:47",
+      "duration_seconds": 2795.61,
+      "hours_online": 0.78,
+      "mb_per_hour": 1.68,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (293) при низком трафике",
       "evidence_items": [
         {
-          "description": "Hostname = 52-6A-CB-2B-D2-83",
+          "description": "Hostname = Rauf",
           "contribution": 10,
           "source": "hostname",
           "details": ""
@@ -114,13 +279,1060 @@
           "description": "Omada Controller provides telemetry",
           "contribution": 30,
           "source": "omada",
-          "details": "type: unknown, hostname: 52-6A-CB-2B-D2-83, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -84dBm, Signal: 15, Rank: 1, SNR: 11dB, Ch: 40, Radio: 5GHz, TX: 144Mbps, RX: 144Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 3min, LastSeen: 1784187613119, Active: True, Down: 0.2MB, Up: 0.2MB, PktDown: 532, PktUp: 647, PowerSave: True, Wireless: True, Guest: False"
+          "details": "type: unknown, hostname: Rauf, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -67dBm, Signal: 57, Rank: 3, SNR: 28dB, Ch: 11, Radio: 2.4GHz, TX: 58Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 39min, LastSeen: 1784208597997, Active: True, Down: 62.5MB, Up: 7.7MB, PktDown: 62364, PktUp: 49283, PowerSave: True, Wireless: True, Guest: False"
         },
         {
           "description": "Rule: linux_ttl_generic",
           "contribution": 40,
           "source": "rule:linux_ttl_generic",
           "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.155",
+      "mac": "8E:DD:C2:F0:D9:AC",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-12",
+      "model": "Redmi-12",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 105,
+      "bytes": 386870,
+      "megabytes": 0.37,
+      "first_seen": "2026-07-16 17:17:36",
+      "duration_seconds": 815.55,
+      "hours_online": 0.23,
+      "mb_per_hour": 1.63,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 8E:DD:C2"
+        },
+        {
+          "description": "Hostname = Redmi-12",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-12, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -86dBm, Signal: 10, Rank: 1, SNR: 9dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 14min, LastSeen: 1784208597997, Active: True, Down: 14.1MB, Up: 8.6MB, PktDown: 16221, PktUp: 12631, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.225",
+      "mac": "5E:B8:E4:0E:4E:22",
+      "vendor": "Xiaomi",
+      "hostname": "REDMI-15C",
+      "model": "REDMI-15C",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 180,
+      "bytes": 605524,
+      "megabytes": 0.58,
+      "first_seen": "2026-07-16 17:19:01",
+      "duration_seconds": 2091.82,
+      "hours_online": 0.58,
+      "mb_per_hour": 0.99,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 5E:B8:E4"
+        },
+        {
+          "description": "Hostname = REDMI-15C",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: REDMI-15C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 18min, LastSeen: 1784208597997, Active: True, Down: 3.9MB, Up: 2.7MB, PktDown: 9783, PktUp: 11395, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.232",
+      "mac": "16:16:02:54:2D:3E",
+      "vendor": "Xiaomi",
+      "hostname": "POCO-M6",
+      "model": "",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 21,
+      "bytes": 38538,
+      "megabytes": 0.04,
+      "first_seen": "2026-07-16 17:19:29",
+      "duration_seconds": 136.14,
+      "hours_online": 0.04,
+      "mb_per_hour": 0.97,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 16:16:02"
+        },
+        {
+          "description": "Hostname = POCO-M6",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: 16-16-02-54-2D-3E, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 10min, LastSeen: 1784208567287, Active: True, Down: 0.4MB, Up: 0.0MB, PktDown: 584, PktUp: 391, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.233",
+      "mac": "56:FA:7F:7B:C0:38",
+      "vendor": "Unknown",
+      "hostname": "56-FA-7F-7B-C0-38",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 166,
+      "bytes": 816234,
+      "megabytes": 0.78,
+      "first_seen": "2026-07-16 17:18:39",
+      "duration_seconds": 2921.67,
+      "hours_online": 0.81,
+      "mb_per_hour": 0.96,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (166) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Hostname = 56-FA-7F-7B-C0-38",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: 56-FA-7F-7B-C0-38, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -87dBm, Signal: 7, Rank: 1, SNR: 8dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 11min, LastSeen: 1784208597997, Active: True, Down: 2.6MB, Up: 1.7MB, PktDown: 5840, PktUp: 6170, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.223",
+      "mac": "A2:F9:2E:6D:02:9D",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-14C",
+      "model": "Redmi-14C",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 65,
+      "bytes": 144286,
+      "megabytes": 0.14,
+      "first_seen": "2026-07-16 17:19:13",
+      "duration_seconds": 561.57,
+      "hours_online": 0.16,
+      "mb_per_hour": 0.88,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: A2:F9:2E"
+        },
+        {
+          "description": "Hostname = Redmi-14C",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-14C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -94dBm, SNR: 1dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784208597997, Active: True, Down: 1.8MB, Up: 1.1MB, PktDown: 3901, PktUp: 3796, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.230",
+      "mac": "E0:1F:88:90:52:1C",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi8-Redmi",
+      "model": "Redmi8-Redmi",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 19,
+      "bytes": 103722,
+      "megabytes": 0.1,
+      "first_seen": "2026-07-16 17:17:21",
+      "duration_seconds": 486.63,
+      "hours_online": 0.14,
+      "mb_per_hour": 0.73,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: E0:1F:88"
+        },
+        {
+          "description": "Hostname = Redmi8-Redmi",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi8-Redmi, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 14Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 12min, LastSeen: 1784208597997, Active: True, Down: 2.2MB, Up: 0.5MB, PktDown: 2708, PktUp: 2751, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.182",
+      "mac": "C6:5B:FE:B1:80:85",
+      "vendor": "Unknown",
+      "hostname": "mm-110",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 55,
+      "flows": 120,
+      "bytes": 338352,
+      "megabytes": 0.32,
+      "first_seen": "2026-07-16 17:18:49",
+      "duration_seconds": 1611.99,
+      "hours_online": 0.45,
+      "mb_per_hour": 0.72,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (120) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Hostname = mm-110",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: mm-110, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -80dBm, Signal: 25, Rank: 2, SNR: 15dB, Ch: 11, Radio: 2.4GHz, TX: 28Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 56min, LastSeen: 1784208597997, Active: True, Down: 7.9MB, Up: 4.0MB, PktDown: 17050, PktUp: 19369, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.168",
+      "mac": "52:89:42:0F:26:DB",
+      "vendor": "Unknown",
+      "hostname": "Infinix-HOT-40i",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 55,
+      "flows": 190,
+      "bytes": 505295,
+      "megabytes": 0.48,
+      "first_seen": "2026-07-16 17:19:03",
+      "duration_seconds": 2469.82,
+      "hours_online": 0.69,
+      "mb_per_hour": 0.7,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Много flows (190) при низком трафике",
+      "evidence_items": [
+        {
+          "description": "Hostname = Infinix-HOT-40i",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: Infinix-HOT-40i, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -82dBm, Signal: 20, Rank: 1, SNR: 13dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 77min, LastSeen: 1784208597997, Active: True, Down: 29.6MB, Up: 3.3MB, PktDown: 29936, PktUp: 21375, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.219",
+      "mac": "92:5F:FF:76:1B:AF",
+      "vendor": "Xiaomi",
+      "hostname": "Redmi-Note-13-Pro",
+      "model": "Redmi-Note-13-Pro",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 95,
+      "flows": 1,
+      "bytes": 11702,
+      "megabytes": 0.01,
+      "first_seen": "2026-07-16 17:17:31",
+      "duration_seconds": 123.42,
+      "hours_online": 0.03,
+      "mb_per_hour": 0.33,
+      "status": "🔴 ПОДОЗРИТЕЛЬНЫЙ",
+      "reason": "Производитель: Xiaomi",
+      "evidence_items": [
+        {
+          "description": "Vendor = Xiaomi",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 92:5F:FF"
+        },
+        {
+          "description": "Hostname = Redmi-Note-13-Pro",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: unknown, hostname: Redmi-Note-13-Pro, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784208475278, Active: True, Down: 0.8MB, Up: 0.5MB, PktDown: 1749, PktUp: 1430, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_redmi_poco",
+          "contribution": 75,
+          "source": "rule:android_redmi_poco",
+          "details": "Hostname indicates Xiaomi device"
+        },
+        {
+          "description": "Rule: android_xiaomi",
+          "contribution": 70,
+          "source": "rule:android_xiaomi",
+          "details": "Xiaomi vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.203",
+      "mac": "2A:76:24:C3:11:87",
+      "vendor": "Huawei",
+      "hostname": "HONOR-Xb6",
+      "model": "HONOR-Xb6",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 90,
+      "flows": 1,
+      "bytes": 1478,
+      "megabytes": 0.0,
+      "first_seen": "2026-07-16 17:19:58",
+      "duration_seconds": 0.28,
+      "hours_online": 0.0,
+      "mb_per_hour": 18.12,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Vendor = Huawei",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 2A:76:24"
+        },
+        {
+          "description": "Hostname = HONOR-Xb6",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: HONOR-Xb6, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -87dBm, Signal: 7, Rank: 1, SNR: 8dB, Ch: 40, Radio: 5GHz, TX: 58Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784208475278, Active: True, Down: 1.4MB, Up: 0.1MB, PktDown: 1576, PktUp: 549, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_huawei",
+          "contribution": 70,
+          "source": "rule:android_huawei",
+          "details": "Huawei vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.238",
+      "mac": "CE:6A:D7:CD:F4:46",
+      "vendor": "Samsung",
+      "hostname": "Galaxy-A30s",
+      "model": "Galaxy-A30s",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 70,
+      "flows": 65,
+      "bytes": 370143,
+      "megabytes": 0.35,
+      "first_seen": "2026-07-16 17:21:52",
+      "duration_seconds": 314.54,
+      "hours_online": 0.09,
+      "mb_per_hour": 4.04,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Vendor = Samsung",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: CE:6A:D7"
+        },
+        {
+          "description": "Hostname = Galaxy-A30s",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: Galaxy-A30s, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -95dBm, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11n, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784208597997, Active: True, Down: 1.8MB, Up: 0.4MB, PktDown: 2206, PktUp: 2068, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_samsung_hostname",
+          "contribution": 75,
+          "source": "rule:android_samsung_hostname",
+          "details": "Hostname indicates Samsung device"
+        },
+        {
+          "description": "Rule: android_samsung",
+          "contribution": 70,
+          "source": "rule:android_samsung",
+          "details": "Samsung vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.164",
+      "mac": "CE:48:44:E8:04:C6",
+      "vendor": "Unknown",
+      "hostname": "CE-48-44-E8-04-C6",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 94,
+      "bytes": 349928,
+      "megabytes": 0.33,
+      "first_seen": "2026-07-16 17:18:12",
+      "duration_seconds": 705.39,
+      "hours_online": 0.2,
+      "mb_per_hour": 1.7,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = CE-48-44-E8-04-C6",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: CE-48-44-E8-04-C6, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -81dBm, Signal: 22, Rank: 2, SNR: 14dB, Ch: 40, Radio: 5GHz, TX: 175Mbps, RX: 13Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 57min, LastSeen: 1784208597997, Active: True, Down: 67.1MB, Up: 5.5MB, PktDown: 60165, PktUp: 25153, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.234",
+      "mac": "3A:FB:6B:7E:AC:96",
+      "vendor": "Huawei",
+      "hostname": "HONOR-X8d",
+      "model": "HONOR-X8d",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 90,
+      "flows": 8,
+      "bytes": 37725,
+      "megabytes": 0.04,
+      "first_seen": "2026-07-16 17:18:46",
+      "duration_seconds": 78.6,
+      "hours_online": 0.02,
+      "mb_per_hour": 1.65,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Vendor = Huawei",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 3A:FB:6B"
+        },
+        {
+          "description": "Hostname = HONOR-X8d",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: HONOR-X8d, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -93dBm, SNR: 2dB, Ch: 40, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784208536619, Active: True, Down: 1.6MB, Up: 0.2MB, PktDown: 1742, PktUp: 1025, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_huawei",
+          "contribution": 70,
+          "source": "rule:android_huawei",
+          "details": "Huawei vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.207",
+      "mac": "D2:36:52:AC:FF:C5",
+      "vendor": "Unknown",
+      "hostname": "D2-36-52-AC-FF-C5",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 55,
+      "flows": 26,
+      "bytes": 42993,
+      "megabytes": 0.04,
+      "first_seen": "2026-07-16 17:19:20",
+      "duration_seconds": 99.72,
+      "hours_online": 0.03,
+      "mb_per_hour": 1.48,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = D2-36-52-AC-FF-C5",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: D2-36-52-AC-FF-C5, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -88dBm, Signal: 5, Rank: 1, SNR: 7dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 26min, LastSeen: 1784208597997, Active: True, Down: 1.0MB, Up: 0.9MB, PktDown: 2569, PktUp: 2160, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.227",
+      "mac": "9A:13:7D:8D:F9:9D",
+      "vendor": "Unknown",
+      "hostname": "9A-13-7D-8D-F9-9D",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 60,
+      "bytes": 200993,
+      "megabytes": 0.19,
+      "first_seen": "2026-07-16 17:19:06",
+      "duration_seconds": 493.83,
+      "hours_online": 0.14,
+      "mb_per_hour": 1.4,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = 9A-13-7D-8D-F9-9D",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: 9A-13-7D-8D-F9-9D, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -86dBm, Signal: 10, Rank: 1, SNR: 9dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 15min, LastSeen: 1784208597997, Active: True, Down: 19.1MB, Up: 3.0MB, PktDown: 19195, PktUp: 14792, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.205",
+      "mac": "52:BD:77:65:FD:F5",
+      "vendor": "Unknown",
+      "hostname": "CMA-LX1",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 35,
+      "bytes": 124565,
+      "megabytes": 0.12,
+      "first_seen": "2026-07-16 17:19:09",
+      "duration_seconds": 374.64,
+      "hours_online": 0.1,
+      "mb_per_hour": 1.14,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = CMA-LX1",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: CMA-LX1, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -75dBm, Signal: 37, Rank: 2, SNR: 20dB, Ch: 11, Radio: 2.4GHz, TX: 21Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 28min, LastSeen: 1784208597997, Active: True, Down: 37.3MB, Up: 5.0MB, PktDown: 36305, PktUp: 12316, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.216",
+      "mac": "BA:F1:AE:B1:52:12",
+      "vendor": "Unknown",
+      "hostname": "realme-C11-2021",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 55,
+      "flows": 47,
+      "bytes": 73296,
+      "megabytes": 0.07,
+      "first_seen": "2026-07-16 17:19:11",
+      "duration_seconds": 351.97,
+      "hours_online": 0.1,
+      "mb_per_hour": 0.71,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = realme-C11-2021",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: realme-C11-2021, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 13Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784208597997, Active: True, Down: 1.9MB, Up: 0.7MB, PktDown: 3292, PktUp: 2951, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.226",
+      "mac": "22:C3:12:3B:07:72",
+      "vendor": "Unknown",
+      "hostname": "22-C3-12-3B-07-72",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 34,
+      "bytes": 55614,
+      "megabytes": 0.05,
+      "first_seen": "2026-07-16 17:20:07",
+      "duration_seconds": 267.16,
+      "hours_online": 0.07,
+      "mb_per_hour": 0.71,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = 22-C3-12-3B-07-72",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: 22-C3-12-3B-07-72, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -78dBm, Signal: 30, Rank: 2, SNR: 17dB, Ch: 11, Radio: 2.4GHz, TX: 34Mbps, RX: 24Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 28min, LastSeen: 1784208597997, Active: True, Down: 1.4MB, Up: 0.9MB, PktDown: 3134, PktUp: 3379, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.180",
+      "mac": "52:AB:DC:F4:02:4C",
+      "vendor": "Huawei",
+      "hostname": "HONOR-X6c",
+      "model": "HONOR-X6c",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 90,
+      "flows": 18,
+      "bytes": 28944,
+      "megabytes": 0.03,
+      "first_seen": "2026-07-16 17:21:52",
+      "duration_seconds": 193.82,
+      "hours_online": 0.05,
+      "mb_per_hour": 0.51,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Vendor = Huawei",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: 52:AB:DC"
+        },
+        {
+          "description": "Hostname = HONOR-X6c",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: HONOR-X6c, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 11, Radio: 2.4GHz, TX: 21Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784208597997, Active: True, Down: 7.3MB, Up: 3.9MB, PktDown: 13000, PktUp: 13859, PowerSave: True, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_huawei",
+          "contribution": 70,
+          "source": "rule:android_huawei",
+          "details": "Huawei vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.236",
+      "mac": "5A:E2:76:E8:F2:45",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 45,
+      "flows": 40,
+      "bytes": 45049,
+      "megabytes": 0.04,
+      "first_seen": "2026-07-16 17:20:05",
+      "duration_seconds": 394.78,
+      "hours_online": 0.11,
+      "mb_per_hour": 0.39,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.218",
+      "mac": "BE:A9:06:91:0A:5B",
+      "vendor": "Unknown",
+      "hostname": "STN-28",
+      "model": "",
+      "os": "Linux",
+      "device_type": "Network Device",
+      "confidence": 50,
+      "flows": 5,
+      "bytes": 1649,
+      "megabytes": 0.0,
+      "first_seen": "2026-07-16 17:19:34",
+      "duration_seconds": 20.28,
+      "hours_online": 0.01,
+      "mb_per_hour": 0.28,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Hostname = STN-28",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller provides telemetry",
+          "contribution": 30,
+          "source": "omada",
+          "details": "type: unknown, hostname: STN-28, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -81dBm, Signal: 22, Rank: 2, SNR: 14dB, Ch: 40, Radio: 5GHz, TX: 263Mbps, RX: 117Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784208597997, Active: True, Down: 7.3MB, Up: 2.8MB, PktDown: 10650, PktUp: 9323, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.215",
+      "mac": "A6:0C:DD:04:5C:41",
+      "vendor": "Huawei",
+      "hostname": "HONOR-X8b",
+      "model": "HONOR-X8b",
+      "os": "Android",
+      "device_type": "Smartphone",
+      "confidence": 90,
+      "flows": 3,
+      "bytes": 782,
+      "megabytes": 0.0,
+      "first_seen": "2026-07-16 17:20:57",
+      "duration_seconds": 12.2,
+      "hours_online": 0.0,
+      "mb_per_hour": 0.22,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Vendor = Huawei",
+          "contribution": 10,
+          "source": "vendor",
+          "details": "MAC: A6:0C:DD"
+        },
+        {
+          "description": "Hostname = HONOR-X8b",
+          "contribution": 10,
+          "source": "hostname",
+          "details": ""
+        },
+        {
+          "description": "Omada Controller identifies device",
+          "contribution": 70,
+          "source": "omada",
+          "details": "type: android, hostname: HONOR-X8b, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -72dBm, Signal: 45, Rank: 3, SNR: 23dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784208597997, Active: True, Down: 1.2MB, Up: 0.4MB, PktDown: 1765, PktUp: 2032, PowerSave: False, Wireless: True, Guest: False"
+        },
+        {
+          "description": "Rule: android_huawei",
+          "contribution": 70,
+          "source": "rule:android_huawei",
+          "details": "Huawei vendor + no HTTP ports (Android firewall)"
+        },
+        {
+          "description": "Rule: linux_vendor_silent",
+          "contribution": 65,
+          "source": "rule:linux_vendor_silent",
+          "details": "Vendor + TTL=64 + no open TCP ports (likely Android)"
+        },
+        {
+          "description": "Rule: linux_ttl_generic",
+          "contribution": 40,
+          "source": "rule:linux_ttl_generic",
+          "details": "TTL=55-64 (Linux)"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.1.235",
+      "mac": "36:7D:CE:6E:95:9D",
+      "vendor": "Unknown",
+      "hostname": "",
+      "model": "",
+      "os": "Unknown",
+      "device_type": "Mobile Device",
+      "confidence": 45,
+      "flows": 10,
+      "bytes": 5110,
+      "megabytes": 0.0,
+      "first_seen": "2026-07-16 17:20:04",
+      "duration_seconds": 175.54,
+      "hours_online": 0.05,
+      "mb_per_hour": 0.1,
+      "status": "🟢 НОРМАЛЬНЫЙ",
+      "reason": "—",
+      "evidence_items": [
+        {
+          "description": "Rule: mac_randomization",
+          "contribution": 45,
+          "source": "rule:mac_randomization",
+          "details": "Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)"
         }
       ]
     }
