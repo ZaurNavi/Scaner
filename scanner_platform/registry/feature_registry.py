@@ -65,4 +65,4 @@ class FeatureRegistry:
         
         return errors
 
-from platform.registry.metric_registry import MetricRegistry
+from .metric_registry import MetricRegistry
