@@ -49,7 +49,11 @@ from traffic import traffic_collector
 from session import SessionEngine, SessionEndReason
 from identity import IdentityService, IdentityRepository
 from confidence import ConfidenceService, FactCategory
-from behaviour import BehaviourService, BehaviourCategory  # <-- v1.5.6: ДОБАВЛЕНО
+from behaviour import BehaviourService, BehaviourCategory
+from mobility import MobilityService, ProviderRegistry  # <-- v1.5.7: ДОБАВЛЕНО
+# Импорты триггерят авто-регистрацию через @register_feature
+from mobility.providers.session_provider import SessionMetricsProvider
+from mobility.features.roaming_feature import build_roaming_rate
 
 
 def print_header() -> None:
@@ -232,7 +236,7 @@ def main() -> int:
 
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6: Archivist + Event + Session + Identity + Confidence + Behaviour ===
+    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7: Archivist + Event + Session + Identity + Confidence + Behaviour + Mobility ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -403,13 +407,11 @@ def main() -> int:
                     print(f"         Total Facts: {behaviour_profile.summary.facts_total}")
                     print(f"         High Confidence: {behaviour_profile.summary.high}")
                     
-                    # Показываем примеры фактов с measured_value
                     if behaviour_profile.facts:
                         print(f"         Detected Behaviours:")
                         for fact in behaviour_profile.facts[:5]:
                             print(f"            • {fact.category.value}: {fact.measured_value} (threshold: {fact.threshold}) → {fact.confidence:.1f}% [{fact.rule_id}]")
                     
-                    # Показываем объяснение для первого факта
                     if behaviour_profile.facts:
                         first_fact = behaviour_profile.facts[0]
                         explain = behaviour_service.explain(sample_device_id, first_fact.category)
@@ -423,6 +425,59 @@ def main() -> int:
                             print(f"            Status: {explain['status']}")
             except Exception as exc:
                 print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
+        # ===========================================
+
+        # === v1.5.7: Mobility Engine ===
+        mobility_service = None
+        if behaviour_service and session_engine and history_service:
+            try:
+                # Регистрация провайдеров (Open/Closed Principle)
+                ProviderRegistry.register("session_provider", SessionMetricsProvider)
+                
+                mobility_service = MobilityService(
+                    behaviour_service=behaviour_service,
+                    session_engine=session_engine,
+                    history_service=history_service
+                )
+                print("\n  [MOBILITY] Analyzing movement patterns...")
+                
+                sample_device_id = profiles[0].device_id
+                mobility_profile = mobility_service.get_profile(sample_device_id)
+                debug_info = mobility_service.debug(sample_device_id)
+                
+                if mobility_profile:
+                    print(f"      ✅ Mobility Profile for {sample_device_id[:8]}...")
+                    print(f"         Feature Coverage: {mobility_profile.feature_coverage:.1f}% (Available/Supported)")
+                    print(f"         Mobility Coverage: {mobility_profile.mobility_coverage:.1f}% (Matched/Enabled Rules)")
+                    print(f"         Facts Detected: {len(mobility_profile.facts)}")
+                    
+                    if mobility_profile.facts:
+                        print(f"         Detected Mobility Patterns:")
+                        for fact in mobility_profile.facts:
+                            print(f"            • {fact.category.value}: {fact.measured_value} (Score: {fact.score}, Rule: {', '.join(fact.matched_rules)})")
+                    
+                    if debug_info:
+                        print(f"         Debug:")
+                        print(f"            Computation Time: {debug_info.computation_time_ms:.2f}ms")
+                        if debug_info.provider_times:
+                            print(f"            Provider Times:")
+                            for provider, time_ms in debug_info.provider_times.items():
+                                print(f"               • {provider}: {time_ms:.2f}ms")
+                        if debug_info.feature_times:
+                            print(f"            Feature Builder Times:")
+                            for feature, time_ms in list(debug_info.feature_times.items())[:3]:
+                                print(f"               • {feature}: {time_ms:.2f}ms")
+                        if debug_info.skipped_rules:
+                            print(f"            Skipped Rules:")
+                            for rule in debug_info.skipped_rules[:2]:
+                                print(f"               • {rule}")
+                        if debug_info.missing_features:
+                            print(f"            Missing Features: {', '.join(debug_info.missing_features)}")
+                            
+            except Exception as exc:
+                print(f"  [MOBILITY] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
         # ===========================================
