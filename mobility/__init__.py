@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from .service import MobilityService
 from .models import MobilityProfile, MobilityExplanation, DebugInfo, MobilityFeature
-from .registry import ProviderRegistry, FeatureRegistry
+from .registry import ProviderRegistry, FeatureRegistry, register_feature
 
 __all__ = [
     "MobilityService", "MobilityProfile", "MobilityExplanation", 
-    "DebugInfo", "MobilityFeature", "ProviderRegistry", "FeatureRegistry"
+    "DebugInfo", "MobilityFeature", "ProviderRegistry", "FeatureRegistry", "register_feature"
 ]
