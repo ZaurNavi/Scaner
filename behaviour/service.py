@@ -126,3 +126,8 @@ class BehaviourService:
         self._cache.clear()
         self._identity_versions.clear()
         return self.get_all()
+        
+    def debug(self, device_id: str) -> Optional[DebugInfo]:
+        """Возвращает отладочную информацию."""
+        _, debug = self.engine.analyze(device_id)
+        return debug
