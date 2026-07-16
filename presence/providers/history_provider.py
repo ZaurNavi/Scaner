@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""History Provider: возвращает ТОЛЬКО сырые данные (Замечание №1)."""
+"""History Provider: возвращает ТОЛЬКО сырые данные."""
 from typing import Dict, Any
 from history import HistoryService
 
@@ -10,7 +10,6 @@ class HistoryProvider:
         self.history_service = history_service
         
     def extract(self, device_id: str) -> Dict[str, Any]:
-        # Возвращаем ТОЛЬКО сырые факты. Никаких вычислений.
         history = self.history_service.get_device_history(device_id)
         
         return {
