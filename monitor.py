@@ -116,6 +116,56 @@ def _safe_get(obj, attr, default=None):
     return getattr(obj, attr, default)
 
 
+def _safe_get_feature_value(features, feature_id):
+    """
+    Безопасное извлечение значения фичи из разных типов контейнеров:
+    - dict (Mobility, Presence)
+    - dataclass FeatureSet (Behaviour)
+    """
+    if not features:
+        return None
+    
+    # Словарь (Mobility, Presence)
+    if isinstance(features, dict):
+        feature = features.get(feature_id)
+        if feature and hasattr(feature, 'value'):
+            return feature
+        return feature
+    
+    # FeatureSet как dataclass (Behaviour)
+    if hasattr(features, feature_id):
+        value = getattr(features, feature_id)
+        if value is not None:
+            # Возвращаем как объект с name/value/unit
+            return type('FeatureWrapper', (), {
+                'name': feature_id,
+                'value': value,
+                'unit': _get_unit_for_feature(feature_id)
+            })()
+    
+    return None
+
+
+def _get_unit_for_feature(feature_id: str) -> str:
+    """Возвращает единицу измерения для известных фич Behaviour."""
+    units = {
+        'average_session_duration': 'sec',
+        'session_count': 'sessions',
+        'total_session_duration': 'sec',
+        'peak_speed': 'Mbps',
+        'average_speed': 'Mbps',
+        'total_traffic': 'bytes',
+        'idle_ratio': 'ratio',
+        'active_ratio': 'ratio',
+        'ap_changes': 'changes',
+        'ssid_changes': 'changes',
+        'rssi_variance': 'dB',
+        'snr_variance': 'dB',
+        'lifetime_seconds': 'sec',
+    }
+    return units.get(feature_id, '')
+
+
 def _safe_get_metric_value(metrics, metric_id):
     """Безопасное извлечение значения метрики из разных типов контейнеров."""
     if not metrics:
@@ -140,8 +190,8 @@ def _safe_get_metric_value(metrics, metric_id):
 
 def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
     """
-    Единый форматтер вывода для всех аналитических движков (Защищённая версия).
-    Безопасно извлекает атрибуты через getattr, не падает при отсутствии полей.
+    Единый форматтер вывода для всех аналитических движков.
+    Работает с унифицированными моделями Behaviour, Mobility и Presence.
     """
     print(f"\n  [{engine_name}] Analyzing {engine_type}...")
     if not profile:
@@ -151,7 +201,7 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
     identity_id = _safe_get(profile, 'identity_id', 'unknown')
     print(f"      ✅ {engine_name} Profile for {identity_id[:8]}...")
     
-    # 1. Coverage (Безопасное извлечение)
+    # 1. Coverage
     print("         Coverage:")
     metric_coverage = _safe_get(profile, 'metric_coverage')
     if metric_coverage is not None:
@@ -164,9 +214,9 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
     ratio_val = _safe_get(profile, 'rule_match_ratio', feature_coverage)
     print(f"            • {ratio_name}: {ratio_val:.1f}%")
 
-    # 2. Timeline (Безопасное извлечение)
+    # 2. Timeline (есть только в Mobility и Presence)
     timeline = _safe_get(profile, 'timeline')
-    if timeline and hasattr(timeline, 'events'):
+    if timeline and hasattr(timeline, 'events') and timeline.events:
         events_count = len(timeline.events)
         sessions_count = 0
         if hasattr(timeline, 'count_by_type'):
@@ -184,9 +234,9 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
         print(f"            • Sessions: {sessions_count}")
         print(f"            • Completeness: {feature_coverage:.1f}%")
 
-    # 3. Detected Facts (Безопасное извлечение)
+    # 3. Detected Facts
     facts = _safe_get(profile, 'facts', [])
-    features = _safe_get(profile, 'features', {})
+    features = _safe_get(profile, 'features')
     
     print(f"         Detected Facts ({len(facts)}):")
     
@@ -196,19 +246,18 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
             category_value = category_value.value
         
         fact_feature = _safe_get(fact, 'feature', '')
-        feature_detail = features.get(fact_feature) if isinstance(features, dict) else None
+        feature_detail = _safe_get_feature_value(features, fact_feature)
+        matched_rules = _safe_get(fact, 'matched_rules', [])
         
         if feature_detail and hasattr(feature_detail, 'name'):
             name = _safe_get(feature_detail, 'name', '')
             value = _safe_get(feature_detail, 'value', 'N/A')
             unit = _safe_get(feature_detail, 'unit', '')
-            score = _safe_get(fact, 'score', 0)
-            matched_rules = _safe_get(fact, 'matched_rules', [])
+            score = _safe_get(fact, 'score', _safe_get(fact, 'raw_score', 0))
             print(f"            • {category_value}: {name} = {value} {unit} (Score: {score}, Rule: {', '.join(matched_rules)})")
         else:
             measured_value = _safe_get(fact, 'measured_value', 'N/A')
-            score = _safe_get(fact, 'score', 0)
-            matched_rules = _safe_get(fact, 'matched_rules', [])
+            score = _safe_get(fact, 'score', _safe_get(fact, 'raw_score', 0))
             print(f"            • {category_value}: {measured_value} (Score: {score}, Rule: {', '.join(matched_rules)})")
 
     # Explain Summary
@@ -220,7 +269,7 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
                 category_value = category_value.value
             
             fact_feature = _safe_get(fact, 'feature', '')
-            feature_detail = features.get(fact_feature) if isinstance(features, dict) else None
+            feature_detail = _safe_get_feature_value(features, fact_feature)
             matched_rules = _safe_get(fact, 'matched_rules', [])
             
             if feature_detail and hasattr(feature_detail, 'name'):
@@ -228,8 +277,11 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
                 value = _safe_get(feature_detail, 'value', 'N/A')
                 unit = _safe_get(feature_detail, 'unit', '')
                 print(f"            • {category_value} because {name} = {value} {unit}, matched: {', '.join(matched_rules)}")
+            else:
+                measured_value = _safe_get(fact, 'measured_value', 'N/A')
+                print(f"            • {category_value} because measured = {measured_value}, matched: {', '.join(matched_rules)}")
 
-    # 4. Performance & Debug (Безопасное извлечение)
+    # 4. Performance & Debug
     if debug_info:
         print("         Performance & Debug:")
         cache_hit = _safe_get(debug_info, 'cache_hit', 'N/A')
@@ -484,54 +536,40 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
-        # === v1.5.6: Behaviour Engine (Унифицированный вывод) ===
+        # === v1.5.6: Behaviour Engine ===
         behaviour_service = None
         if identity_service and profiles:
             try:
                 behaviour_service = BehaviourService(history_service, identity_service, session_engine)
-                bp = behaviour_service.get_profile(profiles[0].device_id)
-                # Безопасный вызов debug - может отсутствовать в старых версиях
-                bd = None
-                if hasattr(behaviour_service, 'debug'):
-                    try:
-                        bd = behaviour_service.debug(profiles[0].device_id)
-                    except Exception:
-                        bd = None
+                sample_device_id = profiles[0].device_id
+                bp = behaviour_service.get_profile(sample_device_id)
+                bd = behaviour_service.debug(sample_device_id) if hasattr(behaviour_service, 'debug') else None
                 _format_engine_output("BEHAVIOUR", bp, bd, engine_type="behavioural patterns")
             except Exception as exc:
                 print(f"  [BEHAVIOUR] ❌ Failed: {exc}")
 
-        # === v1.5.7: Mobility Engine (Унифицированный вывод) ===
+        # === v1.5.7: Mobility Engine ===
         mobility_service = None
         if behaviour_service and session_engine and history_service:
             try:
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
                 mobility_service = MobilityService(behaviour_service, session_engine, history_service)
-                mp = mobility_service.get_profile(profiles[0].device_id)
-                # Безопасный вызов debug
-                md = None
-                if hasattr(mobility_service, 'debug'):
-                    try:
-                        md = mobility_service.debug(profiles[0].device_id)
-                    except Exception:
-                        md = None
+                sample_device_id = profiles[0].device_id
+                mp = mobility_service.get_profile(sample_device_id)
+                md = mobility_service.debug(sample_device_id) if hasattr(mobility_service, 'debug') else None
                 _format_engine_output("MOBILITY", mp, md, engine_type="movement patterns")
             except Exception as exc:
                 print(f"  [MOBILITY] ❌ Failed: {exc}")
 
-        # === v1.6.1: Presence Engine (Унифицированный вывод) ===
+        # === v1.6.1: Presence Engine ===
         presence_service = None
         if history_service and profiles:
             try:
                 PresenceProviderRegistry.register("history_provider", HistoryProvider, version="1.0.0", priority=10, dependencies=[])
                 presence_service = PresenceService(history_service)
-                pp = presence_service.get_profile(profiles[0].device_id)
-                pd = None
-                if hasattr(presence_service, 'debug'):
-                    try:
-                        pd = presence_service.debug(profiles[0].device_id)
-                    except Exception:
-                        pd = None
+                sample_device_id = profiles[0].device_id
+                pp = presence_service.get_profile(sample_device_id)
+                pd = presence_service.debug(sample_device_id) if hasattr(presence_service, 'debug') else None
                 _format_engine_output("PRESENCE", pp, pd, engine_type="temporal presence")
             except Exception as exc:
                 print(f"  [PRESENCE] ❌ Failed: {exc}")
