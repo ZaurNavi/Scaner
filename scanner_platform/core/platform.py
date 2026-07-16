@@ -4,8 +4,7 @@ from typing import Dict, List
 from .platform_context import PlatformContext
 from .bundles import MetricBundle, FeatureBundle, RuleBundle
 from .base_engine import BaseEngine, EngineResult
-from ..timeline.models import Timeline
-from ..timeline.builder import TimelineBuilder
+from ..builders.timeline_builder import TimelineBuilder  # <-- ИСПРАВЛЕНО: был ..timeline.builder
 from ..registry.metric_registry import MetricRegistry
 from ..registry.feature_registry import FeatureRegistry
 from ..registry.rule_registry import RuleRegistry
