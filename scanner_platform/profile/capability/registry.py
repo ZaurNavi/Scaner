@@ -2,7 +2,6 @@
 """Capability Registry — реестр возможностей платформы."""
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from enum import Enum
 
 @dataclass
 class CapabilityDescriptor:
@@ -10,8 +9,8 @@ class CapabilityDescriptor:
     id: str
     description: str
     requires_categories: List[str] = field(default_factory=list)
-    requires_facts: List[str] = field(default_factory=list)
     optional_categories: List[str] = field(default_factory=list)
+    provides: List[str] = field(default_factory=list)  # ДОБАВЛЕНО: что предоставляет
     minimum_confidence: float = 0.0
     version: str = "1.0.0"
 
@@ -34,3 +33,9 @@ class CapabilityRegistry:
     def get_all(cls) -> Dict[str, CapabilityDescriptor]:
         """Получает все возможности."""
         return cls._capabilities.copy()
+    
+    @classmethod
+    def get_providers(cls, capability_id: str) -> List[str]:
+        """Получает список предоставляемых возможностей."""
+        descriptor = cls.get(capability_id)
+        return descriptor.provides if descriptor else []
