@@ -12,10 +12,8 @@ class EventGenerator:
     Генератор доменных событий.
     Не содержит бизнес-логики, только Registry.
     O(n) сложность, где n = количество Change.
+    Детерминированный и идемпотентный.
     """
-    
-    def __init__(self):
-        self._rules = EventRuleRegistry.get_all()
     
     def generate(self, diff: ProfileDiff) -> DomainEventSet:
         """
@@ -28,19 +26,26 @@ class EventGenerator:
         
         events: List[DomainEvent] = []
         
+        # Извлекаем device_uuid и occurred_at из Diff для детерминированности
+        device_uuid = diff.identity_uuid
+        occurred_at = diff.created_at
+        
+        # Получаем правила из Registry
+        rules = EventRuleRegistry.get_all()
+        
         # O(n): один проход по всем изменениям
         for change in diff.changes:
             # Проходим по всем правилам
-            for rule in self._rules:
+            for rule in rules:
                 if rule.supports(change):
                     # Правило может вернуть 0..N событий
-                    rule_events = rule.emit(change, diff.diff_id)
+                    rule_events = rule.emit(change, diff.diff_id, device_uuid, occurred_at)
                     events.extend(rule_events)
         
-        # Сортируем для детерминированности
-        events.sort(key=lambda e: (e.event_type, e.event_id))
+        # Сортируем для детерминированности (стабильная сортировка)
+        events.sort(key=lambda e: (e.event_type, e.event_id, e.source_change_id))
         
         return DomainEventSet(
             events=tuple(events),
-            generated_at=datetime.now()
+            generated_at=occurred_at  # Используем время из Diff
         )
