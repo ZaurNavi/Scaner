@@ -78,10 +78,8 @@ from scanner_platform.knowledge import (
     FactRegistry, FactDescriptor, FactSeverity
 )
 
-# v1.6.6: Unified Device Profile импорты
-from scanner_platform.profile import (
-    ProfileService, ExplainService, VersionSnapshot as ProfileVersionSnapshot
-)
+# v1.6.6: Unified Device Profile импорты (ИСПРАВЛЕНО: убран дублирующий VersionSnapshot)
+from scanner_platform.profile import ProfileService, ExplainService
 
 
 def print_header() -> None:
@@ -851,9 +849,9 @@ def main() -> int:
                     history_service=history_service
                 )
                 
-                # 2. Строим Unified Device Profile через ProfileService
+                # 2. Строим Unified Device Profile через ProfileService (ИСПРАВЛЕНО: используем VersionSnapshot из scanner_platform)
                 profile_service = ProfileService(knowledge_service)
-                profile_result = profile_service.build(sample_device_id, ProfileVersionSnapshot())
+                profile_result = profile_service.build(sample_device_id, VersionSnapshot())
                 profile = profile_result.profile
                 
                 # 3. Выводим Unified Device Profile
