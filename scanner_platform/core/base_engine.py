@@ -15,11 +15,7 @@ from ..rules.evaluator import RuleEvaluator
 
 @dataclass
 class ExecutionInfo:
-    """
-    Информация о выполнении движка.
-    
-    ИСПРАВЛЕНО: вынесен отдельно от Statistics.
-    """
+    """Информация о выполнении движка."""
     started_at: datetime = field(default_factory=datetime.now)
     finished_at: datetime = None
     duration_ms: float = 0.0
@@ -41,7 +37,7 @@ class EngineResult:
         explain: dict,
         dependencies: dict,
         version: str = "1.0.0",
-        execution: ExecutionInfo = None  # ДОБАВЛЕНО
+        execution: ExecutionInfo = None
     ):
         self.device_id = device_id
         self.engine = engine
@@ -56,11 +52,12 @@ class EngineResult:
         self.execution = execution or ExecutionInfo()
         self.version_snapshot = VersionSnapshot(
             timeline_version="1.0.0",
-            metric_registry_version="1.0.0",
-            feature_registry_version="1.0.0",
-            rule_registry_version="1.0.0",
-            engine_version=version,
-            knowledge_version="1.0.0"  # ДОБАВЛЕНО
+            metric_version="1.0.0",  # ИСПРАВЛЕНО: было metric_registry_version
+            feature_version="1.0.0",  # ИСПРАВЛЕНО: было feature_registry_version
+            rule_version="1.0.0",  # ИСПРАВЛЕНО: было rule_registry_version
+            knowledge_version="1.0.0",
+            profile_version="1.0.0",
+            profile_model_version="1.0.0"
         )
 
 class BaseEngine(ABC):
@@ -235,10 +232,11 @@ class BaseEngine(ABC):
         """Формирует ключ кэша."""
         snapshot = VersionSnapshot(
             timeline_version="1.0.0",
-            metric_registry_version="1.0.0",
-            feature_registry_version="1.0.0",
-            rule_registry_version="1.0.0",
-            engine_version="1.0.0",
-            knowledge_version="1.0.0"
+            metric_version="1.0.0",  # ИСПРАВЛЕНО
+            feature_version="1.0.0",  # ИСПРАВЛЕНО
+            rule_version="1.0.0",  # ИСПРАВЛЕНО
+            knowledge_version="1.0.0",
+            profile_version="1.0.0",
+            profile_model_version="1.0.0"
         )
         return f"{context.device_id}:{snapshot.to_cache_key()}"
