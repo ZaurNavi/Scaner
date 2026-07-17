@@ -8,7 +8,3 @@ class DifferentIdentityError(Exception):
 class InvalidProfileError(Exception):
     """Вызывается при передаче некорректного или неполного профиля."""
     pass
-
-class DiffBuildError(Exception):
-    """Вызывается при внутренней ошибке построения Diff."""
-    pass
