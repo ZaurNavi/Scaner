@@ -4,7 +4,6 @@ import json
 from typing import Any
 from datetime import datetime
 from types import MappingProxyType
-from dataclasses import asdict
 
 class EventSerializer:
     """Улучшенный сериализатор для DomainEventSet."""
@@ -19,22 +18,43 @@ class EventSerializer:
     
     @staticmethod
     def _to_json(event_set: Any) -> str:
-        """Конвертирует в JSON с улучшенной обработкой."""
-        def custom_encoder(obj):
+        """Конвертирует в JSON без использования asdict()."""
+        def convert(obj: Any) -> Any:
+            """Рекурсивное преобразование объектов."""
+            # datetime
             if isinstance(obj, datetime):
                 return obj.isoformat()
+            
+            # MappingProxyType
             if isinstance(obj, MappingProxyType):
-                return dict(obj)
-            if hasattr(obj, '__dataclass_fields__'):
-                # Используем asdict для frozen dataclass
-                return {k: custom_encoder(v) for k, v in asdict(obj).items()}
+                return {k: convert(v) for k, v in obj.items()}
+            
+            # Обычный dict
+            if isinstance(obj, dict):
+                return {k: convert(v) for k, v in obj.items()}
+            
+            # list/tuple
             if isinstance(obj, (list, tuple)):
-                return [custom_encoder(item) for item in obj]
+                return [convert(item) for item in obj]
+            
+            # Enum
+            if hasattr(obj, 'value') and hasattr(obj, 'name'):
+                return obj.value
+            
+            # Dataclass (проверяем наличие __dataclass_fields__)
+            if hasattr(obj, '__dataclass_fields__'):
+                result = {}
+                for field_name in obj.__dataclass_fields__:
+                    field_value = getattr(obj, field_name)
+                    result[field_name] = convert(field_value)
+                return result
+            
+            # Примитивы (str, int, float, bool, None)
             return obj
         
         data = {
-            "events": [custom_encoder(event) for event in event_set.events],
-            "generated_at": custom_encoder(event_set.generated_at),
+            "events": [convert(event) for event in event_set.events],
+            "generated_at": convert(event_set.generated_at),
             "count": event_set.count()
         }
         
