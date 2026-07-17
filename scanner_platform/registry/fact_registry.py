@@ -17,8 +17,11 @@ class FactDescriptor:
     engine: str
     category: str
     description: str
+    display_name: str = ""  # ДОБАВЛЕНО: для Web UI
+    icon: str = ""  # ДОБАВЛЕНО: для Web UI
     severity: FactSeverity = FactSeverity.LOW
     tags: List[str] = field(default_factory=list)
+    deprecated: bool = False  # ДОБАВЛЕНО
     version: str = "1.0.0"
 
 class FactRegistry:
@@ -40,6 +43,11 @@ class FactRegistry:
     def get_all(cls) -> Dict[str, FactDescriptor]:
         """Получает все факты."""
         return cls._facts.copy()
+    
+    @classmethod
+    def get_active(cls) -> Dict[str, FactDescriptor]:
+        """Получает только активные (не deprecated) факты."""
+        return {k: v for k, v in cls._facts.items() if not v.deprecated}
     
     @classmethod
     def get_by_category(cls, category: str) -> Dict[str, FactDescriptor]:
