@@ -7,6 +7,8 @@ from .builder import ProfileBuilder
 from .cache import ProfileSnapshotCache
 from .result import ProfileResult, ProfileExecution
 from .profile import UnifiedDeviceProfile
+from .query.api import ProfileQueryAPI
+from .capability.resolver import CapabilityResolver
 from ..knowledge.service import KnowledgeService
 from ..cache.platform import VersionSnapshot
 
@@ -14,11 +16,11 @@ class ProfileService:
     """
     ProfileService — единственная точка построения Profile.
     
-    Методы:
+    Предоставляет:
     - build(): строит новый Profile
     - get(): получает из кэша
     - invalidate(): инвалидирует кэш
-    - from_snapshot(): строит из существующего Snapshot
+    - query(): возвращает Query API
     """
     
     def __init__(self, knowledge_service: KnowledgeService):
@@ -27,21 +29,13 @@ class ProfileService:
         self.cache = ProfileSnapshotCache()
     
     def build(self, device_id: str, version_snapshot: VersionSnapshot = None) -> ProfileResult:
-        """
-        Строит UnifiedDeviceProfile.
-        
-        Args:
-            device_id: Идентификатор устройства
-            version_snapshot: Версии компонентов
-        
-        Returns:
-            ProfileResult (profile + execution)
-        """
+        """Строит UnifiedDeviceProfile."""
         start_time = time.time()
         execution = ProfileExecution(
             started_at=datetime.now(),
             finished_at=datetime.now(),
-            duration_ms=0.0
+            duration_ms=0.0,
+            builder_version="1.0.0"  # ДОБАВЛЕНО
         )
         
         if version_snapshot is None:
@@ -58,6 +52,14 @@ class ProfileService:
         # Строим новый Profile
         try:
             profile = self.builder.build(device_id, version_snapshot)
+            
+            # Разрешаем Capabilities через Profile
+            capabilities = CapabilityResolver.resolve(profile)
+            
+            # Создаём новый Profile с capabilities (immutable)
+            from dataclasses import replace
+            profile = replace(profile, capabilities=capabilities)
+            
             self.cache.put(device_id, profile, version_snapshot)
             
             execution.finished_at = datetime.now()
@@ -81,6 +83,6 @@ class ProfileService:
         """Инвалидирует кэш для устройства."""
         self.cache.invalidate(device_id)
     
-    def from_snapshot(self, device_id: str, version_snapshot: VersionSnapshot = None) -> ProfileResult:
-        """Строит Profile из существующего Snapshot."""
-        return self.build(device_id, version_snapshot)
+    def query(self, device_id: str) -> ProfileQueryAPI:
+        """Возвращает Query API для устройства."""
+        return ProfileQueryAPI(device_id, self.knowledge_service)
