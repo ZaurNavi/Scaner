@@ -761,19 +761,65 @@ def main() -> int:
         # === v1.6.5: Knowledge Layer ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
+                from scanner_platform.facts.models import Fact, FactStatus
+                
                 sample_device_id = profiles[0].device_id
+                
+                # === АДАПТЕР: Превращаем legacy-факты в Platform Facts ===
+                def adapt_to_platform_fact(legacy_fact, engine_name: str) -> Fact:
+                    """
+                    Адаптирует legacy-факт (PresenceFact, MobilityFact, UsageFact) в Platform Fact.
+                    Если факт уже Platform Fact — возвращает как есть.
+                    """
+                    # Если это уже Platform Fact (имеет id)
+                    if hasattr(legacy_fact, 'id') and hasattr(legacy_fact, 'engine'):
+                        return legacy_fact
+                    
+                    # Конвертируем legacy в Platform Fact
+                    category_value = legacy_fact.category
+                    if hasattr(category_value, 'value'):
+                        category_value = category_value.value
+                    
+                    confidence = getattr(legacy_fact, 'confidence', 0.0)
+                    status = FactStatus.HIGH if confidence >= 60 else FactStatus.MEDIUM if confidence >= 40 else FactStatus.LOW
+                    
+                    matched_rules = getattr(legacy_fact, 'matched_rules', [])
+                    if isinstance(matched_rules, list):
+                        matched_rules = [r if isinstance(r, str) else str(r) for r in matched_rules]
+                    
+                    feature_name = getattr(legacy_fact, 'feature', '')
+                    
+                    return Fact(
+                        id=str(uuid.uuid4()),
+                        engine=engine_name,
+                        category=category_value,
+                        status=status,
+                        confidence=confidence,
+                        quality=0.9,
+                        sources=[engine_name],
+                        matched_rules=matched_rules,
+                        matched_features=[feature_name] if feature_name else [],
+                        explain={
+                            "legacy": True,
+                            "original_category": category_value,
+                            "original_feature": feature_name,
+                            "original_measured_value": getattr(legacy_fact, 'measured_value', None)
+                        }
+                    )
                 
                 # Собираем все Platform Facts из движков
                 all_facts = []
                 engine_results = {}
                 
+                # Behaviour (уже Platform Fact)
                 if behaviour_engine_result:
                     all_facts.extend(behaviour_engine_result.facts)
                     engine_results["behaviour"] = behaviour_engine_result
                 
+                # Mobility (legacy → Platform Fact)
                 if mobility_profile and hasattr(mobility_profile, 'facts'):
-                    all_facts.extend(mobility_profile.facts)
-                    # Создаём mock engine_result для Coverage
+                    adapted_facts = [adapt_to_platform_fact(f, "mobility") for f in mobility_profile.facts]
+                    all_facts.extend(adapted_facts)
                     mock_mobility = type('obj', (object,), {'coverage': type('obj', (object,), {
                         'timeline_coverage': 100.0,
                         'metric_coverage': _safe_get(mobility_profile, 'metric_coverage', 0.0),
@@ -783,8 +829,10 @@ def main() -> int:
                     })()})()
                     engine_results["mobility"] = mock_mobility
                 
+                # Presence (legacy → Platform Fact)
                 if presence_profile and hasattr(presence_profile, 'facts'):
-                    all_facts.extend(presence_profile.facts)
+                    adapted_facts = [adapt_to_platform_fact(f, "presence") for f in presence_profile.facts]
+                    all_facts.extend(adapted_facts)
                     mock_presence = type('obj', (object,), {'coverage': type('obj', (object,), {
                         'timeline_coverage': 100.0,
                         'metric_coverage': _safe_get(presence_profile, 'metric_coverage', 0.0),
@@ -794,8 +842,10 @@ def main() -> int:
                     })()})()
                     engine_results["presence"] = mock_presence
                 
+                # Usage (legacy → Platform Fact)
                 if usage_profile and hasattr(usage_profile, 'facts'):
-                    all_facts.extend(usage_profile.facts)
+                    adapted_facts = [adapt_to_platform_fact(f, "usage") for f in usage_profile.facts]
+                    all_facts.extend(adapted_facts)
                     mock_usage = type('obj', (object,), {'coverage': type('obj', (object,), {
                         'timeline_coverage': 100.0,
                         'metric_coverage': _safe_get(usage_profile, 'metric_coverage', 0.0),
@@ -835,10 +885,10 @@ def main() -> int:
                 q2 = KnowledgeQuery(confidence_min=50.0)
                 query_results["High Confidence (≥50%)"] = q2.execute(snapshot)
                 
-                # Query 3: Факты по категории (если есть behaviour)
-                if any(f.category == "behaviour" for f in all_facts):
-                    q3 = KnowledgeQuery(category="behaviour")
-                    query_results["Category: behaviour"] = q3.execute(snapshot)
+                # Query 3: Факты по категории (если есть presence)
+                if any(f.category == "presence" for f in all_facts):
+                    q3 = KnowledgeQuery(category="presence")
+                    query_results["Category: presence"] = q3.execute(snapshot)
                 
                 # Query 4: Топ-3 факта по уверенности
                 q4 = KnowledgeQuery(sort_by="confidence", limit=3)
