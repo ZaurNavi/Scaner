@@ -10,26 +10,26 @@ from .registry import ProviderRegistry, FeatureRegistry
 from .constants import ENGINE_VERSION, RULES_VERSION
 
 class MobilityEngine:
-    def __init__(self, behaviour_service, session_engine, history_service):
-        self.behaviour_service = behaviour_service
+    def __init__(self, identity_service, session_engine, history_service):
+        self.identity_service = identity_service
         self.session_engine = session_engine
         self.history_service = history_service
         self.evaluator = MobilityEvaluator()
         self._cache: Dict[Tuple, MobilityProfile] = {}
 
     def _get_versions(self, device_id: str) -> Tuple[str, int, int, int, int]:
-        # Получаем реальные версии (Замечание №3)
-        id_ver = getattr(self.behaviour_service.identity_service, 'get_version', lambda x: 1)(device_id)
-        beh_ver = 1 # Заглушка, если метода нет
+        # Получаем реальные версии напрямую от identity_service
+        id_ver = getattr(self.identity_service, 'get_version', lambda x: 1)(device_id)
         sess_ver = 1
         hist_ver = 1
-        return (device_id, id_ver, beh_ver, sess_ver, hist_ver)
+        mob_ver = 1
+        return (device_id, id_ver, mob_ver, sess_ver, hist_ver)
 
     def analyze(self, device_id: str) -> Tuple[MobilityProfile, DebugInfo]:
         start_time = time.time()
         debug = DebugInfo(computation_time_ms=0)
         
-        # 1. Проверка кэша по составному ключу (Замечание №11)
+        # 1. Проверка кэша по составному ключу
         cache_key = self._get_versions(device_id)
         if cache_key in self._cache:
             debug.cache_invalidated = False
@@ -39,7 +39,7 @@ class MobilityEngine:
         debug.cache_invalidated = True
         debug.cache_reason = "Version mismatch or cold cache"
 
-        # 2. Provider Manager (Замечание №2, №9)
+        # 2. Provider Manager
         metrics = {}
         providers = ProviderRegistry.get_all()
         for name, provider_cls in providers.items():
@@ -48,7 +48,7 @@ class MobilityEngine:
                 metrics.update(provider_cls(self.session_engine).extract(device_id))
             debug.provider_times[name] = (time.time() - t0) * 1000
 
-        # 3. Feature Builder (Замечание №2, №9)
+        # 3. Feature Builder
         feature_set: MobilityFeatureSet = {}
         feature_builders = FeatureRegistry.get_all()
         for feat_id, builder in feature_builders.items():
@@ -62,13 +62,13 @@ class MobilityEngine:
                 debug.missing_features.append(feat_id)
             debug.feature_times[feat_id] = (time.time() - t0) * 1000
 
-        # 4. Evaluator (Замечание №2, №9)
+        # 4. Evaluator
         facts, eval_debug = self.evaluator.evaluate(feature_set, metrics)
         debug.evaluated_rules = eval_debug["evaluated"]
         debug.matched_rules = eval_debug["matched"]
         debug.skipped_rules = eval_debug["skipped"]
 
-        # 5. Profile Builder & Correct Coverage (Замечание №4, №5)
+        # 5. Profile Builder & Correct Coverage
         available_count = sum(1 for f in feature_set.values() if f.availability.available)
         supported_count = len(feature_builders)
         feature_coverage = (available_count / supported_count * 100) if supported_count > 0 else 0.0
@@ -87,7 +87,7 @@ class MobilityEngine:
             mobility_coverage=mobility_coverage,
             features=feature_set,
             facts=facts,
-            timeline=MobilityTimeline(events=[MovementEvent(datetime.now(), None, "AP-1", "initial", -50, 0.9)]) # Заглушка Timeline (Замечание №13)
+            timeline=MobilityTimeline(events=[MovementEvent(datetime.now(), None, "AP-1", "initial", -50, 0.9)])
         )
 
         self._cache[cache_key] = profile
