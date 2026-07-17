@@ -8,12 +8,16 @@ from .event_query import EventQuery
 from .registry import EventRuleRegistry
 from .generator import EventGenerator
 from .serializer import EventSerializer
+
+# Импорт правил автоматически регистрирует их в Registry
 from .rules import (
     BaseEventRule,
     HostnameRule,
     VendorRule,
     CapabilityRule,
-    SummaryRule
+    SummaryRule,
+    PresenceRule,
+    SessionRule
 )
 
 __all__ = [
@@ -31,4 +35,6 @@ __all__ = [
     "VendorRule",
     "CapabilityRule",
     "SummaryRule",
+    "PresenceRule",
+    "SessionRule",
 ]
