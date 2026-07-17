@@ -14,8 +14,8 @@ class DomainEventSet:
     generated_at: datetime = field(default_factory=datetime.now)
     
     def query(self) -> EventQuery:
-        """Возвращает Query API."""
-        return EventQuery(list(self.events))
+        """Возвращает immutable Query API."""
+        return EventQuery(_events=self.events)
     
     def serialize(self, format: str = "json") -> str:
         """Сериализует события."""
