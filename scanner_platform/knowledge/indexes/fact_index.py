@@ -49,7 +49,7 @@ class FactIndex:
             for fact in self._facts:
                 # ИСПРАВЛЕНО: используем fact.id, а не fact.category
                 descriptor = FactRegistry.get(fact.id)
-                if descriptor:
+                if descriptor and descriptor.tags:  # ДОБАВЛЕНО: проверка на None
                     for tag in descriptor.tags:
                         if tag not in self._by_tag:
                             self._by_tag[tag] = set()
@@ -63,18 +63,21 @@ class FactIndex:
     def get_by_category(self, category: str) -> List[Any]:
         """Получает факты по категории."""
         self._ensure_category_index()
+        self._ensure_id_index()  # ИСПРАВЛЕНО: гарантируем наличие _by_id
         fact_ids = self._by_category.get(category, set())
         return [self._by_id[fid] for fid in fact_ids if fid in self._by_id]
     
     def get_by_engine(self, engine: str) -> List[Any]:
         """Получает факты по движку."""
         self._ensure_engine_index()
+        self._ensure_id_index()  # ИСПРАВЛЕНО: гарантируем наличие _by_id
         fact_ids = self._by_engine.get(engine, set())
         return [self._by_id[fid] for fid in fact_ids if fid in self._by_id]
     
     def get_by_tag(self, tag: str) -> List[Any]:
         """Получает факты по тегу."""
         self._ensure_tag_index()
+        self._ensure_id_index()  # ИСПРАВЛЕНО: гарантируем наличие _by_id
         fact_ids = self._by_tag.get(tag, set())
         return [self._by_id[fid] for fid in fact_ids if fid in self._by_id]
     
