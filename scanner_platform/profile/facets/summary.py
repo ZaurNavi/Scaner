@@ -2,21 +2,17 @@
 """Summary Facet — краткое описание устройства."""
 from typing import Dict, Any
 from .base import BaseFacet
-from ...knowledge.service import KnowledgeService
+from ...knowledge.facade import KnowledgeFacade
 
 class SummaryFacet(BaseFacet):
-    """Summary Facet — агрегирует Summary из Knowledge Snapshot."""
+    """Summary Facet — через KnowledgeFacade."""
     
-    def __init__(self, knowledge_service: KnowledgeService):
-        super().__init__(knowledge_service)
+    def __init__(self, facade: KnowledgeFacade):
+        self._facade = facade
     
     def get_name(self) -> str:
         return "summary"
     
     def build(self, device_id: str) -> Dict[str, Any]:
-        """Строит Summary Facet."""
-        snapshot = self.knowledge_service.get_snapshot(device_id)
-        if not snapshot:
-            return {}
-        
-        return dict(snapshot.summary)
+        """Строит Summary Facet через Facade."""
+        return self._facade.get_summary(device_id)
