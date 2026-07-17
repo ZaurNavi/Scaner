@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-"""Event Query API - immutable builder pattern."""
+"""Event Query API - immutable builder pattern с оптимизацией."""
 from typing import List, Optional, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class EventQuery:
-    """Immutable Query API для DomainEventSet (builder pattern)."""
+    """
+    Immutable Query API для DomainEventSet (builder pattern).
+    
+    ОПТИМИЗАЦИЯ: фильтры накапливаются, применяются только при _execute().
+    Это избегает создания промежуточных tuple при chaining.
+    """
     _events: Tuple[Any, ...] = field(default_factory=tuple)
     _device_uuid: Optional[str] = None
     _event_type: Optional[str] = None
+    _engine: Optional[str] = None
+    _category: Optional[str] = None
     _time_from: Optional[datetime] = None
     _time_to: Optional[datetime] = None
     _diff_id: Optional[str] = None
@@ -21,6 +28,8 @@ class EventQuery:
             _events=self._events,
             _device_uuid=device_uuid,
             _event_type=self._event_type,
+            _engine=self._engine,
+            _category=self._category,
             _time_from=self._time_from,
             _time_to=self._time_to,
             _diff_id=self._diff_id,
@@ -33,6 +42,36 @@ class EventQuery:
             _events=self._events,
             _device_uuid=self._device_uuid,
             _event_type=event_type,
+            _engine=self._engine,
+            _category=self._category,
+            _time_from=self._time_from,
+            _time_to=self._time_to,
+            _diff_id=self._diff_id,
+            _change_id=self._change_id
+        )
+    
+    def by_engine(self, engine: str) -> 'EventQuery':
+        """Возвращает новый EventQuery с фильтром по engine (из payload)."""
+        return EventQuery(
+            _events=self._events,
+            _device_uuid=self._device_uuid,
+            _event_type=self._event_type,
+            _engine=engine,
+            _category=self._category,
+            _time_from=self._time_from,
+            _time_to=self._time_to,
+            _diff_id=self._diff_id,
+            _change_id=self._change_id
+        )
+    
+    def by_category(self, category: str) -> 'EventQuery':
+        """Возвращает новый EventQuery с фильтром по category (из payload)."""
+        return EventQuery(
+            _events=self._events,
+            _device_uuid=self._device_uuid,
+            _event_type=self._event_type,
+            _engine=self._engine,
+            _category=category,
             _time_from=self._time_from,
             _time_to=self._time_to,
             _diff_id=self._diff_id,
@@ -45,6 +84,8 @@ class EventQuery:
             _events=self._events,
             _device_uuid=self._device_uuid,
             _event_type=self._event_type,
+            _engine=self._engine,
+            _category=self._category,
             _time_from=time_from,
             _time_to=time_to,
             _diff_id=self._diff_id,
@@ -57,6 +98,8 @@ class EventQuery:
             _events=self._events,
             _device_uuid=self._device_uuid,
             _event_type=self._event_type,
+            _engine=self._engine,
+            _category=self._category,
             _time_from=self._time_from,
             _time_to=self._time_to,
             _diff_id=diff_id,
@@ -69,50 +112,73 @@ class EventQuery:
             _events=self._events,
             _device_uuid=self._device_uuid,
             _event_type=self._event_type,
+            _engine=self._engine,
+            _category=self._category,
             _time_from=self._time_from,
             _time_to=self._time_to,
             _diff_id=self._diff_id,
             _change_id=change_id
         )
     
+    def _matches(self, event: Any) -> bool:
+        """
+        Проверяет, соответствует ли событие всем фильтрам.
+        ОПТИМИЗАЦИЯ: один проход по событию, без создания промежуточных tuple.
+        """
+        if self._device_uuid and event.device_uuid != self._device_uuid:
+            return False
+        
+        if self._event_type and event.event_type != self._event_type:
+            return False
+        
+        if self._time_from and event.occurred_at < self._time_from:
+            return False
+        
+        if self._time_to and event.occurred_at > self._time_to:
+            return False
+        
+        if self._diff_id and event.source_diff_id != self._diff_id:
+            return False
+        
+        if self._change_id and event.source_change_id != self._change_id:
+            return False
+        
+        # Фильтры по payload (engine и category)
+        if self._engine or self._category:
+            payload = event.payload
+            if self._engine and payload.get("engine") != self._engine:
+                return False
+            if self._category and payload.get("category") != self._category:
+                return False
+        
+        return True
+    
     def _execute(self) -> List[Any]:
-        """Выполняет фильтрацию (без лишних копий)."""
-        results = self._events  # Работаем с tuple напрямую
-        
-        if self._device_uuid:
-            results = tuple(e for e in results if e.device_uuid == self._device_uuid)
-        
-        if self._event_type:
-            results = tuple(e for e in results if e.event_type == self._event_type)
-        
-        if self._time_from:
-            results = tuple(e for e in results if e.occurred_at >= self._time_from)
-        
-        if self._time_to:
-            results = tuple(e for e in results if e.occurred_at <= self._time_to)
-        
-        if self._diff_id:
-            results = tuple(e for e in results if e.source_diff_id == self._diff_id)
-        
-        if self._change_id:
-            results = tuple(e for e in results if e.source_change_id == self._change_id)
-        
-        return list(results)  # Возвращаем list только в конце
+        """
+        Выполняет фильтрацию за ОДИН проход.
+        ОПТИМИЗАЦИЯ: нет промежуточных tuple, только один list.
+        """
+        return [e for e in self._events if self._matches(e)]
     
     def all(self) -> List[Any]:
         """Возвращает все отфильтрованные события."""
         return self._execute()
     
     def first(self) -> Optional[Any]:
-        """Возвращает первое событие."""
-        results = self._execute()
-        return results[0] if results else None
+        """Возвращает первое событие (лениво — останавливается после первого совпадения)."""
+        for e in self._events:
+            if self._matches(e):
+                return e
+        return None
     
     def last(self) -> Optional[Any]:
         """Возвращает последнее событие."""
-        results = self._execute()
-        return results[-1] if results else None
+        result = None
+        for e in self._events:
+            if self._matches(e):
+                result = e
+        return result
     
     def count(self) -> int:
-        """Возвращает количество событий."""
-        return len(self._execute())
+        """Возвращает количество событий (без создания list)."""
+        return sum(1 for e in self._events if self._matches(e))
