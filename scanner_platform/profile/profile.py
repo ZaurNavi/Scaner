@@ -31,7 +31,21 @@ class UnifiedDeviceProfile:
     capabilities: Dict[str, bool]
     version_snapshot: VersionSnapshot
     generated_at: datetime = field(default_factory=datetime.now)
+    _knowledge_service: Any = field(repr=False, compare=False, default=None)  # Для Query API
     
     def is_immutable(self) -> bool:
         """Profile действительно immutable."""
         return True
+    
+    def query(self):
+        """
+        Возвращает Fluent Query API для Profile.
+        
+        Пример использования:
+            profile.query().category("usage").confidence(60).all()
+            profile.query().engine("presence").first()
+        """
+        from .query.api import ProfileQueryAPI
+        if self._knowledge_service is None:
+            raise ValueError("KnowledgeService not available for Query API")
+        return ProfileQueryAPI(self.device_id, self._knowledge_service)
