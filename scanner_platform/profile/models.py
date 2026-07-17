@@ -13,6 +13,22 @@ class IdentityState(Enum):
     TEMPORARY = "temporary"
 
 @dataclass(frozen=True)
+class IdentityReference:
+    """
+    Идентификация устройства (immutable).
+    
+    Главный объект платформы.
+    """
+    device_uuid: str
+    primary_mac: str = ""
+    current_ip: str = ""
+    aliases: tuple = ()  # tuple для immutability
+    vendor: str = ""
+    hostname: str = ""
+    device_type: str = ""
+    identity_state: IdentityState = IdentityState.TEMPORARY
+
+@dataclass(frozen=True)
 class ProfileSummary:
     """Краткое описание устройства (immutable)."""
     known_since: Optional[datetime] = None
@@ -21,10 +37,6 @@ class ProfileSummary:
     sessions: int = 0
     facts: int = 0
     confidence: float = 0.0
-    vendor: str = ""
-    hostname: str = ""
-    device_type: str = ""
-    identity_state: IdentityState = IdentityState.TEMPORARY
 
 @dataclass(frozen=True)
 class ProfileStatistics:
@@ -59,9 +71,13 @@ class ProfileConfidence:
     by_engine: Dict[str, float] = field(default_factory=dict)
 
 @dataclass(frozen=True)
-class CategoryProfile:
-    """Профиль категории (immutable)."""
-    category: str
-    summary: Dict[str, Any] = field(default_factory=dict)
-    statistics: Dict[str, Any] = field(default_factory=dict)
-    coverage: Dict[str, float] = field(default_factory=dict)
+class ProfileCategories:
+    """
+    Категории профиля (immutable).
+    
+    Публичный API — каждое поле соответствует категории.
+    """
+    presence: Dict[str, Any] = field(default_factory=dict)
+    usage: Dict[str, Any] = field(default_factory=dict)
+    behaviour: Dict[str, Any] = field(default_factory=dict)
+    mobility: Dict[str, Any] = field(default_factory=dict)
