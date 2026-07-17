@@ -12,17 +12,19 @@ class SessionRule(BaseEventRule):
     """Правило для изменений sessions."""
     
     def supports(self, change: Change) -> bool:
-        return (
-            change.subject == SubjectType.SUMMARY and
-            change.category == CategoryType.SESSIONS and
-            change.delta is not None
-        )
+        # ИСПРАВЛЕНО: единый стиль с ==
+        if change.subject != SubjectType.SUMMARY:
+            return False
+        if change.category != CategoryType.SESSIONS:
+            return False
+        if change.delta is None:
+            return False
+        return True
     
     def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[DomainEvent, ...]:
         events = []
         
         if change.delta > 0:
-            # Сессии увеличились
             event = DomainEvent.create(
                 event_type=EventType.SESSION_STARTED.value,
                 device_uuid=device_uuid,
@@ -39,7 +41,6 @@ class SessionRule(BaseEventRule):
             events.append(event)
         
         elif change.delta < 0:
-            # Сессии уменьшились
             event = DomainEvent.create(
                 event_type=EventType.SESSION_ENDED.value,
                 device_uuid=device_uuid,
