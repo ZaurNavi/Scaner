@@ -2,7 +2,9 @@
 """Immutable модели данных для ProfileDiff."""
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any, Tuple, MappingProxyType
+from typing import Dict, Any, Tuple
+from types import MappingProxyType
+from enum import Enum
 import json
 
 from .enums import ChangeType, CapabilityState
