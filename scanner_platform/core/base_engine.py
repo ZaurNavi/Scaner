@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from datetime import datetime
+from dataclasses import dataclass, field
 import time
 
 from .platform_context import PlatformContext
@@ -11,6 +12,20 @@ from ..facts.models import Fact, FactStatus
 from ..coverage.platform import Coverage
 from ..cache.platform import VersionSnapshot
 from ..rules.evaluator import RuleEvaluator
+
+@dataclass
+class ExecutionInfo:
+    """
+    Информация о выполнении движка.
+    
+    ИСПРАВЛЕНО: вынесен отдельно от Statistics.
+    """
+    started_at: datetime = field(default_factory=datetime.now)
+    finished_at: datetime = None
+    duration_ms: float = 0.0
+    cache_hit: bool = False
+    warnings: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
 
 class EngineResult:
     """Единый результат работы любого движка."""
@@ -25,7 +40,8 @@ class EngineResult:
         debug: dict,
         explain: dict,
         dependencies: dict,
-        version: str = "1.0.0"
+        version: str = "1.0.0",
+        execution: ExecutionInfo = None  # ДОБАВЛЕНО
     ):
         self.device_id = device_id
         self.engine = engine
@@ -37,29 +53,18 @@ class EngineResult:
         self.dependencies = dependencies
         self.version = version
         self.generated_at = datetime.now()
+        self.execution = execution or ExecutionInfo()
         self.version_snapshot = VersionSnapshot(
             timeline_version="1.0.0",
             metric_registry_version="1.0.0",
             feature_registry_version="1.0.0",
             rule_registry_version="1.0.0",
-            engine_version=version
+            engine_version=version,
+            knowledge_version="1.0.0"  # ДОБАВЛЕНО
         )
 
 class BaseEngine(ABC):
-    """
-    Базовый класс для всех движков.
-    
-    Делает ВСЁ:
-    - Принимает PlatformContext
-    - Оценивает правила
-    - Строит Facts
-    - Считает Coverage
-    - Строит Explain
-    
-    Движок определяет ТОЛЬКО:
-    - engine_name
-    - engine_rules (список правил)
-    """
+    """Базовый класс для всех движков."""
     
     def __init__(self, engine_name: str, engine_rules: List):
         self.engine_name = engine_name
@@ -68,26 +73,21 @@ class BaseEngine(ABC):
         self._cache = {}
     
     def run(self, context: PlatformContext) -> EngineResult:
-        """
-        Главный метод. Движок НЕ переопределяет его.
-        
-        Args:
-            context: PlatformContext от Platform
-        
-        Returns:
-            EngineResult
-        """
+        """Главный метод. Движок НЕ переопределяет его."""
         start_time = time.time()
+        execution = ExecutionInfo(started_at=datetime.now())
         
         # === 1. Проверка кэша ===
         cache_key = self._get_cache_key(context)
         if cache_key in self._cache:
-            # ИСПРАВЛЕНО: при возврате из кэша создаём новый EngineResult
-            # с обнулённым computation_time_ms
             cached = self._cache[cache_key]
             cached_stats = dict(cached.statistics)
             cached_stats["computation_time_ms"] = 0.0
             cached_stats["cache_hit"] = True
+            
+            execution.finished_at = datetime.now()
+            execution.duration_ms = 0.0
+            execution.cache_hit = True
             
             return EngineResult(
                 device_id=cached.device_id,
@@ -98,7 +98,8 @@ class BaseEngine(ABC):
                 debug=cached.debug,
                 explain=cached.explain,
                 dependencies=cached.dependencies,
-                version=cached.version
+                version=cached.version,
+                execution=execution
             )
         
         # === 2. Оценка правил ===
@@ -108,7 +109,7 @@ class BaseEngine(ABC):
                 if self.evaluator.evaluate(rule, context.features.features):
                     matched_rules.append(rule)
             except Exception as e:
-                print(f"  [{self.engine_name.upper()}] ⚠️ Rule {rule.id} failed: {e}")
+                execution.warnings.append(f"Rule {rule.id} failed: {e}")
         
         # === 3. Построение Facts ===
         facts = self._build_facts(matched_rules, context)
@@ -123,9 +124,7 @@ class BaseEngine(ABC):
         statistics = {
             "rules_evaluated": len(self.engine_rules),
             "rules_matched": len(matched_rules),
-            "facts_generated": len(facts),
-            "computation_time_ms": (time.time() - start_time) * 1000,
-            "cache_hit": False
+            "facts_generated": len(facts)
         }
         
         # === 7. Debug ===
@@ -143,7 +142,12 @@ class BaseEngine(ABC):
             "rule_version": context.rules.version
         }
         
-        # === 9. Engine Result ===
+        # === 9. Execution Info ===
+        execution.finished_at = datetime.now()
+        execution.duration_ms = (time.time() - start_time) * 1000
+        execution.cache_hit = False
+        
+        # === 10. Engine Result ===
         result = EngineResult(
             device_id=context.device_id,
             engine=self.engine_name,
@@ -153,7 +157,8 @@ class BaseEngine(ABC):
             debug=debug,
             explain=explain,
             dependencies=dependencies,
-            version="1.0.0"
+            version="1.0.0",
+            execution=execution
         )
         
         # Сохраняем в кэш
@@ -201,8 +206,8 @@ class BaseEngine(ABC):
         
         return Coverage(
             timeline_coverage=100.0,
-            metric_coverage=100.0,  # Platform уже вычислила
-            feature_coverage=100.0,  # Platform уже вычислила
+            metric_coverage=100.0,
+            feature_coverage=100.0,
             rule_coverage=rule_coverage,
             fact_coverage=fact_coverage
         )
@@ -219,7 +224,7 @@ class BaseEngine(ABC):
                     "chain": {
                         "rule": f.matched_rules,
                         "features": f.matched_features,
-                        "metrics": f.matched_features  # Упрощённо
+                        "metrics": f.matched_features
                     }
                 }
                 for f in facts
@@ -233,6 +238,7 @@ class BaseEngine(ABC):
             metric_registry_version="1.0.0",
             feature_registry_version="1.0.0",
             rule_registry_version="1.0.0",
-            engine_version="1.0.0"
+            engine_version="1.0.0",
+            knowledge_version="1.0.0"
         )
         return f"{context.device_id}:{snapshot.to_cache_key()}"
