@@ -39,13 +39,13 @@ class UnifiedDeviceProfile:
     
     def query(self):
         """
-        Возвращает Fluent Query API для Profile.
+        Возвращает Fluent Query Builder для Profile.
         
         Пример использования:
             profile.query().category("usage").confidence(60).all()
             profile.query().engine("presence").first()
         """
-        from .query.api import ProfileQueryAPI
+        from .query.api import ProfileQueryBuilder
         if self._knowledge_service is None:
             raise ValueError("KnowledgeService not available for Query API")
-        return ProfileQueryAPI(self.device_id, self._knowledge_service)
+        return ProfileQueryBuilder(self.device_id, self._knowledge_service)
