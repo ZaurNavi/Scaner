@@ -5,6 +5,7 @@ from datetime import datetime
 from .base_rule import BaseEventRule
 from ..base import DomainEvent, EventOrigin
 from ..event_types import EventType
+from ..constants import SubjectType, CategoryType
 from ...diff.models import Change, ChangeType
 
 class PresenceRule(BaseEventRule):
@@ -12,9 +13,9 @@ class PresenceRule(BaseEventRule):
     
     def supports(self, change: Change) -> bool:
         return (
-            change.subject == "fact" and
-            change.category == "presence" and
-            change.type.value in ("ADDED", "REMOVED")
+            change.subject == SubjectType.FACT and
+            change.category == CategoryType.PRESENCE and
+            change.type in (ChangeType.ADDED, ChangeType.REMOVED)
         )
     
     def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[DomainEvent, ...]:
