@@ -71,6 +71,13 @@ from usage.providers.traffic_provider import TrafficProvider
 from scanner_platform import Pipeline, PlatformValidator, VersionSnapshot, DeviceState
 from scanner_platform.core.platform import Platform
 
+# v1.6.5: Knowledge Layer импорты
+from scanner_platform.knowledge import (
+    KnowledgeService, KnowledgeCache, KnowledgeSnapshot, KnowledgeQuery,
+    KnowledgeRegistry, KnowledgeDescriptor, KnowledgeCategory,
+    FactRegistry, FactDescriptor, FactSeverity
+)
+
 
 def print_header() -> None:
     print()
@@ -126,11 +133,7 @@ def _safe_get(obj, attr, default=None):
 
 
 def _safe_get_feature_value(features, feature_id):
-    """
-    Безопасное извлечение значения фичи из разных типов контейнеров:
-    - dict (Mobility, Presence, Usage, Platform Adapter)
-    - dataclass FeatureSet (Behaviour)
-    """
+    """Безопасное извлечение значения фичи из разных типов контейнеров."""
     if not features:
         return None
     
@@ -196,9 +199,7 @@ def _safe_get_metric_value(metrics, metric_id):
 
 
 def _format_engine_output(engine_name: str, profile, debug_info, engine_type: str = "generic"):
-    """
-    Единый форматтер вывода для всех аналитических движков.
-    """
+    """Единый форматтер вывода для всех аналитических движков."""
     print(f"\n  [{engine_name}] Analyzing {engine_type}...")
     if not profile:
         print(f"      ❌ {engine_name} Profile not generated.")
@@ -313,6 +314,69 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
         missing = _safe_get(debug_info, 'missing_features', [])
         if missing:
             print(f"            [Missing] Features: {', '.join(missing)}")
+
+
+def _format_knowledge_output(snapshot: KnowledgeSnapshot, query_results: dict):
+    """Форматтер вывода для Knowledge Snapshot."""
+    print(f"\n  [KNOWLEDGE] Building Knowledge Snapshot...")
+    if not snapshot:
+        print(f"      ❌ Knowledge Snapshot not generated.")
+        return
+    
+    print(f"      ✅ Knowledge Snapshot for {snapshot.device_id[:8]}...")
+    
+    # Summary
+    print("         Summary:")
+    summary = snapshot.summary
+    known_since = summary.get('known_since')
+    known_since_str = known_since.strftime("%Y-%m-%d %H:%M") if known_since else "N/A"
+    print(f"            • Known Since: {known_since_str}")
+    print(f"            • History Depth: {summary.get('history_depth', 0)} days")
+    print(f"            • Facts Count: {summary.get('facts_count', 0)}")
+    print(f"            • Categories: {', '.join(summary.get('categories', [])) or 'none'}")
+    print(f"            • Avg Confidence: {summary.get('average_confidence', 0):.1f}%")
+    
+    # Statistics
+    print("         Statistics:")
+    stats = snapshot.statistics
+    print(f"            • Facts Total: {stats.get('facts_total', 0)}")
+    print(f"            • Highest Confidence: {stats.get('highest_confidence', 0):.1f}%")
+    by_cat = stats.get('facts_by_category', {})
+    if by_cat:
+        cat_str = ', '.join([f"{k}={v}" for k, v in by_cat.items()])
+        print(f"            • By Category: {cat_str}")
+    
+    # Coverage
+    print("         Coverage:")
+    cov = snapshot.coverage
+    print(f"            • Timeline: {cov.timeline_coverage:.1f}%")
+    print(f"            • Metric: {cov.metric_coverage:.1f}%")
+    print(f"            • Feature: {cov.feature_coverage:.1f}%")
+    print(f"            • Rule: {cov.rule_coverage:.1f}%")
+    print(f"            • Fact: {cov.fact_coverage:.1f}%")
+    
+    # Indexes
+    print("         Indexes:")
+    idx = snapshot.indexes
+    print(f"            • By Category: {list(idx._by_category.keys()) if idx._by_category else 'lazy'}")
+    print(f"            • By Engine: {list(idx._by_engine.keys()) if idx._by_engine else 'lazy'}")
+    print(f"            • By Tag: {list(idx._by_tag.keys()) if idx._by_tag else 'lazy'}")
+    
+    # Query Results
+    if query_results:
+        print("         Query Results:")
+        for query_name, results in query_results.items():
+            print(f"            • {query_name}: {len(results)} facts")
+    
+    # Version
+    print("         Version:")
+    vs = snapshot.version_snapshot
+    print(f"            • Timeline: {vs.timeline_version}")
+    print(f"            • Metric Registry: {vs.metric_registry_version}")
+    print(f"            • Feature Registry: {vs.feature_registry_version}")
+    print(f"            • Rule Registry: {vs.rule_registry_version}")
+    print(f"            • Engine: {vs.engine_version}")
+    print(f"            • Knowledge: {vs.knowledge_version}")
 
 
 def main() -> int:
@@ -452,7 +516,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + v1.4.1 + v1.5.3 + v1.5.4 + v1.5.5 + v1.5.6 + v1.5.7 + v1.6.1 + v1.6.2 + v1.6.3 + v1.6.4 ===
+    # === v1.4.0 + ... + v1.6.5 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -553,22 +617,21 @@ def main() -> int:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
         # === v1.6.4: Behaviour Engine (Platform Core) ===
+        behaviour_engine_result = None
         if identity_service and profiles:
             try:
                 from scanner_platform.core.platform_context import PlatformContext
                 from scanner_platform.core.bundles import MetricBundle, FeatureBundle, RuleBundle
                 from scanner_platform.behaviour.engine import BehaviourEngine
-                from scanner_platform.timeline.models import Timeline, TimelineEvent, EventType
+                from scanner_platform.timeline.models import Timeline, TimelineEvent, EventType as PlatformEventType
                 from scanner_platform.registry.metric_registry import MetricRegistry
                 from scanner_platform.registry.feature_registry import FeatureRegistry
                 from scanner_platform.registry.rule_registry import RuleRegistry
 
-                # 1. Инициализация Platform (регистрирует все движки)
                 Platform.start()
                 
                 sample_device_id = profiles[0].device_id
                 
-                # 2. Строим минимальный Timeline из History для демонстрации
                 history = history_service.get_device_history(sample_device_id)
                 events = []
                 
@@ -578,7 +641,7 @@ def main() -> int:
                         id=str(uuid.uuid4()),
                         timestamp=first_seen,
                         device_id=sample_device_id,
-                        event_type=EventType.FIRST_SEEN,
+                        event_type=PlatformEventType.FIRST_SEEN,
                         source="history"
                     ))
                 
@@ -588,17 +651,13 @@ def main() -> int:
                         id=str(uuid.uuid4()),
                         timestamp=getattr(snap, 'timestamp', datetime.now()),
                         device_id=sample_device_id,
-                        event_type=EventType.SESSION_STARTED,
+                        event_type=PlatformEventType.SESSION_STARTED,
                         source="history",
-                        payload={
-                            "ip": getattr(snap, 'ip', ''), 
-                            "hostname": getattr(snap, 'hostname', '')
-                        }
+                        payload={"ip": getattr(snap, 'ip', ''), "hostname": getattr(snap, 'hostname', '')}
                     ))
                 
                 timeline = Timeline(events=events, device_id=sample_device_id)
                 
-                # 3. Вычисляем метрики и фичи через Platform Registry
                 metrics_dict = MetricRegistry.build(timeline)
                 features_dict = FeatureRegistry.build(metrics_dict)
                 rules_list = list(RuleRegistry.get_by_engine("behaviour").values())
@@ -611,11 +670,9 @@ def main() -> int:
                     rules=RuleBundle(rules=rules_list)
                 )
                 
-                # 4. Запускаем Behaviour Engine
                 behaviour_engine = BehaviourEngine()
-                result = behaviour_engine.run(context)
+                behaviour_engine_result = behaviour_engine.run(context)
                 
-                # 5. Адаптер для совместимости с _format_engine_output
                 class BehaviourResultAdapter:
                     def __init__(self, res, tl, feats_dict):
                         self.identity_id = res.device_id
@@ -632,28 +689,22 @@ def main() -> int:
                                     val = feats_dict.get(feat_name, 'N/A')
                                     unit = 'ratio' if isinstance(val, float) else ('visits' if isinstance(val, int) else 'bool')
                                     self.features[feat_name] = type('FeatureObj', (object,), {
-                                        'name': feat_name,
-                                        'value': val,
-                                        'unit': unit
+                                        'name': feat_name, 'value': val, 'unit': unit
                                     })()
                         
                         self.facts = res.facts
 
-                adapter = BehaviourResultAdapter(result, timeline, features_dict)
+                adapter = BehaviourResultAdapter(behaviour_engine_result, timeline, features_dict)
                 
-                # Формируем debug_info
                 debug_info = type('obj', (object,), {
-                    'cache_hit': result.statistics.get('cache_hit', False),
+                    'cache_hit': behaviour_engine_result.statistics.get('cache_hit', False),
                     'cache_key': behaviour_engine._get_cache_key(context),
-                    'engine_version': result.version,
+                    'engine_version': behaviour_engine_result.version,
                     'feature_version': "1.0.0",
                     'provider_version': "1.0.0",
-                    'computation_time_ms': result.statistics.get('computation_time_ms', 0.0),
-                    'provider_times': {},
-                    'builder_times': {},
-                    'feature_times': {},
-                    'skipped_rules': [],
-                    'missing_features': []
+                    'computation_time_ms': behaviour_engine_result.statistics.get('computation_time_ms', 0.0),
+                    'provider_times': {}, 'builder_times': {}, 'feature_times': {},
+                    'skipped_rules': [], 'missing_features': []
                 })()
                 
                 _format_engine_output("BEHAVIOUR", adapter, debug_info, engine_type="behavioural patterns (Platform Core)")
@@ -663,45 +714,141 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.5.7: Mobility Engine (Независимый от Behaviour) ===
+        # === v1.5.7: Mobility Engine ===
+        mobility_profile = None
         mobility_service = None
         if identity_service and profiles:
             try:
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
-                # ИСПРАВЛЕНО: Mobility теперь принимает identity_service напрямую
                 mobility_service = MobilityService(identity_service, session_engine, history_service)
                 sample_device_id = profiles[0].device_id
-                mp = mobility_service.get_profile(sample_device_id)
+                mobility_profile = mobility_service.get_profile(sample_device_id)
                 md = mobility_service.debug(sample_device_id) if hasattr(mobility_service, 'debug') else None
-                _format_engine_output("MOBILITY", mp, md, engine_type="movement patterns")
+                _format_engine_output("MOBILITY", mobility_profile, md, engine_type="movement patterns")
             except Exception as exc:
                 print(f"  [MOBILITY] ❌ Failed: {exc}")
 
         # === v1.6.1: Presence Engine ===
+        presence_profile = None
         presence_service = None
         if history_service and profiles:
             try:
                 PresenceProviderRegistry.register("history_provider", HistoryProvider, version="1.0.0", priority=10, dependencies=[])
                 presence_service = PresenceService(history_service)
                 sample_device_id = profiles[0].device_id
-                pp = presence_service.get_profile(sample_device_id)
+                presence_profile = presence_service.get_profile(sample_device_id)
                 pd = presence_service.debug(sample_device_id) if hasattr(presence_service, 'debug') else None
-                _format_engine_output("PRESENCE", pp, pd, engine_type="temporal presence")
+                _format_engine_output("PRESENCE", presence_profile, pd, engine_type="temporal presence")
             except Exception as exc:
                 print(f"  [PRESENCE] ❌ Failed: {exc}")
 
         # === v1.6.2: Usage Engine ===
+        usage_profile = None
         usage_service = None
         if history_service and profiles:
             try:
                 UsageProviderRegistry.register("traffic_provider", TrafficProvider, version="1.0.0", priority=10, dependencies=[])
                 usage_service = UsageService(history_service)
                 sample_device_id = profiles[0].device_id
-                up = usage_service.get_profile(sample_device_id)
+                usage_profile = usage_service.get_profile(sample_device_id)
                 ud = usage_service.debug(sample_device_id) if hasattr(usage_service, 'debug') else None
-                _format_engine_output("USAGE", up, ud, engine_type="network usage patterns")
+                _format_engine_output("USAGE", usage_profile, ud, engine_type="network usage patterns")
             except Exception as exc:
                 print(f"  [USAGE] ❌ Failed: {exc}")
+                import traceback
+                traceback.print_exc()
+
+        # === v1.6.5: Knowledge Layer ===
+        if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
+            try:
+                sample_device_id = profiles[0].device_id
+                
+                # Собираем все Platform Facts из движков
+                all_facts = []
+                engine_results = {}
+                
+                if behaviour_engine_result:
+                    all_facts.extend(behaviour_engine_result.facts)
+                    engine_results["behaviour"] = behaviour_engine_result
+                
+                if mobility_profile and hasattr(mobility_profile, 'facts'):
+                    all_facts.extend(mobility_profile.facts)
+                    # Создаём mock engine_result для Coverage
+                    mock_mobility = type('obj', (object,), {'coverage': type('obj', (object,), {
+                        'timeline_coverage': 100.0,
+                        'metric_coverage': _safe_get(mobility_profile, 'metric_coverage', 0.0),
+                        'feature_coverage': _safe_get(mobility_profile, 'feature_coverage', 0.0),
+                        'rule_coverage': _safe_get(mobility_profile, 'mobility_coverage', 0.0),
+                        'fact_coverage': 0.0
+                    })()})()
+                    engine_results["mobility"] = mock_mobility
+                
+                if presence_profile and hasattr(presence_profile, 'facts'):
+                    all_facts.extend(presence_profile.facts)
+                    mock_presence = type('obj', (object,), {'coverage': type('obj', (object,), {
+                        'timeline_coverage': 100.0,
+                        'metric_coverage': _safe_get(presence_profile, 'metric_coverage', 0.0),
+                        'feature_coverage': _safe_get(presence_profile, 'feature_coverage', 0.0),
+                        'rule_coverage': _safe_get(presence_profile, 'rule_match_ratio', 0.0),
+                        'fact_coverage': 0.0
+                    })()})()
+                    engine_results["presence"] = mock_presence
+                
+                if usage_profile and hasattr(usage_profile, 'facts'):
+                    all_facts.extend(usage_profile.facts)
+                    mock_usage = type('obj', (object,), {'coverage': type('obj', (object,), {
+                        'timeline_coverage': 100.0,
+                        'metric_coverage': _safe_get(usage_profile, 'metric_coverage', 0.0),
+                        'feature_coverage': _safe_get(usage_profile, 'feature_coverage', 0.0),
+                        'rule_coverage': _safe_get(usage_profile, 'rule_match_ratio', 0.0),
+                        'fact_coverage': 0.0
+                    })()})()
+                    engine_results["usage"] = mock_usage
+                
+                # Создаём Knowledge Service и Snapshot
+                knowledge_service = KnowledgeService()
+                version_snapshot = VersionSnapshot(
+                    timeline_version="1.0.0",
+                    metric_registry_version="1.0.0",
+                    feature_registry_version="1.0.0",
+                    rule_registry_version="1.0.0",
+                    engine_version="1.0.0",
+                    knowledge_version="1.0.0"
+                )
+                
+                snapshot = knowledge_service.create_snapshot(
+                    device_id=sample_device_id,
+                    facts=all_facts,
+                    engine_results=engine_results,
+                    version_snapshot=version_snapshot,
+                    history_service=history_service
+                )
+                
+                # Выполняем демонстрационные запросы
+                query_results = {}
+                
+                # Query 1: Все факты
+                q1 = KnowledgeQuery()
+                query_results["All Facts"] = q1.execute(snapshot)
+                
+                # Query 2: Факты с высокой уверенностью (>= 50%)
+                q2 = KnowledgeQuery(confidence_min=50.0)
+                query_results["High Confidence (≥50%)"] = q2.execute(snapshot)
+                
+                # Query 3: Факты по категории (если есть behaviour)
+                if any(f.category == "behaviour" for f in all_facts):
+                    q3 = KnowledgeQuery(category="behaviour")
+                    query_results["Category: behaviour"] = q3.execute(snapshot)
+                
+                # Query 4: Топ-3 факта по уверенности
+                q4 = KnowledgeQuery(sort_by="confidence", limit=3)
+                query_results["Top 3 by Confidence"] = q4.execute(snapshot)
+                
+                # Выводим Knowledge Snapshot
+                _format_knowledge_output(snapshot, query_results)
+                
+            except Exception as exc:
+                print(f"  [KNOWLEDGE] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
 
