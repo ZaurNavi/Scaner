@@ -90,6 +90,8 @@ class ProfileDiff:
         def to_dict_recursive(obj):
             if hasattr(obj, '__dataclass_fields__'):
                 return {k: to_dict_recursive(v) for k, v in obj.__dict__.items()}
+            elif isinstance(obj, MappingProxyType):  # ИСПРАВЛЕНО: обработка MappingProxyType
+                return {k: to_dict_recursive(v) for k, v in obj.items()}
             elif isinstance(obj, (list, tuple)):
                 return [to_dict_recursive(item) for item in obj]
             elif isinstance(obj, dict):
