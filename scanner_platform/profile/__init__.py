@@ -11,7 +11,7 @@ from .models import (
     ProfileConfidence, IdentityState, IdentityReference,
     ProfileCategories
 )
-from .query.api import ProfileQueryAPI, ProfileQueryBuilder
+from .query.api import ProfileQueryBuilder
 from .explain.graph import ExplainGraph
 from .explain.service import ExplainService
 from .capability.resolver import CapabilityResolver
@@ -31,7 +31,6 @@ __all__ = [
     "IdentityState",
     "IdentityReference",
     "ProfileCategories",
-    "ProfileQueryAPI",
     "ProfileQueryBuilder",
     "ExplainGraph",
     "ExplainService",
