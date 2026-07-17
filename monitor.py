@@ -78,8 +78,14 @@ from scanner_platform.knowledge import (
     FactRegistry, FactDescriptor, FactSeverity
 )
 
-# v1.6.6: Unified Device Profile импорты (ИСПРАВЛЕНО: убран дублирующий VersionSnapshot)
+# v1.6.6: Unified Device Profile импорты
 from scanner_platform.profile import ProfileService, ExplainService
+
+# v1.6.7: Change Detection Layer импорты
+from scanner_platform.diff import (
+    ProfileDiffer, ProfileDiff, EMPTY_DIFF, ChangeType, CapabilityState,
+    DifferentIdentityError, InvalidProfileError
+)
 
 
 def print_header() -> None:
@@ -519,7 +525,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + ... + v1.6.6 ===
+    # === v1.4.0 + ... + v1.6.7 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -761,7 +767,7 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.6.5 + v1.6.6: Knowledge Layer & Unified Device Profile ===
+        # === v1.6.5 + v1.6.6 + v1.6.7: Knowledge Layer & Unified Device Profile & Change Detection ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
                 from scanner_platform.facts.models import Fact, FactStatus
@@ -849,7 +855,7 @@ def main() -> int:
                     history_service=history_service
                 )
                 
-                # 2. Строим Unified Device Profile через ProfileService (ИСПРАВЛЕНО: используем VersionSnapshot из scanner_platform)
+                # 2. Строим Unified Device Profile через ProfileService
                 profile_service = ProfileService(knowledge_service)
                 profile_result = profile_service.build(sample_device_id, VersionSnapshot())
                 profile = profile_result.profile
@@ -903,6 +909,64 @@ def main() -> int:
                 print(f"            • Facts Traced: {explain_graph.facts_count}")
                 print(f"            • Engines Involved: {', '.join(explain_graph.engines)}")
                 print(f"            • Overall Confidence Trace: {explain_graph.confidence_trace.get('overall', 0):.1%}")
+                
+                # 6. v1.6.7: Change Detection Layer
+                print("\n  [DIFF] Detecting Profile Changes...")
+                
+                # Получаем предыдущий профиль из кэша (если есть)
+                previous_profile = profile_service.get(sample_device_id)
+                
+                if previous_profile is None:
+                    print(f"      ℹ️  First run - no previous profile to compare")
+                    print(f"      ✅ Current profile cached for next comparison")
+                else:
+                    # Сравниваем профили
+                    differ = ProfileDiffer()
+                    diff = differ.compare(previous_profile, profile)
+                    
+                    if diff is EMPTY_DIFF:
+                        print(f"      ✅ No changes detected (idempotent)")
+                    else:
+                        print(f"      ✅ Changes detected: {diff.count()}")
+                        print(f"         Diff ID: {diff.diff_id}")
+                        
+                        # Summary изменений
+                        print("         Summary Changes:")
+                        if diff.summary.facts_count.delta != 0:
+                            print(f"            • Facts: {diff.summary.facts_count.old} → {diff.summary.facts_count.new} (delta={diff.summary.facts_count.delta})")
+                        if diff.summary.confidence.delta != 0:
+                            print(f"            • Confidence: {diff.summary.confidence.old:.1f}% → {diff.summary.confidence.new:.1f}% (delta={diff.summary.confidence.delta:.1f})")
+                        
+                        # Engines
+                        if diff.engine_diff.added or diff.engine_diff.removed:
+                            print("         Engine Changes:")
+                            for eng in diff.engine_diff.added:
+                                print(f"            • +{eng} (ADDED)")
+                            for eng in diff.engine_diff.removed:
+                                print(f"            • -{eng} (REMOVED)")
+                        
+                        # Capabilities
+                        if diff.capability_diff.became_available or diff.capability_diff.became_unavailable:
+                            print("         Capability Changes:")
+                            for cap in diff.capability_diff.became_available:
+                                print(f"            • +{cap} (AVAILABLE)")
+                            for cap in diff.capability_diff.became_unavailable:
+                                print(f"            • -{cap} (UNAVAILABLE)")
+                        
+                        # Примеры изменений фактов (только первые 3)
+                        fact_changes = [c for c in diff.changes if c.subject == "fact"]
+                        if fact_changes:
+                            print(f"         Fact Changes (showing {min(3, len(fact_changes))} of {len(fact_changes)}):")
+                            for change in fact_changes[:3]:
+                                if change.type == ChangeType.ADDED:
+                                    print(f"            • +{change.metadata['fact_id']} (ADDED)")
+                                elif change.type == ChangeType.REMOVED:
+                                    print(f"            • -{change.metadata['fact_id']} (REMOVED)")
+                                elif change.type == ChangeType.UPDATED:
+                                    fields = change.metadata.get('changed_fields', [])
+                                    print(f"            • ~{change.metadata['fact_id']} (UPDATED: {', '.join(fields)})")
+                    
+                    print(f"      ✅ New profile cached for next comparison")
                 
             except Exception as exc:
                 print(f"  [PROFILE] ❌ Failed: {exc}")
