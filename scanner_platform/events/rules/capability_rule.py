@@ -5,13 +5,14 @@ from datetime import datetime
 from .base_rule import BaseEventRule
 from ..base import DomainEvent, EventOrigin
 from ..event_types import EventType
+from ..constants import SubjectType
 from ...diff.models import Change, ChangeType
 
 class CapabilityRule(BaseEventRule):
     """Правило для изменений capabilities."""
     
     def supports(self, change: Change) -> bool:
-        return change.subject == "capability"
+        return change.subject == SubjectType.CAPABILITY
     
     def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[DomainEvent, ...]:
         events = []
