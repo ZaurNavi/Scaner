@@ -6,9 +6,14 @@ from .result import ProfileResult, ProfileExecution
 from .service import ProfileService
 from .builder import ProfileBuilder
 from .cache import ProfileSnapshotCache
-from .models import ProfileSummary, ProfileStatistics, ProfileCoverage, ProfileConfidence, IdentityState, CategoryProfile
-from .query.api import ProfileQueryAPI
+from .models import (
+    ProfileSummary, ProfileStatistics, ProfileCoverage,
+    ProfileConfidence, IdentityState, IdentityReference,
+    ProfileCategories
+)
+from .query.api import ProfileQueryAPI, ProfileQueryBuilder
 from .explain.graph import ExplainGraph
+from .explain.service import ExplainService
 from .capability.resolver import CapabilityResolver
 from .capability.registry import CapabilityRegistry, CapabilityDescriptor
 
@@ -24,9 +29,12 @@ __all__ = [
     "ProfileCoverage",
     "ProfileConfidence",
     "IdentityState",
-    "CategoryProfile",
+    "IdentityReference",
+    "ProfileCategories",
     "ProfileQueryAPI",
+    "ProfileQueryBuilder",
     "ExplainGraph",
+    "ExplainService",
     "CapabilityResolver",
     "CapabilityRegistry",
     "CapabilityDescriptor",
