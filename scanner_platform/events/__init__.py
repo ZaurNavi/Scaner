@@ -11,7 +11,7 @@ from .serializer import EventSerializer
 from .constants import SubjectType, CategoryType
 from .exceptions import InvalidDiffError, EventGenerationError
 
-# Импорт правил автоматически регистрирует их в Registry
+# Импортируем правила (без регистрации)
 from .rules import (
     BaseEventRule,
     HostnameRule,
@@ -21,6 +21,15 @@ from .rules import (
     PresenceRule,
     SessionRule
 )
+
+# ИСПРАВЛЕНО: регистрация происходит здесь, после импорта EventRuleRegistry
+# Это предотвращает circular import
+EventRuleRegistry.register(HostnameRule())
+EventRuleRegistry.register(VendorRule())
+EventRuleRegistry.register(CapabilityRule())
+EventRuleRegistry.register(SummaryRule())
+EventRuleRegistry.register(PresenceRule())
+EventRuleRegistry.register(SessionRule())
 
 __all__ = [
     "DomainEvent",
