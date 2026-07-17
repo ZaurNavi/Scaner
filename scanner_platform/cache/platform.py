@@ -7,15 +7,15 @@ class VersionSnapshot:
     """
     Единый снимок версий для всей платформы.
     
-    Расширен для v1.6.6: добавлены profile_version и profile_schema_version.
+    Расширен для v1.6.6: добавлены profile_version и profile_model_version.
     """
     timeline_version: str = "1.0.0"
     metric_version: str = "1.0.0"
     feature_version: str = "1.0.0"
     rule_version: str = "1.0.0"
     knowledge_version: str = "1.0.0"
-    profile_version: str = "1.0.0"  # ДОБАВЛЕНО
-    profile_schema_version: str = "1.0.0"  # ДОБАВЛЕНО
+    profile_version: str = "1.0.0"
+    profile_model_version: str = "1.0.0"  # ПЕРЕИМЕНОВАНО (было profile_schema_version)
     
     def to_cache_key(self) -> tuple:
         """Формирует единый ключ кэша."""
@@ -26,5 +26,5 @@ class VersionSnapshot:
             self.rule_version,
             self.knowledge_version,
             self.profile_version,
-            self.profile_schema_version
+            self.profile_model_version
         )
