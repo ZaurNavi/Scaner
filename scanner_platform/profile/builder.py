@@ -109,7 +109,7 @@ class ProfileBuilder:
             by_engine={}
         )
         
-        # Строим Categories
+        # Строим Categories (ИСПРАВЛЕНО: передаём данные из Facets)
         categories = ProfileCategories(
             presence=facets_data.get("presence", {}),
             usage=facets_data.get("usage", {}),
@@ -117,7 +117,7 @@ class ProfileBuilder:
             mobility=facets_data.get("mobility", {})
         )
         
-        # Создаём immutable Profile (БЕЗ _snapshot)
+        # Создаём immutable Profile (ИСПРАВЛЕНО: передаём _knowledge_service)
         profile = UnifiedDeviceProfile(
             device_id=device_id,
             identity=identity,
@@ -127,7 +127,8 @@ class ProfileBuilder:
             coverage=coverage,
             confidence=confidence,
             capabilities={},  # Заполняется позже через CapabilityResolver
-            version_snapshot=version_snapshot
+            version_snapshot=version_snapshot,
+            _knowledge_service=self._service  # ИСПРАВЛЕНО: для Query API
         )
         
         return profile
