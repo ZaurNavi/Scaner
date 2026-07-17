@@ -8,6 +8,8 @@ from .event_query import EventQuery
 from .registry import EventRuleRegistry
 from .generator import EventGenerator
 from .serializer import EventSerializer
+from .constants import SubjectType, CategoryType
+from .exceptions import InvalidDiffError, EventGenerationError
 
 # Импорт правил автоматически регистрирует их в Registry
 from .rules import (
@@ -30,6 +32,10 @@ __all__ = [
     "EventRuleRegistry",
     "EventGenerator",
     "EventSerializer",
+    "SubjectType",
+    "CategoryType",
+    "InvalidDiffError",
+    "EventGenerationError",
     "BaseEventRule",
     "HostnameRule",
     "VendorRule",
