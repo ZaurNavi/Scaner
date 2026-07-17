@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Event Serializer - сериализация событий."""
+"""Event Serializer - улучшенная сериализация событий."""
 import json
 from typing import Any
 from datetime import datetime
 from types import MappingProxyType
+from dataclasses import asdict
 
 class EventSerializer:
-    """Сериализатор для DomainEventSet."""
+    """Улучшенный сериализатор для DomainEventSet."""
     
     @staticmethod
     def serialize(event_set: Any, format: str = "json") -> str:
@@ -18,14 +19,17 @@ class EventSerializer:
     
     @staticmethod
     def _to_json(event_set: Any) -> str:
-        """Конвертирует в JSON."""
+        """Конвертирует в JSON с улучшенной обработкой."""
         def custom_encoder(obj):
             if isinstance(obj, datetime):
                 return obj.isoformat()
             if isinstance(obj, MappingProxyType):
                 return dict(obj)
             if hasattr(obj, '__dataclass_fields__'):
-                return {k: custom_encoder(v) for k, v in obj.__dict__.items()}
+                # Используем asdict для frozen dataclass
+                return {k: custom_encoder(v) for k, v in asdict(obj).items()}
+            if isinstance(obj, (list, tuple)):
+                return [custom_encoder(item) for item in obj]
             return obj
         
         data = {
