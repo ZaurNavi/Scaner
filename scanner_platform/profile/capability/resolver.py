@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Capability Resolver — определяет доступные возможности устройства."""
-from typing import Dict, List, Any
-from .registry import CapabilityRegistry, CapabilityDescriptor
-from ...knowledge.snapshot import KnowledgeSnapshot
+"""Capability Resolver — определяет доступные возможности."""
+from typing import Dict
+from .registry import CapabilityRegistry
+from ..profile import UnifiedDeviceProfile
 
 class CapabilityResolver:
     """
-    Определяет доступные возможности на основе Knowledge Snapshot.
+    Определяет доступные возможности на основе Profile.
     
-    Не вычисляет Capability, только проверяет доступность.
+    Работает с Profile, а не со Snapshot.
     """
     
     @staticmethod
-    def resolve(snapshot: KnowledgeSnapshot) -> Dict[str, bool]:
+    def resolve(profile: UnifiedDeviceProfile) -> Dict[str, bool]:
         """
         Определяет доступность всех Capability для устройства.
         
         Args:
-            snapshot: Knowledge Snapshot устройства
+            profile: UnifiedDeviceProfile
         
         Returns:
             Dict[str, bool]: {capability_id: is_available}
@@ -25,19 +25,13 @@ class CapabilityResolver:
         capabilities = CapabilityRegistry.get_all()
         results = {}
         
-        # Собираем доступные категории и факты
-        available_categories = set()
-        available_facts = set()
-        avg_confidence = 0.0
-        
-        if snapshot.facts:
-            available_categories = set(f.category for f in snapshot.facts)
-            available_facts = set(f.id for f in snapshot.facts)
-            avg_confidence = sum(f.confidence for f in snapshot.facts) / len(snapshot.facts)
+        # Извлекаем данные из Profile
+        available_categories = set(profile.categories.__dict__.keys())
+        avg_confidence = profile.confidence.overall
         
         for cap_id, descriptor in capabilities.items():
             is_available = CapabilityResolver._check_availability(
-                descriptor, available_categories, available_facts, avg_confidence
+                descriptor, available_categories, avg_confidence
             )
             results[cap_id] = is_available
         
@@ -45,20 +39,14 @@ class CapabilityResolver:
     
     @staticmethod
     def _check_availability(
-        descriptor: CapabilityDescriptor,
+        descriptor,
         available_categories: set,
-        available_facts: set,
         avg_confidence: float
     ) -> bool:
         """Проверяет доступность конкретной Capability."""
         # Проверка required_categories
         for req_cat in descriptor.requires_categories:
             if req_cat not in available_categories:
-                return False
-        
-        # Проверка required_facts
-        for req_fact in descriptor.requires_facts:
-            if req_fact not in available_facts:
                 return False
         
         # Проверка minimum_confidence
