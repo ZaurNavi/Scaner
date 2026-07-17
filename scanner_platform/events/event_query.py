@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Event Query API - immutable builder pattern."""
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class EventQuery:
     """Immutable Query API для DomainEventSet (builder pattern)."""
-    _events: tuple = field(default_factory=tuple)
+    _events: Tuple[Any, ...] = field(default_factory=tuple)
     _device_uuid: Optional[str] = None
     _event_type: Optional[str] = None
     _time_from: Optional[datetime] = None
@@ -76,28 +76,28 @@ class EventQuery:
         )
     
     def _execute(self) -> List[Any]:
-        """Выполняет фильтрацию."""
-        results = list(self._events)
+        """Выполняет фильтрацию (без лишних копий)."""
+        results = self._events  # Работаем с tuple напрямую
         
         if self._device_uuid:
-            results = [e for e in results if e.device_uuid == self._device_uuid]
+            results = tuple(e for e in results if e.device_uuid == self._device_uuid)
         
         if self._event_type:
-            results = [e for e in results if e.event_type == self._event_type]
+            results = tuple(e for e in results if e.event_type == self._event_type)
         
         if self._time_from:
-            results = [e for e in results if e.occurred_at >= self._time_from]
+            results = tuple(e for e in results if e.occurred_at >= self._time_from)
         
         if self._time_to:
-            results = [e for e in results if e.occurred_at <= self._time_to]
+            results = tuple(e for e in results if e.occurred_at <= self._time_to)
         
         if self._diff_id:
-            results = [e for e in results if e.source_diff_id == self._diff_id]
+            results = tuple(e for e in results if e.source_diff_id == self._diff_id)
         
         if self._change_id:
-            results = [e for e in results if e.source_change_id == self._change_id]
+            results = tuple(e for e in results if e.source_change_id == self._change_id)
         
-        return results
+        return list(results)  # Возвращаем list только в конце
     
     def all(self) -> List[Any]:
         """Возвращает все отфильтрованные события."""
