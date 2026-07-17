@@ -663,12 +663,13 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.5.7: Mobility Engine ===
+        # === v1.5.7: Mobility Engine (Независимый от Behaviour) ===
         mobility_service = None
-        if identity_service and profiles: # Упростили условие, т.к. behaviour теперь в platform
+        if identity_service and profiles:
             try:
                 MobilityProviderRegistry.register("session_provider", SessionMetricsProvider)
-                mobility_service = MobilityService(None, session_engine, history_service) # behaviour_service больше не нужен напрямую
+                # ИСПРАВЛЕНО: Mobility теперь принимает identity_service напрямую
+                mobility_service = MobilityService(identity_service, session_engine, history_service)
                 sample_device_id = profiles[0].device_id
                 mp = mobility_service.get_profile(sample_device_id)
                 md = mobility_service.debug(sample_device_id) if hasattr(mobility_service, 'debug') else None
