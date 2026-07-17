@@ -36,14 +36,11 @@ class DomainEvent:
         payload: Dict[str, Any],
         source_diff_id: str,
         source_change_id: str,
-        origin: EventOrigin = EventOrigin.RULE,
-        occurred_at: datetime = None
+        occurred_at: datetime,  # ОБЯЗАТЕЛЬНЫЙ параметр для детерминированности
+        origin: EventOrigin = EventOrigin.RULE
     ) -> 'DomainEvent':
         """Фабричный метод с детерминированным event_id."""
-        if occurred_at is None:
-            occurred_at = datetime.now()
-        
-        # Детерминированный event_id
+        # Детерминированный event_id (без occurred_at)
         id_payload = f"{event_type}|{device_uuid}|{str(payload)}|{source_change_id}"
         event_id = hashlib.sha256(id_payload.encode('utf-8')).hexdigest()[:16]
         
