@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Base Event Rule - базовый класс для правил генерации событий."""
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Any
 from datetime import datetime
 from ...diff.models import Change
 
