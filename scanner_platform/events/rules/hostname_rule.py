@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Hostname Change Rule."""
 from typing import Tuple
+from datetime import datetime
 from .base_rule import BaseEventRule
 from ..base import DomainEvent, EventOrigin
 from ..event_types import EventType
@@ -16,19 +17,20 @@ class HostnameRule(BaseEventRule):
             "hostname" in change.metadata.get("changed_fields", ())
         )
     
-    def emit(self, change: Change, diff_id: str) -> Tuple[DomainEvent, ...]:
+    def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[DomainEvent, ...]:
         old_hostname = change.old.get("hostname", "") if change.old else ""
         new_hostname = change.new.get("hostname", "") if change.new else ""
         
         event = DomainEvent.create(
             event_type=EventType.HOSTNAME_CHANGED.value,
-            device_uuid=change.engine,  # Используем engine как device_uuid
+            device_uuid=device_uuid,  # ИСПРАВЛЕНО: из Generator
             payload={
                 "old_hostname": old_hostname,
                 "new_hostname": new_hostname
             },
             source_diff_id=diff_id,
             source_change_id=change.change_id,
+            occurred_at=occurred_at,  # ИСПРАВЛЕНО: из Generator
             origin=EventOrigin.RULE
         )
         
