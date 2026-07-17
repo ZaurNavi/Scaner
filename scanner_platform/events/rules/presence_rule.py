@@ -12,11 +12,16 @@ class PresenceRule(BaseEventRule):
     """Правило для изменений presence."""
     
     def supports(self, change: Change) -> bool:
-        return (
-            change.subject == SubjectType.FACT and
-            change.category == CategoryType.PRESENCE and
-            change.type in (ChangeType.ADDED, ChangeType.REMOVED)
-        )
+        # ИСПРАВЛЕНО: единый стиль с ==
+        if change.subject != SubjectType.FACT:
+            return False
+        if change.category != CategoryType.PRESENCE:
+            return False
+        if change.type == ChangeType.ADDED:
+            return True
+        if change.type == ChangeType.REMOVED:
+            return True
+        return False
     
     def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[DomainEvent, ...]:
         events = []
