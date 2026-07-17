@@ -29,9 +29,10 @@ def main():
             HostnameRule, VendorRule, CapabilityRule, SummaryRule,
             PresenceRule, SessionRule
         )
+        # ИСПРАВЛЕНО: убраны Severity и ChangeReason (их больше нет в diff)
         from scanner_platform.diff import (
             ProfileDiffer, ProfileDiff, EMPTY_DIFF,
-            Change, ChangeType, Severity, ChangeReason
+            Change, ChangeType
         )
         from scanner_platform.diff.models import SummaryDiff, MetricDelta, EngineDiff, CapabilityDiff
         from scanner_platform.profile import (
