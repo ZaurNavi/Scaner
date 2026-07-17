@@ -87,6 +87,11 @@ from scanner_platform.diff import (
     DifferentIdentityError, InvalidProfileError
 )
 
+# v1.6.8: Domain Event Layer импорты
+from scanner_platform.events import (
+    EventGenerator, DomainEventSet, EMPTY_EVENT_SET
+)
+
 
 def print_header() -> None:
     print()
@@ -525,7 +530,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + ... + v1.6.7 ===
+    # === v1.4.0 + ... + v1.6.8 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -767,7 +772,7 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.6.5 + v1.6.6 + v1.6.7: Knowledge Layer & Unified Device Profile & Change Detection ===
+        # === v1.6.5 + v1.6.6 + v1.6.7 + v1.6.8: Knowledge, Profile, Diff & Events ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
                 from scanner_platform.facts.models import Fact, FactStatus
@@ -919,6 +924,7 @@ def main() -> int:
                 if previous_profile is None:
                     print(f"      ℹ️  First run - no previous profile to compare")
                     print(f"      ✅ Current profile cached for next comparison")
+                    diff = EMPTY_DIFF
                 else:
                     # Сравниваем профили
                     differ = ProfileDiffer()
@@ -967,6 +973,28 @@ def main() -> int:
                                     print(f"            • ~{change.metadata['fact_id']} (UPDATED: {', '.join(fields)})")
                     
                     print(f"      ✅ New profile cached for next comparison")
+
+                # 7. v1.6.8: Domain Event Layer
+                print("\n  [EVENTS] Generating Domain Events...")
+                event_generator = EventGenerator()
+                event_set = event_generator.generate(diff)
+                
+                if event_set is EMPTY_EVENT_SET:
+                    print(f"      ℹ️  No domain events generated (EMPTY_DIFF or no matching rules)")
+                else:
+                    print(f"      ✅ Generated {event_set.count()} domain event(s)")
+                    
+                    # Выводим первые 3 события для демонстрации
+                    events_to_show = list(event_set.events[:3])
+                    for i, event in enumerate(events_to_show, 1):
+                        print(f"         {i}. {event.event_type}")
+                        print(f"            • Device: {event.device_uuid[:8]}...")
+                        print(f"            • Origin: {event.origin.value}")
+                        print(f"            • Payload: {dict(event.payload)}")
+                        print(f"            • Trace: Diff={event.source_diff_id[:8]}... | Change={event.source_change_id[:8]}...")
+                    
+                    if event_set.count() > 3:
+                        print(f"         ... and {event_set.count() - 3} more event(s)")
                 
             except Exception as exc:
                 print(f"  [PROFILE] ❌ Failed: {exc}")
