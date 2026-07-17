@@ -78,6 +78,11 @@ from scanner_platform.knowledge import (
     FactRegistry, FactDescriptor, FactSeverity
 )
 
+# v1.6.6: Unified Device Profile импорты
+from scanner_platform.profile import (
+    ProfileService, ExplainService, VersionSnapshot as ProfileVersionSnapshot
+)
+
 
 def print_header() -> None:
     print()
@@ -516,7 +521,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + ... + v1.6.5 ===
+    # === v1.4.0 + ... + v1.6.6 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -758,7 +763,7 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.6.5: Knowledge Layer ===
+        # === v1.6.5 + v1.6.6: Knowledge Layer & Unified Device Profile ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
                 from scanner_platform.facts.models import Fact, FactStatus
@@ -767,15 +772,9 @@ def main() -> int:
                 
                 # === АДАПТЕР: Превращаем legacy-факты в Platform Facts ===
                 def adapt_to_platform_fact(legacy_fact, engine_name: str) -> Fact:
-                    """
-                    Адаптирует legacy-факт (PresenceFact, MobilityFact, UsageFact) в Platform Fact.
-                    Если факт уже Platform Fact — возвращает как есть.
-                    """
-                    # Если это уже Platform Fact (имеет id)
                     if hasattr(legacy_fact, 'id') and hasattr(legacy_fact, 'engine'):
                         return legacy_fact
                     
-                    # Конвертируем legacy в Platform Fact
                     category_value = legacy_fact.category
                     if hasattr(category_value, 'value'):
                         category_value = category_value.value
@@ -811,94 +810,104 @@ def main() -> int:
                 all_facts = []
                 engine_results = {}
                 
-                # Behaviour (уже Platform Fact)
                 if behaviour_engine_result:
                     all_facts.extend(behaviour_engine_result.facts)
                     engine_results["behaviour"] = behaviour_engine_result
                 
-                # Mobility (legacy → Platform Fact)
                 if mobility_profile and hasattr(mobility_profile, 'facts'):
-                    adapted_facts = [adapt_to_platform_fact(f, "mobility") for f in mobility_profile.facts]
-                    all_facts.extend(adapted_facts)
+                    all_facts.extend([adapt_to_platform_fact(f, "mobility") for f in mobility_profile.facts])
                     mock_mobility = type('obj', (object,), {'coverage': type('obj', (object,), {
-                        'timeline_coverage': 100.0,
-                        'metric_coverage': _safe_get(mobility_profile, 'metric_coverage', 0.0),
+                        'timeline_coverage': 100.0, 'metric_coverage': _safe_get(mobility_profile, 'metric_coverage', 0.0),
                         'feature_coverage': _safe_get(mobility_profile, 'feature_coverage', 0.0),
-                        'rule_coverage': _safe_get(mobility_profile, 'mobility_coverage', 0.0),
-                        'fact_coverage': 0.0
+                        'rule_coverage': _safe_get(mobility_profile, 'mobility_coverage', 0.0), 'fact_coverage': 0.0
                     })()})()
                     engine_results["mobility"] = mock_mobility
                 
-                # Presence (legacy → Platform Fact)
                 if presence_profile and hasattr(presence_profile, 'facts'):
-                    adapted_facts = [adapt_to_platform_fact(f, "presence") for f in presence_profile.facts]
-                    all_facts.extend(adapted_facts)
+                    all_facts.extend([adapt_to_platform_fact(f, "presence") for f in presence_profile.facts])
                     mock_presence = type('obj', (object,), {'coverage': type('obj', (object,), {
-                        'timeline_coverage': 100.0,
-                        'metric_coverage': _safe_get(presence_profile, 'metric_coverage', 0.0),
+                        'timeline_coverage': 100.0, 'metric_coverage': _safe_get(presence_profile, 'metric_coverage', 0.0),
                         'feature_coverage': _safe_get(presence_profile, 'feature_coverage', 0.0),
-                        'rule_coverage': _safe_get(presence_profile, 'rule_match_ratio', 0.0),
-                        'fact_coverage': 0.0
+                        'rule_coverage': _safe_get(presence_profile, 'rule_match_ratio', 0.0), 'fact_coverage': 0.0
                     })()})()
                     engine_results["presence"] = mock_presence
                 
-                # Usage (legacy → Platform Fact)
                 if usage_profile and hasattr(usage_profile, 'facts'):
-                    adapted_facts = [adapt_to_platform_fact(f, "usage") for f in usage_profile.facts]
-                    all_facts.extend(adapted_facts)
+                    all_facts.extend([adapt_to_platform_fact(f, "usage") for f in usage_profile.facts])
                     mock_usage = type('obj', (object,), {'coverage': type('obj', (object,), {
-                        'timeline_coverage': 100.0,
-                        'metric_coverage': _safe_get(usage_profile, 'metric_coverage', 0.0),
+                        'timeline_coverage': 100.0, 'metric_coverage': _safe_get(usage_profile, 'metric_coverage', 0.0),
                         'feature_coverage': _safe_get(usage_profile, 'feature_coverage', 0.0),
-                        'rule_coverage': _safe_get(usage_profile, 'rule_match_ratio', 0.0),
-                        'fact_coverage': 0.0
+                        'rule_coverage': _safe_get(usage_profile, 'rule_match_ratio', 0.0), 'fact_coverage': 0.0
                     })()})()
                     engine_results["usage"] = mock_usage
                 
-                # Создаём Knowledge Service и Snapshot
+                # 1. Создаём Knowledge Snapshot
                 knowledge_service = KnowledgeService()
-                version_snapshot = VersionSnapshot(
-                    timeline_version="1.0.0",
-                    metric_registry_version="1.0.0",
-                    feature_registry_version="1.0.0",
-                    rule_registry_version="1.0.0",
-                    engine_version="1.0.0",
-                    knowledge_version="1.0.0"
-                )
-                
-                snapshot = knowledge_service.create_snapshot(
+                knowledge_service.create_snapshot(
                     device_id=sample_device_id,
                     facts=all_facts,
                     engine_results=engine_results,
-                    version_snapshot=version_snapshot,
+                    version_snapshot=VersionSnapshot(),
                     history_service=history_service
                 )
                 
-                # Выполняем демонстрационные запросы
-                query_results = {}
+                # 2. Строим Unified Device Profile через ProfileService
+                profile_service = ProfileService(knowledge_service)
+                profile_result = profile_service.build(sample_device_id, ProfileVersionSnapshot())
+                profile = profile_result.profile
                 
-                # Query 1: Все факты
-                q1 = KnowledgeQuery()
-                query_results["All Facts"] = q1.execute(snapshot)
+                # 3. Выводим Unified Device Profile
+                print(f"\n  [PROFILE] Building Unified Device Profile...")
+                print(f"      ✅ Profile built for {profile.device_id[:8]}... (Duration: {profile_result.execution.duration_ms:.2f}ms, Cache: {profile_result.execution.cache_hit})")
                 
-                # Query 2: Факты с высокой уверенностью (>= 50%)
-                q2 = KnowledgeQuery(confidence_min=50.0)
-                query_results["High Confidence (≥50%)"] = q2.execute(snapshot)
+                print("         Identity:")
+                print(f"            • UUID: {profile.identity.device_uuid[:8]}...")
+                print(f"            • MAC: {profile.identity.primary_mac or 'N/A'}")
+                print(f"            • IP: {profile.identity.current_ip or 'N/A'}")
+                print(f"            • State: {profile.identity.identity_state.value}")
                 
-                # Query 3: Факты по категории (если есть presence)
-                if any(f.category == "presence" for f in all_facts):
-                    q3 = KnowledgeQuery(category="presence")
-                    query_results["Category: presence"] = q3.execute(snapshot)
+                print("         Summary:")
+                print(f"            • Known Since: {profile.summary.known_since.strftime('%Y-%m-%d') if profile.summary.known_since else 'N/A'}")
+                print(f"            • History Depth: {profile.summary.history_depth} days")
+                print(f"            • Total Facts: {profile.summary.facts}")
+                print(f"            • Avg Confidence: {profile.summary.confidence:.1f}%")
                 
-                # Query 4: Топ-3 факта по уверенности
-                q4 = KnowledgeQuery(sort_by="confidence", limit=3)
-                query_results["Top 3 by Confidence"] = q4.execute(snapshot)
+                print("         Categories:")
+                for cat_name in ['presence', 'usage', 'behaviour', 'mobility']:
+                    cat_data = getattr(profile.categories, cat_name, {})
+                    count = cat_data.get('facts_count', 0) if isinstance(cat_data, dict) else 0
+                    if count > 0:
+                        print(f"            • {cat_name.capitalize()}: {count} facts")
                 
-                # Выводим Knowledge Snapshot
-                _format_knowledge_output(snapshot, query_results)
+                print("         Coverage:")
+                print(f"            • Knowledge: {profile.coverage.knowledge:.1f}%")
+                print(f"            • Fact: {profile.coverage.fact:.1f}%")
+                
+                print("         Capabilities Available:")
+                available_caps = [cap for cap, is_avail in profile.capabilities.items() if is_avail]
+                print(f"            • {', '.join(available_caps) if available_caps else 'None'}")
+                
+                # 4. Демонстрация Fluent Query API
+                print("         Query API Demo:")
+                q1_count = profile.query().count()
+                print(f"            • profile.query().count() = {q1_count} facts")
+                
+                high_conf_count = profile.query().confidence(50.0).count()
+                print(f"            • profile.query().confidence(50.0).count() = {high_conf_count} facts")
+                
+                presence_facts = profile.query().category("presence").all()
+                print(f"            • profile.query().category('presence').all() = {len(presence_facts)} facts")
+                
+                # 5. Демонстрация ExplainService
+                explain_service = ExplainService(knowledge_service)
+                explain_graph = explain_service.build(profile)
+                print("         Explain Graph:")
+                print(f"            • Facts Traced: {explain_graph.facts_count}")
+                print(f"            • Engines Involved: {', '.join(explain_graph.engines)}")
+                print(f"            • Overall Confidence Trace: {explain_graph.confidence_trace.get('overall', 0):.1%}")
                 
             except Exception as exc:
-                print(f"  [KNOWLEDGE] ❌ Failed: {exc}")
+                print(f"  [PROFILE] ❌ Failed: {exc}")
                 import traceback
                 traceback.print_exc()
 
