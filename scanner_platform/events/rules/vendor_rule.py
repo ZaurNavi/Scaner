@@ -5,15 +5,16 @@ from datetime import datetime
 from .base_rule import BaseEventRule
 from ..base import DomainEvent, EventOrigin
 from ..event_types import EventType
-from ...diff.models import Change
+from ..constants import SubjectType
+from ...diff.models import Change, ChangeType
 
 class VendorRule(BaseEventRule):
     """Правило для изменений vendor."""
     
     def supports(self, change: Change) -> bool:
         return (
-            change.subject == "fact" and
-            change.type.value == "UPDATED" and
+            change.subject == SubjectType.FACT and
+            change.type == ChangeType.UPDATED and
             "vendor" in change.metadata.get("changed_fields", ())
         )
     
