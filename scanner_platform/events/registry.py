@@ -1,24 +1,31 @@
 #!/usr/bin/env python3
-"""Event Rule Registry - реестр правил генерации событий."""
+"""Event Rule Registry - thread-safe реестр правил генерации событий."""
 from typing import List
+from threading import Lock
 from .rules.base_rule import BaseEventRule
 
 class EventRuleRegistry:
-    """Registry для Event Rules."""
+    """Thread-safe Registry для Event Rules."""
     
     _rules: List[BaseEventRule] = []
+    _lock = Lock()
     
     @classmethod
     def register(cls, rule: BaseEventRule):
-        """Регистрирует правило."""
-        cls._rules.append(rule)
+        """Регистрирует правило (thread-safe)."""
+        with cls._lock:
+            # Защита от повторной регистрации
+            if not any(isinstance(r, type(rule)) for r in cls._rules):
+                cls._rules.append(rule)
     
     @classmethod
     def get_all(cls) -> List[BaseEventRule]:
         """Получает все зарегистрированные правила."""
-        return cls._rules.copy()
+        with cls._lock:
+            return cls._rules.copy()
     
     @classmethod
     def clear(cls):
         """Очищает registry."""
-        cls._rules.clear()
+        with cls._lock:
+            cls._rules.clear()
