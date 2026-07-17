@@ -2,6 +2,7 @@
 """Base Event Rule - базовый класс для правил генерации событий."""
 from abc import ABC, abstractmethod
 from typing import Tuple
+from datetime import datetime
 from ...diff.models import Change
 
 class BaseEventRule(ABC):
@@ -13,9 +14,10 @@ class BaseEventRule(ABC):
         pass
     
     @abstractmethod
-    def emit(self, change: Change, diff_id: str) -> Tuple[Any, ...]:
+    def emit(self, change: Change, diff_id: str, device_uuid: str, occurred_at: datetime) -> Tuple[Any, ...]:
         """
         Генерирует события для данного изменения.
         Возвращает tuple из 0..N событий.
+        device_uuid и occurred_at передаются из Generator для детерминированности.
         """
         pass
