@@ -1,5 +1,1 @@
 Статус,IP,MAC,Vendor,Hostname,Model,OS,Type,Confidence,Flows,Bytes,MB,First Seen,Duration (sec),Hours Online,MB/h,Причина
-🔴 ПОДОЗРИТЕЛЬНЫЙ,192.168.1.38,FC:19:99:BD:93:5B,Xiaomi,M2006C3MG-Redmi9C,M2006C3MG-Redmi9C,Android,Smartphone,95,97,1180440,1.13,2026-07-18 02:10:14,776.58,0.22,5.22,Производитель: Xiaomi
-🟡 НЕОПРЕДЕЛЁННО,192.168.1.29,D6:57:DB:5D:C7:E4,Unknown,D6-57-DB-5D-C7-E4,,Unknown,Mobile Device,55,33,4386274,4.18,2026-07-18 01:57:01,3980.84,1.11,3.78,Фоновое устройство (низкий трафик)
-🟢 НОРМАЛЬНЫЙ,192.168.1.37,B6:84:19:48:56:F1,Unknown,B6-84-19-48-56-F1,,Unknown,Mobile Device,55,25,94329,0.09,2026-07-18 02:10:06,430.05,0.12,0.75,—
-🟢 НОРМАЛЬНЫЙ,192.168.1.36,0E:36:0B:2E:96:1E,Unknown,0E-36-0B-2E-96-1E,,Unknown,Mobile Device,55,5,4430,0.0,2026-07-18 02:09:38,21.96,0.01,0.69,—

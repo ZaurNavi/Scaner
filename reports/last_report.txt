@@ -1,43 +1,7 @@
 =====================================================================================================================================================================
                                                                           Repeater Monitor                                                                           
-                                                                         18.07.2026 02:20:09                                                                         
+                                                                         19.07.2026 03:26:11                                                                         
                                                                            [VERBOSE MODE]                                                                            
 =====================================================================================================================================================================
 
-Статус              IP              MAC                 Vendor              Hostname          Model           OS          Type           Conf  Flows    MB/h  Причина
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.38    FC:19:99:BD:93:5B   Xiaomi              M2006C3MG-Redmi9C M2006C3MG-Redm..Android     Smartphone       95     97    5.22  Производитель: Xiaomi
-🟡 НЕОПРЕДЕЛЁННО     192.168.1.29    D6:57:DB:5D:C7:E4   Unknown             D6-57-DB-5D-C7-E4                 Unknown     Mobile Device    55     33    3.78  Фоновое устройство (низкий трафик)
-🟢 НОРМАЛЬНЫЙ        192.168.1.37    B6:84:19:48:56:F1   Unknown             B6-84-19-48-56-F1                 Unknown     Mobile Device    55     25    0.75  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.36    0E:36:0B:2E:96:1E   Unknown             0E-36-0B-2E-96-1E                 Unknown     Mobile Device    55      5    0.69  —
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Всего: 4 | 🔴 Подозрительных: 1 | 🟡 Неопределённых: 1 | 🟢 Нормальных: 2
-
-  🔍 Evidence Explorer:
-
-  📋 192.168.1.38 (FC:19:99:BD:93:5B) — Android Smartphone [95]
-     ✔ Vendor = Xiaomi (MAC: FC:19:99) [+10]
-     ✔ Hostname = M2006C3MG-Redmi9C [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: M2006C3MG-Redmi9C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -71dBm, Signal: 47, Rank: 3, SNR: 24dB, Ch: 11, Radio: 2.4GHz, TX: 43Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784326789572, Active: True, Down: 40.0MB, Up: 2.0MB, PktDown: 30969, PktUp: 18270, PowerSave: True, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
-     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 95
-
-  📋 192.168.1.29 (D6:57:DB:5D:C7:E4) — Unknown Mobile Device [55]
-     ✔ Hostname = D6-57-DB-5D-C7-E4 [+10]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 55
-
-  📋 192.168.1.37 (B6:84:19:48:56:F1) — Unknown Mobile Device [55]
-     ✔ Hostname = B6-84-19-48-56-F1 [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: B6-84-19-48-56-F1, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 40, Radio: 5GHz, TX: 72Mbps, RX: 24Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784326789572, Active: True, Down: 0.3MB, Up: 0.2MB, PktDown: 576, PktUp: 637, PowerSave: True, Wireless: True, Guest: False) [+30]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 55
-
-  📋 192.168.1.36 (0E:36:0B:2E:96:1E) — Unknown Mobile Device [55]
-     ✔ Hostname = 0E-36-0B-2E-96-1E [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: 0E-36-0B-2E-96-1E, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -74dBm, Signal: 40, Rank: 2, SNR: 21dB, Ch: 11, Radio: 2.4GHz, TX: 34Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 14min, LastSeen: 1784326697783, Active: True, Down: 50.4MB, Up: 2.5MB, PktDown: 43371, PktUp: 12770, PowerSave: False, Wireless: True, Guest: False) [+30]
-     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
-     ─── Total: 55
+Нет устройств для отображения.
