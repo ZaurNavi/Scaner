@@ -92,6 +92,9 @@ from scanner_platform.events import (
     EventGenerator, DomainEventSet, EMPTY_EVENT_SET
 )
 
+# v1.6.9: Configuration Layer импорты
+from configuration import get_config_manager
+
 
 def print_header() -> None:
     print()
@@ -397,6 +400,26 @@ def main() -> int:
     start = time.time()
     print_header()
 
+    # === v1.6.9: Configuration Layer Initialization ===
+    print("\n  [CONFIG] Initializing Configuration Layer...")
+    try:
+        config = get_config_manager()
+        config.load({})  # Загружаем defaults
+        config.validate()
+        config.freeze()  # Делаем immutable для runtime
+        
+        print("  [CONFIG] ✅ Configuration loaded, validated and frozen")
+        print(f"         • Monitor scan interval: {config.get('monitor.scan_interval')}s")
+        print(f"         • SNMP enabled: {config.get('snmp.enabled')}")
+        print(f"         • NetFlow enabled: {config.get('netflow.enabled')}")
+        print(f"         • Fingerprint min confidence: {config.get('fingerprint.minimum_confidence')}")
+        print(f"         • Knowledge cache size: {config.get('knowledge.cache_size')}")
+        print(f"         • Events enabled: {config.get('events.events_enabled')}")
+        print(f"         • Log level: {config.get('logging.level')}")
+    except Exception as exc:
+        print(f"  [CONFIG] ❌ Configuration initialization failed: {exc}")
+        print("  [CONFIG] ⚠️  Continuing with fallback defaults...")
+
     # === v1.6.3: Scanner Platform Validation ===
     print("\n  [PLATFORM] Validating Scanner Platform Core...")
     try:
@@ -530,7 +553,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + ... + v1.6.8 ===
+    # === v1.4.0 + ... + v1.6.9 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
