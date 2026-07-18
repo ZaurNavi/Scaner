@@ -15,6 +15,9 @@ class ConfigValue:
     validator: Optional[Callable[[Any], bool]] = None
     mutable: bool = False
     deprecated: bool = False
+    required: bool = False
+    min_value: Optional[Any] = None
+    max_value: Optional[Any] = None
 
 @dataclass(frozen=True)
 class ConfigGroup:
