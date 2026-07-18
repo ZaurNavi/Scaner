@@ -55,7 +55,8 @@ class ConfigurationManager:
             source = {}
         
         self._repository.clear()
-        self._cache.clear()
+        # ИСПРАВЛЕНО: пересоздаём _cache вместо clear() (MappingProxyType не имеет clear)
+        self._cache = {}
         
         # Регистрируем defaults при первой загрузке
         self._register_defaults()
