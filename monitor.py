@@ -436,6 +436,21 @@ def main() -> int:
         print("  [PLATFORM] ⚠️ Continuing without platform features...")
 
     archivist, db, scan = init_archivist()
+
+        # === v1.6.9.9: Repository Layer Initialization ===
+    try:
+        from storage import active_cache, device_db
+        
+        # Инициализируем Active Cache с конфигурацией
+        active_cache.initialize(configuration=config)
+        print("  [CACHE] ✅ Active Cache initialized")
+        
+        # Инициализируем Device DB с конфигурацией
+        device_db.initialize(configuration=config)
+        print("  [DEVICE_DB] ✅ Device DB initialized")
+        
+    except Exception as exc:
+        print(f"  [REPOSITORY] ❌ Initialization failed: {exc}")
     
     # === v1.5.1: Инициализация History Service ===
     history_service = None
