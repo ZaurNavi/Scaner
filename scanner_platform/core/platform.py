@@ -10,7 +10,7 @@ from ..registry.feature_registry import FeatureRegistry
 from ..registry.rule_registry import RuleRegistry
 
 # v1.6.9.1: Configuration Layer Integration
-from configuration import ConfigurationManager
+from configuration import ConfigurationManager, get_config_manager
 
 
 class Platform:
@@ -67,24 +67,27 @@ class Platform:
         """
         v1.6.9.1: Инициализирует ConfigurationManager (один раз).
         
-        ConfigurationManager — Singleton, поэтому повторные вызовы
-        ConfigurationManager() вернут тот же экземпляр.
-        Но мы добавляем защиту от повторной инициализации.
+        ConfigurationManager — Singleton. Если он уже существует и заморожен
+        (например, инициализирован в monitor.py), просто используем его.
+        Иначе — создаём, загружаем, валидируем и замораживаем.
         """
         if cls._configuration_manager is not None:
-            # Уже инициализирован — пропускаем
+            # Уже инициализирован в Platform — пропускаем
             return
         
-        # Создаём экземпляр ConfigurationManager (Singleton)
-        cls._configuration_manager = ConfigurationManager()
+        # Получаем существующий Singleton экземпляр
+        cls._configuration_manager = get_config_manager()
         
-        # Загружаем конфигурацию по умолчанию
+        # Проверяем, заморожен ли он уже (инициализирован ранее)
+        if cls._configuration_manager._is_frozen:
+            # ConfigurationManager уже инициализирован где-то раньше (например, в monitor.py)
+            # Просто используем его — не пытаемся перезагрузить
+            print("  [PLATFORM] ✅ ConfigurationManager already initialized (reusing existing)")
+            return
+        
+        # ConfigurationManager ещё не заморожен — инициализируем его
         cls._configuration_manager.load({})
-        
-        # Валидируем
         cls._configuration_manager.validate()
-        
-        # Замораживаем для runtime immutability
         cls._configuration_manager.freeze()
         
         print("  [PLATFORM] ✅ ConfigurationManager initialized and frozen")
