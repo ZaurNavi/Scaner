@@ -663,7 +663,9 @@ def main() -> int:
                 
                 # v1.6.9.2: Выводим информацию из Configuration Layer
                 print("\n  [PLATFORM] Configuration from Configuration Layer:")
+                print(f"         • Platform enabled: {config.get('platform.enabled', True)}")
                 print(f"         • Behaviour enabled: {config.get('behaviour.enabled', True)}")
+                print(f"         • Behaviour min confidence: {config.get('behaviour.min_confidence', 0.4)}")
                 print(f"         • Fingerprint min confidence: {config.get('fingerprint.minimum_confidence')}")
                 print(f"         • Knowledge cache size: {config.get('knowledge.cache_size')}")
                 
@@ -672,18 +674,12 @@ def main() -> int:
                 platform.start()
                 
                 # v1.6.9.2: Создаём BehaviourEngine с правильными аргументами
-                # BehaviourEngine принимает history_service, identity_service, session_engine
-                # (не engine_name, engine_rules, configuration — это другой класс!)
+                # BehaviourEngine принимает: history_service, identity_service, session_engine
                 behaviour_engine = BehaviourEngine(
                     history_service=history_service,
                     identity_service=identity_service,
                     session_engine=session_engine
                 )
-                
-                # v1.6.9.2: Передаём configuration в движок (если поддерживается)
-                # Это опционально — движок может не использовать его сейчас
-                if hasattr(behaviour_engine, 'configuration'):
-                    behaviour_engine.configuration = config
                 
                 # v1.6.9.2: Запускаем анализ через правильный метод analyze()
                 behaviour_profile, debug_info = behaviour_engine.analyze(sample_device_id)
