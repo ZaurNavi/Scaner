@@ -752,7 +752,7 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-        # === v1.6.5 + v1.6.6 + v1.6.7 + v1.6.8: Knowledge, Profile, Diff & Events ===
+                # === v1.6.5 + v1.6.6 + v1.6.7 + v1.6.8: Knowledge, Profile, Diff & Events ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
                 from scanner_platform.facts.models import Fact, FactStatus
@@ -800,7 +800,8 @@ def main() -> int:
                 engine_results = {}
                 
                 if behaviour_engine_result:
-                    all_facts.extend(behaviour_engine_result.facts)
+                    # v1.6.9.2: ИСПРАВЛЕНО — адаптируем BehaviourFact в Fact
+                    all_facts.extend([adapt_to_platform_fact(f, "behaviour") for f in behaviour_engine_result.facts])
                     engine_results["behaviour"] = behaviour_engine_result
                 
                 if mobility_profile and hasattr(mobility_profile, 'facts'):
