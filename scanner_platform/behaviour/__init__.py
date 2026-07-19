@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""Behaviour Engine — первый движок на платформенной архитектуре Core."""
-from .engine import BehaviourEngine
+"""
+Behaviour Engine Module.
+"""
+
+from .service import BehaviourService
 from .models import (
-    BehaviourProfile,
-    FeatureSet,
-    BehaviourSummary,
-    SourceVersions,
-    DebugInfo,
+    BehaviourProfile, BehaviourFact, BehaviourFeature,
+    BehaviourSummary, BehaviourExplanation, FeatureSet
 )
-from .registry import register_all
+from .categories import BehaviourCategory, BehaviourStatus
 
 __all__ = [
-    "BehaviourEngine",
+    "BehaviourService",
     "BehaviourProfile",
-    "FeatureSet",
+    "BehaviourFact",
+    "BehaviourFeature",
     "BehaviourSummary",
-    "SourceVersions",
-    "DebugInfo",
-    "register_all",
+    "BehaviourExplanation",
+    "FeatureSet",
+    "BehaviourCategory",
+    "BehaviourStatus",
 ]
