@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Platform — центр управления всеми движками."""
-from typing import Dict, List
+from typing import Dict, List, Optional, Any
 from .platform_context import PlatformContext
 from .bundles import MetricBundle, FeatureBundle, RuleBundle
 from .base_engine import BaseEngine, EngineResult
@@ -9,8 +9,8 @@ from ..registry.metric_registry import MetricRegistry
 from ..registry.feature_registry import FeatureRegistry
 from ..registry.rule_registry import RuleRegistry
 
-# v1.6.9.2: Configuration Layer Integration (Dependency Injection)
-from configuration import ConfigurationManager
+# v1.6.9.2: Configuration Layer Integration
+from configuration import ConfigurationManager, get_config_manager
 
 
 class Platform:
@@ -18,24 +18,12 @@ class Platform:
     Platform Core — управляет всеми движками.
     
     v1.6.9.2: Platform принимает ConfigurationManager через конструктор.
-    Никаких Singleton. Никаких classmethod. Полностью instance-based.
-    
-    Пример использования:
-        config = ConfigurationManager()
-        config.load({})
-        config.freeze()
-        
-        platform = Platform(configuration=config)
-        platform.start()
-        results = platform.run(device_id)
+    Движки регистрируются вручную через register_engine().
     """
     
     def __init__(self, configuration: ConfigurationManager):
         """
         v1.6.9.2: Конструктор принимает ConfigurationManager через DI.
-        
-        Args:
-            configuration: Единый источник конфигурации платформы
         """
         self.configuration = configuration
         self._engines: Dict[str, BaseEngine] = {}
@@ -44,12 +32,11 @@ class Platform:
     
     def start(self):
         """
-        Запускает Platform и регистрирует все движки.
+        Запускает Platform.
         
-        v1.6.9.2: Instance method (не classmethod).
-        Защищён от повторного вызова.
+        v1.6.9.2: Инициализирует Timeline Builder.
+        Движки НЕ регистрируются автоматически — используйте register_engine().
         """
-        # Защита от повторного вызова
         if self._started:
             print("  [PLATFORM] ⚠️  Platform already started, skipping")
             return
@@ -59,18 +46,11 @@ class Platform:
         # Инициализируем Timeline Builder
         self._timeline_builder = TimelineBuilder()
         
-        # Регистрируем движки с передачей configuration
-        from ..behaviour.engine import BehaviourEngine
-        self.register_engine("behaviour", BehaviourEngine(
-            engine_name="behaviour",
-            engine_rules=list(RuleRegistry.get_by_engine("behaviour").values()),
-            configuration=self.configuration  # v1.6.9.2: DI
-        ))
+        # v1.6.9.2: Движки НЕ регистрируются здесь автоматически.
+        # Они должны быть зарегистрированы вручную через register_engine().
         
-        # Устанавливаем флаг
         self._started = True
-        
-        print("  [PLATFORM] ✅ All engines registered")
+        print("  [PLATFORM] ✅ Platform Core initialized")
     
     def register_engine(self, name: str, engine: BaseEngine):
         """Регистрирует движок."""
@@ -80,8 +60,6 @@ class Platform:
         """
         Выполняет полный pipeline для устройства.
         
-        v1.6.9.2: Instance method (не classmethod).
-        
         Returns:
             Dict[str, EngineResult]: Результаты всех движков
         """
@@ -90,15 +68,15 @@ class Platform:
         # === 1. Timeline ===
         timeline = self._timeline_builder.build(device_id)
         
-        # === 2. Metrics (Platform вычисляет) ===
+        # === 2. Metrics ===
         metrics_dict = MetricRegistry.build(timeline)
         metric_bundle = MetricBundle(metrics=metrics_dict)
         
-        # === 3. Features (Platform вычисляет) ===
+        # === 3. Features ===
         features_dict = FeatureRegistry.build(metrics_dict)
         feature_bundle = FeatureBundle(features=features_dict)
         
-        # === 4. Rules (Platform предоставляет) ===
+        # === 4. Rules ===
         rule_bundle = RuleBundle(rules=list(RuleRegistry.get_all().values()))
         
         # === 5. PlatformContext (с configuration) ===
@@ -108,7 +86,7 @@ class Platform:
             metrics=metric_bundle,
             features=feature_bundle,
             rules=rule_bundle,
-            configuration=self.configuration  # v1.6.9.2: DI через Context
+            configuration=self.configuration  # v1.6.9.2: DI
         )
         
         # === 6. Запуск всех движков ===
@@ -122,16 +100,7 @@ class Platform:
         return results
     
     def get_config_value(self, param_id: str, default=None):
-        """
-        v1.6.9.2: Шорткат для получения значения параметра.
-        
-        Args:
-            param_id: Идентификатор параметра
-            default: Значение по умолчанию
-        
-        Returns:
-            Значение параметра или default
-        """
+        """Шорткат для получения значения параметра."""
         try:
             return self.configuration.get(param_id)
         except Exception:
