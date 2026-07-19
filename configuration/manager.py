@@ -125,10 +125,37 @@ class ConfigurationManager:
                 config.freeze()
         """
         return self._is_frozen
+    
+    def get(self, param_id: str, default: Any = None) -> Any:
+        """
+        Получает значение параметра. O(1).
         
-    def get(self, param_id: str) -> Any:
-        """Получает значение параметра. O(1)."""
+        v1.6.9.2: Добавлен параметр default для обработки отсутствующих параметров.
+        
+        Args:
+            param_id: Идентификатор параметра (например, "monitor.scan_interval")
+            default: Значение по умолчанию, если параметр не найден.
+                     Если default=None и параметр не найден — выбрасывается исключение.
+                     Если default указан — возвращается default без исключения.
+        
+        Returns:
+            Any: Значение параметра или default
+        
+        Raises:
+            ConfigUnknownParameterError: Если параметр не найден и default не указан
+        
+        Пример:
+            # Строгий режим — выбросит исключение, если параметра нет
+            interval = config.get("monitor.scan_interval")
+            
+            # Мягкий режим — вернёт default, если параметра нет
+            enabled = config.get("behaviour.enabled", True)
+            timeout = config.get("custom.timeout", 30)
+        """
         if param_id not in self._cache:
+            # v1.6.9.2: Если default указан — возвращаем его без исключения
+            if default is not None:
+                return default
             raise ConfigUnknownParameterError(f"Unknown parameter: {param_id}")
         return self._cache[param_id]
     
