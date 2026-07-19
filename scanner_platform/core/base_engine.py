@@ -13,6 +13,10 @@ from ..coverage.platform import Coverage
 from ..cache.platform import VersionSnapshot
 from ..rules.evaluator import RuleEvaluator
 
+# v1.6.9.2: Configuration Layer Integration
+from configuration import ConfigurationManager
+
+
 @dataclass
 class ExecutionInfo:
     """Информация о выполнении движка."""
@@ -22,6 +26,7 @@ class ExecutionInfo:
     cache_hit: bool = False
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
+
 
 class EngineResult:
     """Единый результат работы любого движка."""
@@ -52,20 +57,26 @@ class EngineResult:
         self.execution = execution or ExecutionInfo()
         self.version_snapshot = VersionSnapshot(
             timeline_version="1.0.0",
-            metric_version="1.0.0",  # ИСПРАВЛЕНО: было metric_registry_version
-            feature_version="1.0.0",  # ИСПРАВЛЕНО: было feature_registry_version
-            rule_version="1.0.0",  # ИСПРАВЛЕНО: было rule_registry_version
+            metric_version="1.0.0",
+            feature_version="1.0.0",
+            rule_version="1.0.0",
             knowledge_version="1.0.0",
             profile_version="1.0.0",
             profile_model_version="1.0.0"
         )
 
+
 class BaseEngine(ABC):
-    """Базовый класс для всех движков."""
+    """
+    Базовый класс для всех движков.
     
-    def __init__(self, engine_name: str, engine_rules: List):
+    v1.6.9.2: Принимает ConfigurationManager через конструктор.
+    """
+    
+    def __init__(self, engine_name: str, engine_rules: List, configuration: ConfigurationManager):
         self.engine_name = engine_name
         self.engine_rules = engine_rules
+        self.configuration = configuration  # v1.6.9.2: Configuration через DI
         self.evaluator = RuleEvaluator()
         self._cache = {}
     
@@ -232,9 +243,9 @@ class BaseEngine(ABC):
         """Формирует ключ кэша."""
         snapshot = VersionSnapshot(
             timeline_version="1.0.0",
-            metric_version="1.0.0",  # ИСПРАВЛЕНО
-            feature_version="1.0.0",  # ИСПРАВЛЕНО
-            rule_version="1.0.0",  # ИСПРАВЛЕНО
+            metric_version="1.0.0",
+            feature_version="1.0.0",
+            rule_version="1.0.0",
             knowledge_version="1.0.0",
             profile_version="1.0.0",
             profile_model_version="1.0.0"
