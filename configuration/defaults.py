@@ -43,7 +43,8 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("knowledge.retention_days", int, 30, "Knowledge", "Knowledge retention in days")
     registry.register("knowledge.compression", bool, True, "Knowledge", "Enable knowledge compression")
     registry.register("knowledge.deduplicate", bool, True, "Knowledge", "Deduplicate knowledge facts")
-    registry.register("knowledge.cache_size", int, 10000, "Knowledge", "Knowledge cache max size")
+    registry.register("knowledge.cache_size", int, 10000, "Knowledge", "Knowledge cache max size", min_value=100, max_value=100000)
+    registry.register("knowledge.cache_ttl", int, 3600, "Knowledge", "Knowledge cache TTL in seconds", min_value=60)
 
     # Repository
     registry.register("repository.database_path", str, "storage/archivist/sisu.db", "Repository", "SQLite database path")
