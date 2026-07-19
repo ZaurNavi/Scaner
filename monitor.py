@@ -600,13 +600,28 @@ def main() -> int:
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
-        # === v1.5.3: Session Engine ===
+                # === v1.5.3 + v1.6.9.7: Session Engine (with DI, без fallback) ===
         session_engine = None
         if history_service and db:
             try:
-                session_engine = SessionEngine(history_service, Repository(db))
+                # v1.6.9.7: Передаём configuration через Dependency Injection (обязательный параметр)
+                session_engine = SessionEngine(
+                    history_service=history_service,
+                    repository=Repository(db),
+                    configuration=config  # v1.6.9.7: обязательный параметр
+                )
+                
+                print("\n  [SESSION] Configuration from Configuration Layer:")
+                print(f"         • Session enabled: {config.get('session.enabled')}")
+                print(f"         • Session timeout: {config.get('session.timeout_seconds')}s")
+                print(f"         • Timeline limit: {config.get('session.timeline_limit')} events")
+                print(f"         • Inactivity threshold: {config.get('session.inactivity_minutes')} min")
+                print(f"         • Merge window: {config.get('session.merge_window')}s")
+                print(f"         • Recovery enabled: {config.get('session.recovery_enabled')}")
+                
                 print("\n  [SESSION] ✅ Session Engine initialized (with Recovery)")
                 print("  [SESSION] Processing new snapshots...")
+                
                 for ip, device_id in ip_to_device_id.items():
                     snapshots = history_service.get_snapshots(device_id)
                     if snapshots:
