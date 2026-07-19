@@ -10,7 +10,7 @@ from ..registry.feature_registry import FeatureRegistry
 from ..registry.rule_registry import RuleRegistry
 
 # v1.6.9.2: Configuration Layer Integration
-from configuration import ConfigurationManager, get_config_manager
+from configuration import ConfigurationManager
 
 
 class Platform:
@@ -19,11 +19,22 @@ class Platform:
     
     v1.6.9.2: Platform принимает ConfigurationManager через конструктор.
     Движки регистрируются вручную через register_engine().
+    Никаких Singleton. Никаких classmethod. Полностью instance-based.
+    
+    Пример использования:
+        config = get_config_manager()
+        platform = Platform(configuration=config)
+        platform.start()
+        platform.register_engine("behaviour", behaviour_engine)
+        results = platform.run(device_id)
     """
     
     def __init__(self, configuration: ConfigurationManager):
         """
         v1.6.9.2: Конструктор принимает ConfigurationManager через DI.
+        
+        Args:
+            configuration: Единый источник конфигурации платформы
         """
         self.configuration = configuration
         self._engines: Dict[str, BaseEngine] = {}
@@ -46,7 +57,7 @@ class Platform:
         # Инициализируем Timeline Builder
         self._timeline_builder = TimelineBuilder()
         
-        # v1.6.9.2: Движки НЕ регистрируются здесь автоматически.
+        # v1.6.9.2: Движки НЕ регистрируются автоматически.
         # Они должны быть зарегистрированы вручную через register_engine().
         
         self._started = True
