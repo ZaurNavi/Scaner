@@ -10,17 +10,27 @@ from history import HistoryService
 from identity import IdentityService
 from session import SessionEngine
 
+# v1.6.9.2: Configuration Layer Integration
+from configuration import ConfigurationManager
+
+
 class BehaviourEngine:
-    """Координирует вычисление признаков и оценку поведения."""
+    """
+    Координирует вычисление признаков и оценку поведения.
+    
+    v1.6.9.2: Принимает ConfigurationManager через конструктор (Dependency Injection).
+    """
     
     def __init__(
         self,
         history_service: HistoryService,
         identity_service: IdentityService,
-        session_engine: Optional[SessionEngine] = None
+        session_engine: Optional[SessionEngine] = None,
+        configuration: Optional[ConfigurationManager] = None  # v1.6.9.2: DI
     ):
         self.feature_builder = FeatureBuilder(history_service, identity_service, session_engine)
         self.evaluator = BehaviourEvaluator()
+        self.configuration = configuration  # v1.6.9.2: Configuration через DI
     
     def analyze(self, device_id: str) -> Tuple[BehaviourProfile, DebugInfo]:
         """
@@ -84,12 +94,12 @@ class BehaviourEngine:
             features.ssid_changes > 0,
             features.lifetime_seconds is not None
         ])
-        
         return (filled_features / total_features) * 100.0
     
     def _calculate_behaviour_coverage(self, facts: List) -> float:
         """Вычисляет процент определённых моделей поведения."""
         from .categories import BehaviourCategory
+        
         total_categories = len(BehaviourCategory)
         unique_categories = set(f.category for f in facts)
         filled_categories = len(unique_categories)
@@ -99,10 +109,12 @@ class BehaviourEngine:
     def _build_summary(self, facts: List) -> BehaviourSummary:
         """Формирует краткую сводку."""
         from .categories import BehaviourStatus
+        
         summary = BehaviourSummary()
         
         for fact in facts:
             summary.facts_total += 1
+            
             if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
                 summary.high += 1
             elif fact.status == BehaviourStatus.MEDIUM:
