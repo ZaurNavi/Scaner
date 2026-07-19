@@ -20,7 +20,7 @@ class Platform:
     Platform.start() регистрирует все движки и инициализирует ConfigurationManager.
     Platform.run(device_id) выполняет полный pipeline.
     Platform.get_configuration() предоставляет доступ к ConfigurationManager.
-    Platform.get_config_value(param_id) — шорткат для получения значения.
+    Platform.get_config_value(param_id, default) — шорткат для получения значения.
     """
     
     _engines: Dict[str, BaseEngine] = {}
@@ -78,8 +78,8 @@ class Platform:
         # Получаем существующий Singleton экземпляр
         cls._configuration_manager = get_config_manager()
         
-        # Проверяем, заморожен ли он уже (инициализирован ранее)
-        if cls._configuration_manager._is_frozen:
+        # v1.6.9.1a: Используем публичный метод is_frozen() вместо приватного поля
+        if cls._configuration_manager.is_frozen():
             # ConfigurationManager уже инициализирован где-то раньше (например, в monitor.py)
             # Просто используем его — не пытаемся перезагрузить
             print("  [PLATFORM] ✅ ConfigurationManager already initialized (reusing existing)")
@@ -146,10 +146,18 @@ class Platform:
         v1.6.9.1: Предоставляет публичный доступ к ConfigurationManager.
         
         Все остальные модули будут получать настройки через этот метод.
-        Если ConfigurationManager ещё не инициализирован — инициализирует лениво.
+        
+        Ленивая инициализация: Если ConfigurationManager ещё не инициализирован,
+        метод автоматически вызовет _initialize_configuration(). Это позволяет
+        использовать Platform.get_configuration() даже если Platform.start()
+        ещё не был вызван (например, в тестах или при раннем доступе к конфигурации).
         
         Returns:
             ConfigurationManager: Единый источник конфигурации платформы
+        
+        Пример:
+            config = Platform.get_configuration()
+            scan_interval = config.get("monitor.scan_interval")
         """
         # Ленивая инициализация: если ConfigurationManager ещё не создан
         if cls._configuration_manager is None:
@@ -158,19 +166,27 @@ class Platform:
         return cls._configuration_manager
     
     @classmethod
-    def get_config_value(cls, param_id: str) -> Any:
+    def get_config_value(cls, param_id: str, default: Any = None) -> Any:
         """
         v1.6.9.1: Шорткат для получения значения параметра.
         
         Удобный метод, чтобы не тянуть весь ConfigurationManager везде.
         
+        v1.6.9.1a: Добавлен параметр default для обработки отсутствующих параметров.
+        
         Args:
             param_id: Идентификатор параметра (например, "monitor.scan_interval")
+            default: Значение по умолчанию, если параметр не найден (по умолчанию None)
         
         Returns:
-            Any: Значение параметра
+            Any: Значение параметра или default, если параметр не существует
         
         Пример:
             interval = Platform.get_config_value("monitor.scan_interval")
+            timeout = Platform.get_config_value("custom.timeout", default=30)
         """
-        return cls.get_configuration().get(param_id)
+        try:
+            return cls.get_configuration().get(param_id)
+        except Exception:
+            # v1.6.9.1a: Возвращаем default при отсутствии параметра
+            return default
