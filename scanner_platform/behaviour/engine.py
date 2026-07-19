@@ -10,27 +10,17 @@ from history import HistoryService
 from identity import IdentityService
 from session import SessionEngine
 
-# v1.6.9.2: Configuration Layer Integration
-from configuration import ConfigurationManager
-
-
 class BehaviourEngine:
-    """
-    Координирует вычисление признаков и оценку поведения.
-    
-    v1.6.9.2: Принимает ConfigurationManager через конструктор (Dependency Injection).
-    """
+    """Координирует вычисление признаков и оценку поведения."""
     
     def __init__(
         self,
         history_service: HistoryService,
         identity_service: IdentityService,
-        session_engine: Optional[SessionEngine] = None,
-        configuration: Optional[ConfigurationManager] = None  # v1.6.9.2: DI
+        session_engine: Optional[SessionEngine] = None
     ):
         self.feature_builder = FeatureBuilder(history_service, identity_service, session_engine)
         self.evaluator = BehaviourEvaluator()
-        self.configuration = configuration  # v1.6.9.2: Configuration через DI
     
     def analyze(self, device_id: str) -> Tuple[BehaviourProfile, DebugInfo]:
         """
@@ -40,32 +30,6 @@ class BehaviourEngine:
             Tuple[BehaviourProfile, DebugInfo]
         """
         start_time = time.time()
-        
-        # v1.6.9.2: Проверяем, включён ли движок через Configuration
-        if self.configuration is not None:
-            if not self.configuration.get("behaviour.enabled", True):
-                # Движок отключён через конфигурацию — возвращаем пустой результат
-                empty_profile = BehaviourProfile(
-                    identity_id=device_id,
-                    generated_at=None,
-                    engine_version="1.0.0",
-                    rules_version="1.0.0",
-                    feature_version="1.0.0",
-                    provider_version="1.0.0",
-                    metric_coverage=0.0,
-                    feature_coverage=0.0,
-                    rule_match_ratio=0.0,
-                    behaviour_coverage=0.0,
-                    features=None,
-                    facts=[],
-                    summary=BehaviourSummary(),
-                    source_versions=SourceVersions()
-                )
-                empty_debug = DebugInfo()
-                empty_debug.computation_time_ms = 0.0
-                empty_debug.cache_hit = False
-                empty_debug.cache_key = ()
-                return empty_profile, empty_debug
         
         # 1. Вычисляем сырые признаки
         features = self.feature_builder.build(device_id)
@@ -120,6 +84,7 @@ class BehaviourEngine:
             features.ssid_changes > 0,
             features.lifetime_seconds is not None
         ])
+        
         return (filled_features / total_features) * 100.0
     
     def _calculate_behaviour_coverage(self, facts: List) -> float:
@@ -128,12 +93,14 @@ class BehaviourEngine:
         total_categories = len(BehaviourCategory)
         unique_categories = set(f.category for f in facts)
         filled_categories = len(unique_categories)
+        
         return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
     
     def _build_summary(self, facts: List) -> BehaviourSummary:
         """Формирует краткую сводку."""
         from .categories import BehaviourStatus
         summary = BehaviourSummary()
+        
         for fact in facts:
             summary.facts_total += 1
             if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
@@ -144,4 +111,5 @@ class BehaviourEngine:
                 summary.low += 1
             else:
                 summary.unknown += 1
+        
         return summary
