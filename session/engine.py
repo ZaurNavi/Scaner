@@ -50,6 +50,10 @@ class SessionEngine:
     
     def _load_active_sessions(self):
         """Recovery: загружает ACTIVE сессии из БД при старте."""
+        # v1.6.9.7: Проверяем, включён ли recovery через конфигурацию
+        if not self.configuration.get("session.recovery_enabled", True):
+            return
+        
         try:
             active_sessions = self.repo.get_active_sessions()
             for sess_dict in active_sessions:
