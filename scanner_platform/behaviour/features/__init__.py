@@ -1,2 +1,5 @@
 #!/usr/bin/env python3
-from . import behaviour_features
+"""Behaviour Features — вычисление признаков поведения."""
+from .behaviour_features import FeatureBuilder
+
+__all__ = ["FeatureBuilder"]
