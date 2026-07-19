@@ -657,101 +657,54 @@ def main() -> int:
         behaviour_engine_result = None
         if identity_service and profiles:
             try:
-                from scanner_platform.core.platform_context import PlatformContext
-                from scanner_platform.core.bundles import MetricBundle, FeatureBundle, RuleBundle
                 from scanner_platform.behaviour.engine import BehaviourEngine
-                from scanner_platform.timeline.models import Timeline, TimelineEvent, EventType as PlatformEventType
-                from scanner_platform.registry.metric_registry import MetricRegistry
-                from scanner_platform.registry.feature_registry import FeatureRegistry
-                from scanner_platform.registry.rule_registry import RuleRegistry
+                from scanner_platform.behaviour.models import SourceVersions, DebugInfo as BehaviourDebugInfo
 
                 sample_device_id = profiles[0].device_id
+                
+                # v1.6.9.2: Выводим информацию из Configuration Layer
+                print("\n  [PLATFORM] Configuration from Configuration Layer:")
+                print(f"         • Behaviour enabled: {config.get('behaviour.enabled', True)}")
+                print(f"         • Fingerprint min confidence: {config.get('fingerprint.minimum_confidence')}")
+                print(f"         • Knowledge cache size: {config.get('knowledge.cache_size')}")
                 
                 # v1.6.9.2: Создаём Platform instance с Dependency Injection
                 platform = Platform(configuration=config)
                 platform.start()
                 
-                history = history_service.get_device_history(sample_device_id)
-                events = []
-                
-                first_seen = getattr(history, 'first_seen', None)
-                if first_seen:
-                    events.append(TimelineEvent(
-                        id=str(uuid.uuid4()),
-                        timestamp=first_seen,
-                        device_id=sample_device_id,
-                        event_type=PlatformEventType.FIRST_SEEN,
-                        source="history"
-                    ))
-                
-                snapshots = getattr(history, 'snapshots', [])
-                for snap in snapshots:
-                    events.append(TimelineEvent(
-                        id=str(uuid.uuid4()),
-                        timestamp=getattr(snap, 'timestamp', datetime.now()),
-                        device_id=sample_device_id,
-                        event_type=PlatformEventType.SESSION_STARTED,
-                        source="history",
-                        payload={"ip": getattr(snap, 'ip', ''), "hostname": getattr(snap, 'hostname', '')}
-                    ))
-                
-                timeline = Timeline(events=events, device_id=sample_device_id)
-                
-                metrics_dict = MetricRegistry.build(timeline)
-                features_dict = FeatureRegistry.build(metrics_dict)
-                rules_list = list(RuleRegistry.get_by_engine("behaviour").values())
-                
-                # v1.6.9.2: PlatformContext теперь содержит configuration
-                context = PlatformContext(
-                    device_id=sample_device_id,
-                    timeline=timeline,
-                    metrics=MetricBundle(metrics=metrics_dict),
-                    features=FeatureBundle(features=features_dict),
-                    rules=RuleBundle(rules=rules_list),
-                    configuration=config  # v1.6.9.2: DI
-                )
-                
-                # v1.6.9.2: BehaviourEngine получает configuration через DI
+                # v1.6.9.2: Создаём BehaviourEngine с правильными аргументами
+                # BehaviourEngine принимает history_service, identity_service, session_engine
+                # (не engine_name, engine_rules, configuration — это другой класс!)
                 behaviour_engine = BehaviourEngine(
-                    engine_name="behaviour",
-                    engine_rules=rules_list,
-                    configuration=config  # v1.6.9.2: DI
+                    history_service=history_service,
+                    identity_service=identity_service,
+                    session_engine=session_engine
                 )
-                behaviour_engine_result = behaviour_engine.run(context)
                 
+                # v1.6.9.2: Передаём configuration в движок (если поддерживается)
+                # Это опционально — движок может не использовать его сейчас
+                if hasattr(behaviour_engine, 'configuration'):
+                    behaviour_engine.configuration = config
+                
+                # v1.6.9.2: Запускаем анализ через правильный метод analyze()
+                behaviour_profile, debug_info = behaviour_engine.analyze(sample_device_id)
+                
+                # Адаптируем результат для _format_engine_output
                 class BehaviourResultAdapter:
-                    def __init__(self, res, tl, feats_dict):
-                        self.identity_id = res.device_id
-                        self.metric_coverage = res.coverage.metric_coverage
-                        self.feature_coverage = res.coverage.feature_coverage
-                        self.rule_match_ratio = res.coverage.rule_coverage
-                        self.timeline = tl
-                        self.metrics = type('obj', (object,), {'metrics': metrics_dict})()
-                        
-                        self.features = {}
-                        for fact in res.facts:
-                            for feat_name in fact.matched_features:
-                                if feat_name not in self.features:
-                                    val = feats_dict.get(feat_name, 'N/A')
-                                    unit = 'ratio' if isinstance(val, float) else ('visits' if isinstance(val, int) else 'bool')
-                                    self.features[feat_name] = type('FeatureObj', (object,), {
-                                        'name': feat_name, 'value': val, 'unit': unit
-                                    })()
-                        
-                        self.facts = res.facts
+                    def __init__(self, profile, debug):
+                        self.identity_id = profile.identity_id
+                        self.metric_coverage = profile.metric_coverage
+                        self.feature_coverage = profile.feature_coverage
+                        self.rule_match_ratio = profile.rule_match_ratio
+                        self.timeline = None  # Behaviour не имеет timeline
+                        self.metrics = None
+                        self.features = profile.features
+                        self.facts = profile.facts
 
-                adapter = BehaviourResultAdapter(behaviour_engine_result, timeline, features_dict)
+                adapter = BehaviourResultAdapter(behaviour_profile, debug_info)
                 
-                debug_info = type('obj', (object,), {
-                    'cache_hit': behaviour_engine_result.statistics.get('cache_hit', False),
-                    'cache_key': behaviour_engine._get_cache_key(context),
-                    'engine_version': behaviour_engine_result.version,
-                    'feature_version': "1.0.0",
-                    'provider_version': "1.0.0",
-                    'computation_time_ms': behaviour_engine_result.statistics.get('computation_time_ms', 0.0),
-                    'provider_times': {}, 'builder_times': {}, 'feature_times': {},
-                    'skipped_rules': [], 'missing_features': []
-                })()
+                # Сохраняем для последующего использования в Profile Layer
+                behaviour_engine_result = behaviour_profile
                 
                 _format_engine_output("BEHAVIOUR", adapter, debug_info, engine_type="behavioural patterns (Platform Core)")
                 
