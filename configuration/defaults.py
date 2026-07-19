@@ -128,3 +128,117 @@ def register_defaults(registry: ConfigRegistry):
 
     # Storage Layer (v1.6.9.9)
     registry.register("storage.cache_dir", str, "cache", "Storage", "Cache directory path")
+    
+    # ==============================================================================
+    # v1.7.1: Fingerprint Active Collectors Configuration
+    # ==============================================================================
+    
+    # Global Collector Settings
+    registry.register("collector.default.timeout", float, 2.0, "Collector", "Default timeout for collectors", min_value=0.1)
+    registry.register("collector.default.workers", int, 32, "Collector", "Default thread pool size", min_value=1, max_value=128)
+    registry.register("collector.detection.excluded_ips", str, "127.0.0.1,255.255.255.255", "Collector", "Comma-separated excluded IPs")
+
+    # SNMP Collector
+    registry.register("collector.snmp.enabled", bool, True, "Collector", "Enable SNMP collector")
+    registry.register("collector.snmp.timeout", float, 2.0, "Collector", "SNMP query timeout", min_value=0.1)
+    registry.register("collector.snmp.retries", int, 2, "Collector", "SNMP retries", min_value=0)
+    registry.register("collector.snmp.port", int, 161, "Collector", "SNMP port")
+    registry.register("collector.snmp.workers", int, 16, "Collector", "SNMP concurrent workers", min_value=1)
+    registry.register("collector.snmp.device_timeout", float, 5.0, "Collector", "Max time per device", min_value=1.0)
+    registry.register("collector.snmp.skip_if_no_ping", bool, True, "Collector", "Skip SNMP if ping fails")
+    registry.register("collector.snmp.communities", str, "public,private,admin", "Collector", "Comma-separated SNMP communities")
+    registry.register("collector.snmp.oid.sys_descr", str, "1.3.6.1.2.1.1.1.0", "Collector", "sysDescr OID")
+    registry.register("collector.snmp.oid.sys_object_id", str, "1.3.6.1.2.1.1.2.0", "Collector", "sysObjectID OID")
+    registry.register("collector.snmp.oid.sys_up_time", str, "1.3.6.1.2.1.1.3.0", "Collector", "sysUpTime OID")
+    registry.register("collector.snmp.oid.sys_name", str, "1.3.6.1.2.1.1.5.0", "Collector", "sysName OID")
+    registry.register("collector.snmp.oid.sys_services", str, "1.3.6.1.2.1.1.7.0", "Collector", "sysServices OID")
+    registry.register("collector.snmp.oid.sys_location", str, "1.3.6.1.2.1.1.6.0", "Collector", "sysLocation OID")
+    registry.register("collector.snmp.oid.sys_contact", str, "1.3.6.1.2.1.1.4.0", "Collector", "sysContact OID")
+
+    # TCP Collector
+    registry.register("collector.tcp.timeout", float, 1.0, "Collector", "TCP port scan timeout", min_value=0.1)
+    registry.register("collector.tcp.max_connections", int, 32, "Collector", "Max concurrent TCP connections per host", min_value=1)
+    registry.register("collector.tcp.core_ports", str, "22,53,80,443,445,554,631,9100", "Collector", "Core TCP ports to scan")
+    registry.register("collector.tcp.optional_ports", str, "81,139,8080,8081,8443,8291,8728,3389,5357,8008,8009,32400,5000,5001", "Collector", "Optional TCP ports")
+
+    # HTTP Collector
+    registry.register("collector.http.timeout", float, 2.0, "Collector", "HTTP request timeout", min_value=0.1)
+    registry.register("collector.http.max_body_size", int, 8192, "Collector", "Max HTTP body size to read", min_value=1024)
+
+    # SSH Collector
+    registry.register("collector.ssh.timeout", float, 1.0, "Collector", "SSH banner timeout", min_value=0.1)
+    registry.register("collector.ssh.workers", int, 64, "Collector", "SSH concurrent workers", min_value=1)
+    registry.register("collector.ssh.port", int, 22, "Collector", "SSH port")
+
+    # SMB Collector
+    registry.register("collector.smb.timeout", float, 1.0, "Collector", "SMB negotiation timeout", min_value=0.1)
+    registry.register("collector.smb.workers", int, 64, "Collector", "SMB concurrent workers", min_value=1)
+    registry.register("collector.smb.port", int, 445, "Collector", "SMB port")
+
+    # NTP Collector
+    registry.register("collector.ntp.timeout", float, 1.0, "Collector", "NTP query timeout", min_value=0.1)
+    registry.register("collector.ntp.workers", int, 32, "Collector", "NTP concurrent workers", min_value=1)
+    registry.register("collector.ntp.port", int, 123, "Collector", "NTP port")
+
+    # SSDP Collector
+    registry.register("collector.ssdp.enabled", bool, True, "Collector", "Enable SSDP multicast discovery")
+    registry.register("collector.ssdp.timeout", float, 2.0, "Collector", "SSDP response timeout", min_value=0.1)
+    registry.register("collector.ssdp.multicast", str, "239.255.255.250", "Collector", "SSDP multicast address")
+    registry.register("collector.ssdp.port", int, 1900, "Collector", "SSDP port")
+    registry.register("collector.ssdp.mx", int, 2, "Collector", "SSDP MX (max wait) seconds")
+    registry.register("collector.ssdp.fetch_description", bool, True, "Collector", "Fetch XML description from LOCATION")
+    registry.register("collector.ssdp.description_timeout", float, 2.0, "Collector", "XML description fetch timeout", min_value=0.1)
+
+    # NetBIOS Collector
+    registry.register("collector.netbios.timeout", float, 1.0, "Collector", "NetBIOS query timeout", min_value=0.1)
+    registry.register("collector.netbios.workers", int, 32, "Collector", "NetBIOS concurrent workers", min_value=1)
+
+    # WSD Collector
+    registry.register("collector.wsd.timeout", float, 1.5, "Collector", "WSD query timeout", min_value=0.1)
+    registry.register("collector.wsd.workers", int, 32, "Collector", "WSD concurrent workers", min_value=1)
+
+    # DNS-SD Collector
+    registry.register("collector.dns_sd.timeout", float, 1.5, "Collector", "DNS-SD query timeout", min_value=0.1)
+    registry.register("collector.dns_sd.workers", int, 32, "Collector", "DNS-SD concurrent workers", min_value=1)
+
+    # LLDP/CDP Collector
+    registry.register("collector.lldp_cdp.timeout", float, 2.0, "Collector", "LLDP/CDP probe timeout", min_value=0.1)
+    registry.register("collector.lldp_cdp.workers", int, 16, "Collector", "LLDP/CDP concurrent workers", min_value=1)
+
+    # HTTPS Cert Collector
+    registry.register("collector.https_cert.timeout", float, 2.0, "Collector", "HTTPS cert fetch timeout", min_value=0.1)
+    registry.register("collector.https_cert.workers", int, 32, "Collector", "HTTPS cert concurrent workers", min_value=1)
+    registry.register("collector.https_cert.ports", str, "443,8443,4443", "Collector", "HTTPS ports to check")
+
+    # Favicon Collector
+    registry.register("collector.favicon.timeout", float, 2.0, "Collector", "Favicon fetch timeout", min_value=0.1)
+    registry.register("collector.favicon.workers", int, 32, "Collector", "Favicon concurrent workers", min_value=1)
+
+    # Banners Collector
+    registry.register("collector.banners.timeout", float, 1.0, "Collector", "Banner grab timeout", min_value=0.1)
+    registry.register("collector.banners.workers", int, 64, "Collector", "Banner grab concurrent workers", min_value=1)
+
+    # TTL / Ping Collector
+    registry.register("collector.ttl.timeout", float, 1.0, "Collector", "Ping timeout", min_value=0.1)
+    registry.register("collector.ttl.count", int, 1, "Collector", "Ping packet count", min_value=1)
+
+    # Scapy FP Collector
+    registry.register("collector.scapy_fp.timeout", float, 1.0, "Collector", "Scapy probe timeout", min_value=0.1)
+    registry.register("collector.scapy_fp.workers", int, 32, "Collector", "Scapy concurrent workers", min_value=1)
+    registry.register("collector.scapy_fp.port", int, 80, "Collector", "Scapy target port")
+
+    # Switch Port Collector
+    registry.register("collector.switch_port.timeout", float, 2.0, "Collector", "Switch port SNMP timeout", min_value=0.1)
+    registry.register("collector.switch_port.workers", int, 16, "Collector", "Switch port concurrent workers", min_value=1)
+
+    # DHCP Cisco Collector
+    registry.register("collector.dhcp_cisco.enabled", bool, True, "Collector", "Enable Cisco DHCP collector")
+    registry.register("collector.dhcp_cisco.timeout", float, 10.0, "Collector", "SSH connection timeout", min_value=1.0)
+    registry.register("collector.dhcp_cisco.cache_ttl", int, 300, "Collector", "DHCP leases cache TTL in seconds", min_value=60)
+    registry.register("collector.dhcp_cisco.ip", str, "", "Collector", "Cisco router IP for DHCP")
+    registry.register("collector.dhcp_cisco.port", int, 22, "Collector", "Cisco SSH port")
+    registry.register("collector.dhcp_cisco.username", str, "", "Collector", "Cisco SSH username")
+    registry.register("collector.dhcp_cisco.password", str, "", "Collector", "Cisco SSH password")
+    registry.register("collector.dhcp_cisco.ssh_key_path", str, "", "Collector", "Cisco SSH private key path")
+    registry.register("collector.dhcp_cisco.enable_password", str, "", "Collector", "Cisco enable password")
+    registry.register("collector.dhcp_cisco.network_prefix", str, "192.168.1", "Collector", "Network prefix to filter DHCP leases")
