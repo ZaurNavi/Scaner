@@ -109,3 +109,22 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("restapi.enabled", bool, False, "REST API", "Enable REST API")
     registry.register("risk.enabled", bool, False, "Risk", "Enable Risk Engine")
     registry.register("correlation.enabled", bool, False, "Correlation", "Enable Correlation Engine")
+
+    # Repository Layer (v1.6.9.9)
+    registry.register("repository.sqlite.journal_mode", str, "WAL", "Repository", "SQLite journal mode")
+    registry.register("repository.sqlite.foreign_keys", bool, True, "Repository", "Enable foreign keys")
+    registry.register("repository.sqlite.synchronous", str, "NORMAL", "Repository", "SQLite synchronous mode")
+
+    # Cache Layer (v1.6.9.9)
+    registry.register("cache.enabled", bool, True, "Cache", "Enable active cache")
+    registry.register("cache.ttl.ttl", int, 300, "Cache", "TTL for TTL collector (seconds)")
+    registry.register("cache.ttl.tcp", int, 600, "Cache", "TTL for TCP collector (seconds)")
+    registry.register("cache.ttl.http", int, 3600, "Cache", "TTL for HTTP collector (seconds)")
+    registry.register("cache.ttl.ssdp", int, 1800, "Cache", "TTL for SSDP collector (seconds)")
+    registry.register("cache.ttl.snmp", int, 900, "Cache", "TTL for SNMP collector (seconds)")
+    registry.register("cache.max_retries", int, 3, "Cache", "Max retry attempts for cache operations", min_value=0, max_value=10)
+    registry.register("cache.sqlite.journal_mode", str, "WAL", "Cache", "Cache SQLite journal mode")
+    registry.register("cache.sqlite.synchronous", str, "NORMAL", "Cache", "Cache SQLite synchronous mode")
+
+    # Storage Layer (v1.6.9.9)
+    registry.register("storage.cache_dir", str, "cache", "Storage", "Cache directory path")
