@@ -653,7 +653,7 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
-        # === v1.6.4 + v1.6.9.2: Behaviour Engine (Platform Core with DI) ===
+              # === v1.6.4 + v1.6.9.2: Behaviour Engine (Platform Core with DI) ===
         behaviour_engine_result = None
         if identity_service and profiles:
             try:
@@ -674,7 +674,7 @@ def main() -> int:
                 platform.start()
                 
                 # v1.6.9.2: Создаём BehaviourEngine с правильными аргументами
-                # BehaviourEngine принимает: history_service, identity_service, session_engine
+                # (соответствует оригинальной сигнатуре из behaviour/engine.py)
                 behaviour_engine = BehaviourEngine(
                     history_service=history_service,
                     identity_service=identity_service,
