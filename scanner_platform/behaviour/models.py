@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
+
 @dataclass
 class SourceVersions:
     """Версии источников данных."""
@@ -12,6 +13,7 @@ class SourceVersions:
     metric_version: str = "1.0.0"
     feature_version: str = "1.0.0"
     rule_version: str = "1.0.0"
+
 
 @dataclass
 class DebugInfo:
@@ -24,6 +26,7 @@ class DebugInfo:
     feature_times: Dict[str, float] = field(default_factory=dict)
     skipped_rules: List[str] = field(default_factory=list)
     missing_features: List[str] = field(default_factory=list)
+
 
 @dataclass
 class FeatureSet:
@@ -40,6 +43,14 @@ class FeatureSet:
     ap_changes: int = 0
     ssid_changes: int = 0
     lifetime_seconds: Optional[float] = None
+    
+    # v1.6.9.2: Внутренний словарь метрик для legacy функций
+    _metrics: Dict[str, Any] = field(default_factory=dict)
+    
+    def get_metric(self, key: str, default: Any = None) -> Any:
+        """Получает метрику по ключу."""
+        return self._metrics.get(key, default)
+
 
 @dataclass
 class BehaviourSummary:
@@ -49,6 +60,7 @@ class BehaviourSummary:
     medium: int = 0
     low: int = 0
     unknown: int = 0
+
 
 @dataclass
 class BehaviourProfile:
