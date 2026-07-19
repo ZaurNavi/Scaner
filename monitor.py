@@ -553,7 +553,7 @@ def main() -> int:
     analyze_all(devices)
     save_debug_json(devices, collected_data)
 
-    # === v1.4.0 + ... + v1.6.9 ===
+    # === v1.4.0 + ... + v1.6.9.2 ===
     if archivist and scan:
         print()
         print("  [ARCHIVIST] Saving bundles...")
@@ -653,7 +653,7 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
-        # === v1.6.4: Behaviour Engine (Platform Core) ===
+        # === v1.6.4 + v1.6.9.2: Behaviour Engine (Platform Core with DI) ===
         behaviour_engine_result = None
         if identity_service and profiles:
             try:
@@ -665,9 +665,11 @@ def main() -> int:
                 from scanner_platform.registry.feature_registry import FeatureRegistry
                 from scanner_platform.registry.rule_registry import RuleRegistry
 
-                Platform.start()
-                
                 sample_device_id = profiles[0].device_id
+                
+                # v1.6.9.2: Создаём Platform instance с Dependency Injection
+                platform = Platform(configuration=config)
+                platform.start()
                 
                 history = history_service.get_device_history(sample_device_id)
                 events = []
@@ -699,15 +701,22 @@ def main() -> int:
                 features_dict = FeatureRegistry.build(metrics_dict)
                 rules_list = list(RuleRegistry.get_by_engine("behaviour").values())
                 
+                # v1.6.9.2: PlatformContext теперь содержит configuration
                 context = PlatformContext(
                     device_id=sample_device_id,
                     timeline=timeline,
                     metrics=MetricBundle(metrics=metrics_dict),
                     features=FeatureBundle(features=features_dict),
-                    rules=RuleBundle(rules=rules_list)
+                    rules=RuleBundle(rules=rules_list),
+                    configuration=config  # v1.6.9.2: DI
                 )
                 
-                behaviour_engine = BehaviourEngine()
+                # v1.6.9.2: BehaviourEngine получает configuration через DI
+                behaviour_engine = BehaviourEngine(
+                    engine_name="behaviour",
+                    engine_rules=rules_list,
+                    configuration=config  # v1.6.9.2: DI
+                )
                 behaviour_engine_result = behaviour_engine.run(context)
                 
                 class BehaviourResultAdapter:
