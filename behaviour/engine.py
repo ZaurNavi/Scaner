@@ -41,6 +41,32 @@ class BehaviourEngine:
         """
         start_time = time.time()
         
+        # v1.6.9.2: Проверяем, включён ли движок через Configuration
+        if self.configuration is not None:
+            if not self.configuration.get("behaviour.enabled", True):
+                # Движок отключён через конфигурацию — возвращаем пустой результат
+                empty_profile = BehaviourProfile(
+                    identity_id=device_id,
+                    generated_at=None,
+                    engine_version="1.0.0",
+                    rules_version="1.0.0",
+                    feature_version="1.0.0",
+                    provider_version="1.0.0",
+                    metric_coverage=0.0,
+                    feature_coverage=0.0,
+                    rule_match_ratio=0.0,
+                    behaviour_coverage=0.0,
+                    features=None,
+                    facts=[],
+                    summary=BehaviourSummary(),
+                    source_versions=SourceVersions()
+                )
+                empty_debug = DebugInfo()
+                empty_debug.computation_time_ms = 0.0
+                empty_debug.cache_hit = False
+                empty_debug.cache_key = ()
+                return empty_profile, empty_debug
+        
         # 1. Вычисляем сырые признаки
         features = self.feature_builder.build(device_id)
         
@@ -99,22 +125,17 @@ class BehaviourEngine:
     def _calculate_behaviour_coverage(self, facts: List) -> float:
         """Вычисляет процент определённых моделей поведения."""
         from .categories import BehaviourCategory
-        
         total_categories = len(BehaviourCategory)
         unique_categories = set(f.category for f in facts)
         filled_categories = len(unique_categories)
-        
         return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
     
     def _build_summary(self, facts: List) -> BehaviourSummary:
         """Формирует краткую сводку."""
         from .categories import BehaviourStatus
-        
         summary = BehaviourSummary()
-        
         for fact in facts:
             summary.facts_total += 1
-            
             if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
                 summary.high += 1
             elif fact.status == BehaviourStatus.MEDIUM:
@@ -123,5 +144,4 @@ class BehaviourEngine:
                 summary.low += 1
             else:
                 summary.unknown += 1
-        
         return summary
