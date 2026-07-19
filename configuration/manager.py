@@ -103,6 +103,28 @@ class ConfigurationManager:
         # Преобразуем кэш в MappingProxyType для защиты от изменений
         self._cache = MappingProxyType(self._cache)
         self._is_frozen = True
+    
+    def is_frozen(self) -> bool:
+        """
+        v1.6.9.1a: Публичный метод проверки состояния конфигурации.
+        
+        Используется внешними модулями (например, Platform) для проверки,
+        была ли конфигурация уже заморожена, без обращения к приватным полям.
+        
+        Returns:
+            bool: True если конфигурация заморожена (immutable), False иначе
+        
+        Пример:
+            config = get_config_manager()
+            if config.is_frozen():
+                # Конфигурация уже инициализирована — используем как есть
+                pass
+            else:
+                # Можно загрузить и заморозить
+                config.load({})
+                config.freeze()
+        """
+        return self._is_frozen
         
     def get(self, param_id: str) -> Any:
         """Получает значение параметра. O(1)."""
