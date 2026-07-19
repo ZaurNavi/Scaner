@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Confidence Service — публичный API для оценки достоверности.
+
+v1.6.9.5: Принимает ConfigurationManager через конструктор (Dependency Injection).
 """
 
 from __future__ import annotations
@@ -10,15 +12,38 @@ from typing import Optional, List, Dict
 from .categories import FactCategory
 from .models import ConfidenceProfile, FactAssessment
 from .evaluator import ConfidenceEvaluator
+from .rules import ConfidenceRules
 from identity import IdentityService
+
+# v1.6.9.5: Configuration Layer Integration
+from configuration import ConfigurationManager
 
 
 class ConfidenceService:
     """Публичный API для работы с Confidence."""
     
-    def __init__(self, identity_service: IdentityService):
+    def __init__(
+        self,
+        identity_service: IdentityService,
+        configuration: Optional[ConfigurationManager] = None
+    ):
+        """
+        v1.6.9.5: Конструктор с Dependency Injection.
+        
+        Args:
+            identity_service: Сервис identity
+            configuration: Конфигурация (если None — используется глобальный Singleton)
+        """
         self.identity_service = identity_service
-        self.evaluator = ConfidenceEvaluator()
+        
+        # v1.6.9.5: Создаём ConfidenceRules с переданной конфигурацией
+        if configuration is not None:
+            rules = ConfidenceRules(configuration)
+            self.evaluator = ConfidenceEvaluator(rules=rules)
+        else:
+            # Fallback: используем глобальный Singleton (для обратной совместимости)
+            self.evaluator = ConfidenceEvaluator()
+        
         self._cache: Dict[str, ConfidenceProfile] = {}
     
     def get_profile(self, identity_id: str) -> Optional[ConfidenceProfile]:
