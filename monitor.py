@@ -600,11 +600,7 @@ def main() -> int:
             else:
                 print(f"      ❌ Failed: {device.ip} — {result.error_message}")
 
-                # === v1.5.3 + v1.6.9.7: Session Engine (with DI, без fallback) ===
-        session_engine = None
-        if history_service and db:
-            try:
-                                # === v1.5.3 + v1.6.9.7: Session Engine (with DI) ===
+        # === v1.5.3 + v1.6.9.7: Session Engine (with DI) ===
         session_engine = None
         if history_service and db:
             try:
@@ -657,7 +653,7 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [IDENTITY] ❌ Failed: {exc}")
 
-                # === v1.5.5 + v1.6.9.5: Confidence Service (with DI) ===
+        # === v1.5.5 + v1.6.9.5: Confidence Service (with DI) ===
         if identity_service and profiles:
             try:
                 # v1.6.9.5: Выводим информацию из Configuration Layer
@@ -683,7 +679,7 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [CONFIDENCE] ❌ Failed: {exc}")
 
-              # === v1.6.4 + v1.6.9.2: Behaviour Engine (Platform Core with DI) ===
+        # === v1.6.4 + v1.6.9.2: Behaviour Engine (Platform Core with DI) ===
         behaviour_engine_result = None
         if identity_service and profiles:
             try:
@@ -782,7 +778,7 @@ def main() -> int:
                 import traceback
                 traceback.print_exc()
 
-                # === v1.6.5 + v1.6.6 + v1.6.7 + v1.6.8: Knowledge, Profile, Diff & Events ===
+        # === v1.6.5 + v1.6.6 + v1.6.7 + v1.6.8: Knowledge, Profile, Diff & Events ===
         if profiles and (behaviour_engine_result or mobility_profile or presence_profile or usage_profile):
             try:
                 from scanner_platform.facts.models import Fact, FactStatus
