@@ -638,12 +638,23 @@ def main() -> int:
             except Exception as exc:
                 print(f"  [IDENTITY] ❌ Failed: {exc}")
 
-        # === v1.5.5: Confidence Service ===
+                # === v1.5.5 + v1.6.9.5: Confidence Service (with DI) ===
         if identity_service and profiles:
             try:
-                confidence_service = ConfidenceService(identity_service)
+                # v1.6.9.5: Выводим информацию из Configuration Layer
+                print("\n  [CONFIDENCE] Configuration from Configuration Layer:")
+                print(f"         • Confidence enabled: {config.get('confidence.enabled', True)}")
+                print(f"         • Max score: {config.get('confidence.max_score', 100)}")
+                
+                # v1.6.9.5: Передаём configuration через Dependency Injection
+                confidence_service = ConfidenceService(
+                    identity_service=identity_service,
+                    configuration=config  # v1.6.9.5: DI
+                )
+                
                 sample_device_id = profiles[0].device_id
                 cp = confidence_service.get_profile(sample_device_id)
+                
                 if cp:
                     print(f"\n  [CONFIDENCE] Evaluating confidence...")
                     print(f"      ✅ Confidence Profile for {sample_device_id[:8]}...")
