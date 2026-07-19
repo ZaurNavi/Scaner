@@ -604,7 +604,7 @@ def main() -> int:
         session_engine = None
         if history_service and db:
             try:
-                        # === v1.5.3 + v1.6.9.7: Session Engine (with DI) ===
+                                # === v1.5.3 + v1.6.9.7: Session Engine (with DI) ===
         session_engine = None
         if history_service and db:
             try:
