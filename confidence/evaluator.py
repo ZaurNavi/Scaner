@@ -2,24 +2,49 @@
 """
 Evaluator — главный исполнитель оценки достоверности.
 Получает Identity Profile, применяет правила, формирует оценки.
+
+v1.6.9.5: Принимает ConfidenceRules через конструктор (Dependency Injection).
 """
-
 from __future__ import annotations
-
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from .categories import FactCategory
 from .models import (
-    FactAssessment, FactStatus, ConfidenceProfile, 
+    FactAssessment, FactStatus, ConfidenceProfile,
     ConfidenceSummary, ConfidenceStatistics
 )
-from .rules import get_weight
+from .rules import ConfidenceRules
 from .normalizer import normalize_score
+
+# v1.6.9.5: Configuration Layer Integration
+from configuration import ConfigurationManager
 
 
 class ConfidenceEvaluator:
     """Оценщик достоверности фактов."""
+    
+    def __init__(
+        self,
+        rules: Optional[ConfidenceRules] = None,
+        configuration: Optional[ConfigurationManager] = None
+    ):
+        """
+        v1.6.9.5: Конструктор с Dependency Injection.
+        
+        Args:
+            rules: Сервис правил (если None — создаётся автоматически)
+            configuration: Конфигурация (используется если rules=None)
+        """
+        if rules is not None:
+            self.rules = rules
+        elif configuration is not None:
+            # Создаём ConfidenceRules с переданной конфигурацией
+            self.rules = ConfidenceRules(configuration)
+        else:
+            # Fallback: используем глобальный Singleton (для обратной совместимости)
+            from configuration import get_config_manager
+            self.rules = ConfidenceRules(get_config_manager())
     
     def evaluate(self, identity_profile) -> ConfidenceProfile:
         """
@@ -70,7 +95,7 @@ class ConfidenceEvaluator:
                 vendor_sources[value] = {}
             
             for source in vendor_attr.sources:
-                weight = get_weight(FactCategory.VENDOR, source)
+                weight = self.rules.get_weight(FactCategory.VENDOR, source)
                 if weight > 0:
                     vendor_sources[value][source] = weight
         
@@ -102,7 +127,7 @@ class ConfidenceEvaluator:
                 model_sources[value] = {}
             
             for source in model_attr.sources:
-                weight = get_weight(FactCategory.MODEL, source)
+                weight = self.rules.get_weight(FactCategory.MODEL, source)
                 if weight > 0:
                     model_sources[value][source] = weight
         
@@ -134,7 +159,7 @@ class ConfidenceEvaluator:
                 hostname_sources[value] = {}
             
             for source in hostname_attr.sources:
-                weight = get_weight(FactCategory.HOSTNAME, source)
+                weight = self.rules.get_weight(FactCategory.HOSTNAME, source)
                 if weight > 0:
                     hostname_sources[value][source] = weight
         
@@ -166,7 +191,7 @@ class ConfidenceEvaluator:
                 os_sources[value] = {}
             
             for source in os_attr.sources:
-                weight = get_weight(FactCategory.OS, source)
+                weight = self.rules.get_weight(FactCategory.OS, source)
                 if weight > 0:
                     os_sources[value][source] = weight
         
@@ -198,7 +223,7 @@ class ConfidenceEvaluator:
                 type_sources[value] = {}
             
             for source in type_attr.sources:
-                weight = get_weight(FactCategory.DEVICE_TYPE, source)
+                weight = self.rules.get_weight(FactCategory.DEVICE_TYPE, source)
                 if weight > 0:
                     type_sources[value][source] = weight
         
@@ -230,7 +255,7 @@ class ConfidenceEvaluator:
                 ssid_sources[value] = {}
             
             for source in ssid_attr.sources:
-                weight = get_weight(FactCategory.SSID, source)
+                weight = self.rules.get_weight(FactCategory.SSID, source)
                 if weight > 0:
                     ssid_sources[value][source] = weight
         
@@ -262,7 +287,7 @@ class ConfidenceEvaluator:
                 ap_sources[value] = {}
             
             for source in ap_attr.sources:
-                weight = get_weight(FactCategory.ACCESS_POINT, source)
+                weight = self.rules.get_weight(FactCategory.ACCESS_POINT, source)
                 if weight > 0:
                     ap_sources[value][source] = weight
         
@@ -294,7 +319,7 @@ class ConfidenceEvaluator:
                 vlan_sources[value] = {}
             
             for source in vlan_attr.sources:
-                weight = get_weight(FactCategory.VLAN, source)
+                weight = self.rules.get_weight(FactCategory.VLAN, source)
                 if weight > 0:
                     vlan_sources[value][source] = weight
         
@@ -326,7 +351,7 @@ class ConfidenceEvaluator:
                 radio_sources[value] = {}
             
             for source in radio_attr.sources:
-                weight = get_weight(FactCategory.RADIO, source)
+                weight = self.rules.get_weight(FactCategory.RADIO, source)
                 if weight > 0:
                     radio_sources[value][source] = weight
         
@@ -358,7 +383,7 @@ class ConfidenceEvaluator:
                 wifi_sources[value] = {}
             
             for source in wifi_attr.sources:
-                weight = get_weight(FactCategory.WIFI_CAPABILITY, source)
+                weight = self.rules.get_weight(FactCategory.WIFI_CAPABILITY, source)
                 if weight > 0:
                     wifi_sources[value][source] = weight
         
@@ -404,7 +429,6 @@ class ConfidenceEvaluator:
         """Вычисляет покрытие (полноту знаний)."""
         total_categories = len(FactCategory)
         filled_categories = sum(1 for cat in FactCategory if cat in facts and facts[cat])
-        
         return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
     
     def _calculate_statistics(self, facts: Dict[FactCategory, List[FactAssessment]]) -> ConfidenceStatistics:
@@ -414,6 +438,7 @@ class ConfidenceEvaluator:
         for category, assessments in facts.items():
             for assessment in assessments:
                 stats.total_facts += 1
+                
                 if assessment.status == FactStatus.EVALUATED:
                     stats.evaluated += 1
                 elif assessment.status == FactStatus.CONFLICT:
