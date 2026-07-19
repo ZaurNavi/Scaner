@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 Session Engine (v1.5.3 Full).
+
+v1.6.9.7: Интеграция с Configuration Layer.
+Все параметры теперь читаются через ConfigurationManager.
+configuration — обязательный параметр (без fallback).
 """
-
 from __future__ import annotations
-
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -16,17 +18,36 @@ from .models import (
 from history import HistoryService
 from storage.archivist import Repository
 
-
-SESSION_TIMEOUT = timedelta(minutes=20)
+# v1.6.9.7: Configuration Layer Integration (обязательный параметр)
+from configuration import ConfigurationManager
 
 
 class SessionEngine:
-    def __init__(self, history_service: HistoryService, repository: Repository):
+    """
+    Session Engine — управление сессиями устройств.
+    
+    v1.6.9.7: Принимает ConfigurationManager через конструктор (обязательный параметр).
+    """
+    
+    def __init__(
+        self,
+        history_service: HistoryService,
+        repository: Repository,
+        configuration: ConfigurationManager  # v1.6.9.7: обязательный параметр
+    ):
         self.history = history_service
         self.repo = repository
+        self.configuration = configuration  # v1.6.9.7: DI без fallback
+        
+        # v1.6.9.7: Кэшируем конфигурацию для производительности
+        self._session_timeout = timedelta(
+            seconds=self.configuration.get("session.timeout_seconds")
+        )
+        self._timeline_limit = self.configuration.get("session.timeline_limit")
+        
         self._active_sessions: Dict[str, Session] = {}
         self._load_active_sessions()
-
+    
     def _load_active_sessions(self):
         """Recovery: загружает ACTIVE сессии из БД при старте."""
         try:
@@ -37,11 +58,10 @@ class SessionEngine:
                 self._active_sessions[sess.device_id] = sess
         except Exception as e:
             print(f"  [SESSION] ⚠️ Recovery failed: {e}")
-
+    
     def _dict_to_session(self, data: dict) -> Session:
         """Восстанавливает объект Session из словаря БД."""
         meta = json.loads(data.get("metadata", "{}")) if data.get("metadata") else {}
-        
         sess = Session(
             id=data["id"],
             device_id=data["device_id"],
@@ -66,15 +86,15 @@ class SessionEngine:
                 description=entry["description"],
                 details=entry.get("details")
             ))
+        
         return sess
-
+    
     def process_snapshots(self, device_id: str, new_snapshots: List[dict]):
         """Обрабатывает новые снимки и обновляет сессии."""
         if not new_snapshots:
             return
-
-        new_snapshots.sort(key=lambda s: datetime.fromisoformat(s["timestamp"]))
         
+        new_snapshots.sort(key=lambda s: datetime.fromisoformat(s["timestamp"]))
         session = self._active_sessions.get(device_id)
         
         for snap in new_snapshots:
@@ -82,10 +102,12 @@ class SessionEngine:
             
             if session and session.status == SessionStatus.ACTIVE:
                 time_gap = snap_time - session.last_seen
-                if time_gap > SESSION_TIMEOUT:
+                
+                # v1.6.9.7: Используем кэшированное значение из Configuration
+                if time_gap > self._session_timeout:
                     self._close_session(session, SessionEndReason.TIMEOUT)
                     session = None
-
+            
             if session is None:
                 session = Session(
                     id=str(uuid.uuid4()),
@@ -96,21 +118,21 @@ class SessionEngine:
                 self._add_timeline_event(session, snap_time, "start", "Session started")
                 self._active_sessions[device_id] = session
                 self.repo.create_session(session)
-
+            
             self._enrich_session(session, snap)
-
-        if session and session.status == SessionStatus.ACTIVE:
-            session.last_seen = datetime.fromisoformat(new_snapshots[-1]["timestamp"])
-            session.duration = (session.last_seen - session.start_time).total_seconds()
-            session.updated_at = datetime.now()
-            self.repo.update_session(session)
-
+            
+            if session and session.status == SessionStatus.ACTIVE:
+                session.last_seen = datetime.fromisoformat(new_snapshots[-1]["timestamp"])
+                session.duration = (session.last_seen - session.start_time).total_seconds()
+                session.updated_at = datetime.now()
+                self.repo.update_session(session)
+    
     def close_all_active_sessions(self, reason: SessionEndReason = SessionEndReason.PROGRAM_SHUTDOWN):
         """Вызывается при завершении работы программы."""
         for device_id, session in list(self._active_sessions.items()):
             if session.status == SessionStatus.ACTIVE:
                 self._close_session(session, reason)
-
+    
     def _close_session(self, session: Session, reason: SessionEndReason):
         """Неизменяемое закрытие сессии."""
         session.end_time = session.last_seen
@@ -125,7 +147,7 @@ class SessionEngine:
         
         if session.device_id in self._active_sessions:
             del self._active_sessions[session.device_id]
-
+    
     def _enrich_session(self, session: Session, snap: dict):
         """Добавляет данные снимка в сессию."""
         session.snapshots_count += 1
@@ -133,23 +155,27 @@ class SessionEngine:
         if snap.get("ip") and (not session.ip_history or session.ip_history[-1] != snap["ip"]):
             session.ip_history.append(snap["ip"])
             self._add_timeline_event(session, datetime.fromisoformat(snap["timestamp"]), "ip_change", f"IP changed to {snap['ip']}")
-            
+        
         if snap.get("hostname") and (not session.hostname_history or session.hostname_history[-1] != snap["hostname"]):
             session.hostname_history.append(snap["hostname"])
             self._add_timeline_event(session, datetime.fromisoformat(snap["timestamp"]), "hostname_change", f"Hostname changed to {snap['hostname']}")
-
+        
         session.last_seen = datetime.fromisoformat(snap["timestamp"])
         session.updated_at = datetime.now()
-
+    
     def _add_timeline_event(self, session: Session, timestamp: datetime, event_type: str, description: str, details: str = None):
+        """Добавляет событие в таймлайн с ограничением размера."""
         session.timeline.append(SessionTimelineEntry(
             timestamp=timestamp,
             event_type=event_type,
             description=description,
             details=details
         ))
-        if len(session.timeline) > 50:
-            session.timeline = session.timeline[-50:]
-
+        
+        # v1.6.9.7: Используем кэшированное значение из Configuration
+        if len(session.timeline) > self._timeline_limit:
+            session.timeline = session.timeline[-self._timeline_limit:]
+    
     def get_active_session(self, device_id: str) -> Optional[Session]:
+        """Получает активную сессию устройства."""
         return self._active_sessions.get(device_id)
