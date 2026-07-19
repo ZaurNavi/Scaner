@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-DHCP Cisco Collector — получение DHCP-leases с Cisco IOS через Netmiko.
-Использует фильтрацию на стороне роутера для получения данных только по целевой сети.
+DHCP Cisco Collector.
+v1.7.1: Интеграция с Configuration Layer.
 """
 
 from __future__ import annotations
@@ -14,169 +14,105 @@ from typing import Dict
 try:
     from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticationException
 except ImportError:
-    print("      [ERROR] Netmiko не установлен. Выполните: pip install netmiko")
-    raise
+    pass # Обработка будет в runtime
 
-from config import CiscoDHCP, Network
 from models import Device
-
 from .base import ActiveCollector, FingerprintResult
 from storage.active_cache import get as cache_get, set as cache_set
+from configuration import ConfigurationManager
 
 
 class DHCPCiscoCollector(ActiveCollector):
     PRIORITY = 30
     RELIABILITY = 95
 
-    def __init__(self):
-        super().__init__(timeout=CiscoDHCP.TIMEOUT)
+    def __init__(self, configuration: ConfigurationManager):
+        super().__init__(configuration)
+        self.timeout = self.config.get("collector.dhcp_cisco.timeout", 10.0)
+        self.cache_ttl = self.config.get("collector.dhcp_cisco.cache_ttl", 300)
         self._leases_cache: Dict[str, dict] | None = None
         self._cache_timestamp: float = 0
 
+    def _is_configured(self) -> bool:
+        return bool(self.config.get("collector.dhcp_cisco.ip", ""))
+
     def collect(self, device: Device) -> FingerprintResult:
         start_time = time.time()
-
         cached = cache_get(device.ip, "dhcp_cisco")
         if cached:
-            cached_dict = dict(cached)
-            cached_dict["source"] = "dhcp_cisco"
-            cached_dict["elapsed_ms"] = 0.0
-            return FingerprintResult(**cached_dict)
+            return FingerprintResult(**cached, source="dhcp_cisco", elapsed_ms=0.0)
 
         if not self.is_available(device):
-            return FingerprintResult(
-                source="dhcp_cisco",
-                raw_data={"responded": False, "reason": "device_unavailable"},
-                elapsed_ms=(time.time() - start_time) * 1000,
-            )
+            return FingerprintResult(source="dhcp_cisco", raw_data={"responded": False, "reason": "device_unavailable"}, elapsed_ms=(time.time() - start_time) * 1000)
 
         leases = self._get_all_leases()
         elapsed_ms = (time.time() - start_time) * 1000
-
         device_lease = leases.get(device.ip)
 
         if device_lease:
-            result = FingerprintResult(
-                source="dhcp_cisco",
-                raw_data=device_lease,
-                elapsed_ms=elapsed_ms,
-                capabilities=["supports_dhcp"]
-            )
+            result = FingerprintResult(source="dhcp_cisco", raw_data=device_lease, elapsed_ms=elapsed_ms, capabilities=["supports_dhcp"])
         else:
-            result = FingerprintResult(
-                source="dhcp_cisco",
-                raw_data={"responded": False, "reason": "no_lease_found", "ip": device.ip},
-                elapsed_ms=elapsed_ms,
-            )
+            result = FingerprintResult(source="dhcp_cisco", raw_data={"responded": False, "reason": "no_lease_found", "ip": device.ip}, elapsed_ms=elapsed_ms)
 
         cache_set(device.ip, "dhcp_cisco", asdict(result))
         return result
 
     def _get_all_leases(self) -> Dict[str, dict]:
-        if not CiscoDHCP.is_configured():
+        if not self._is_configured():
             return {}
 
         current_time = time.time()
-        # ИСПРАВЛЕНИЕ 2: Правильная проверка кэша (пустой словарь {} тоже должен считаться кэшем)
-        if self._leases_cache is not None and (current_time - self._cache_timestamp) < CiscoDHCP.CACHE_TTL:
+        if self._leases_cache is not None and (current_time - self._cache_timestamp) < self.cache_ttl:
             return self._leases_cache
 
         try:
             connect_params = {
                 "device_type": "cisco_ios",
-                "host": CiscoDHCP.IP,
-                "port": CiscoDHCP.PORT,
-                "username": CiscoDHCP.USERNAME,
+                "host": self.config.get("collector.dhcp_cisco.ip"),
+                "port": self.config.get("collector.dhcp_cisco.port", 22),
+                "username": self.config.get("collector.dhcp_cisco.username", ""),
                 "timeout": self.timeout,
                 "global_delay_factor": 1,
             }
-            
-            if CiscoDHCP.SSH_KEY_PATH:
+            if self.config.get("collector.dhcp_cisco.ssh_key_path"):
                 connect_params["use_keys"] = True
-                connect_params["key_file"] = CiscoDHCP.SSH_KEY_PATH
-            elif CiscoDHCP.PASSWORD:
-                connect_params["password"] = CiscoDHCP.PASSWORD
+                connect_params["key_file"] = self.config.get("collector.dhcp_cisco.ssh_key_path")
+            elif self.config.get("collector.dhcp_cisco.password"):
+                connect_params["password"] = self.config.get("collector.dhcp_cisco.password")
             else:
                 return {}
-            
-            if CiscoDHCP.ENABLE_PASSWORD:
-                connect_params["secret"] = CiscoDHCP.ENABLE_PASSWORD
+
+            if self.config.get("collector.dhcp_cisco.enable_password"):
+                connect_params["secret"] = self.config.get("collector.dhcp_cisco.enable_password")
 
             with ConnectHandler(**connect_params) as net_connect:
-                if CiscoDHCP.ENABLE_PASSWORD:
+                if self.config.get("collector.dhcp_cisco.enable_password"):
                     net_connect.enable()
-                
-                target_prefix = Network.PREFIX.rstrip('.')
+
+                target_prefix = self.config.get("collector.dhcp_cisco.network_prefix", "192.168.1").rstrip('.')
                 command = f"show ip dhcp binding | include {target_prefix}\\."
-                
                 output = net_connect.send_command(command, read_timeout=self.timeout)
-                
-                print(f"\n      [DEBUG DHCP] Executed on Cisco: '{command}'")
-                print(f"      [DEBUG DHCP] Raw output ({len(output)} chars):")
-                print("      " + "-" * 60)
-                if output.strip():
-                    for line in output.strip().split('\n')[:15]:
-                        print(f"      | {line.strip()}")
-                else:
-                    print("      | (no bindings found for this subnet)")
-                print("      " + "-" * 60)
-                
+
                 self._leases_cache = self._parse_dhcp_binding(output)
                 self._cache_timestamp = current_time
-                
-                print(f"      [DEBUG DHCP] Successfully parsed {len(self._leases_cache)} leases!")
-                if self._leases_cache:
-                    for ip, data in list(self._leases_cache.items())[:3]:
-                        print(f"         -> {ip}: mac={data.get('mac')}, type={data.get('lease_type')}, expires={data.get('lease_expiration')}")
-                
                 return self._leases_cache
 
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
-            print(f"      [ERROR] DHCP Cisco Collector failed (Auth/Timeout): {e}")
-            return {}
-        except Exception as e:
-            print(f"      [ERROR] DHCP Cisco Collector failed: {e}")
+        except Exception:
             return {}
 
     def _parse_dhcp_binding(self, output: str) -> Dict[str, dict]:
         leases = {}
         if not output.strip():
             return leases
-        
-        # ИСПРАВЛЕНИЕ 1: Точная регулярка под формат Cisco: 01 + 2 символа . 4 символа . 4 символа . 2 символа
-        # Пример: 01be.5633.5176.b3
         pattern = r'(\d+\.\d+\.\d+\.\d+)\s+01([0-9a-fA-F]{2}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{2})\s+(.*?)\s+(Automatic|Manual)'
-        
         for match in re.finditer(pattern, output):
-            ip = match.group(1)
-            client_id_raw = match.group(2)
-            lease_expiration = match.group(3).strip()
-            lease_type = match.group(4)
-            
-            # Преобразуем be.5633.5176.b3 в be:56:33:51:76:b3
-            mac = client_id_raw.replace('.', '').lower()
-            mac_formatted = ':'.join(mac[i:i+2] for i in range(0, 12, 2))
-            
-            leases[ip] = {
-                "responded": True,
-                "ip": ip,
-                "mac": mac_formatted,
-                "lease_expiration": lease_expiration,
-                "lease_type": lease_type,
-            }
-        
+            ip, client_id_raw, lease_expiration, lease_type = match.groups()
+            mac = ':'.join(client_id_raw.replace('.', '').lower()[i:i+2] for i in range(0, 12, 2))
+            leases[ip] = {"responded": True, "ip": ip, "mac": mac, "lease_expiration": lease_expiration, "lease_type": lease_type}
         return leases
 
     def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        if not CiscoDHCP.is_configured():
+        if not self._is_configured():
             return {}
-        
-        results: dict[str, FingerprintResult] = {}
-        
-        # Получаем данные ОДИН раз для всех устройств
         self._get_all_leases()
-        
-        for device in devices:
-            results[device.ip] = self.collect(device)
-        
-        return results
+        return {device.ip: self.collect(device) for device in devices}
