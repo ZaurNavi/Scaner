@@ -73,6 +73,30 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("logging.console", bool, True, "Logging", "Enable console logging")
     registry.register("logging.file", bool, True, "Logging", "Enable file logging")
 
+    # v1.6.9.2: Engines Configuration (для интеграции с Platform Core)
+    # Platform Core
+    registry.register("platform.enabled", bool, True, "Platform", "Enable Scanner Platform Core")
+    
+    # Behaviour Engine
+    registry.register("behaviour.enabled", bool, True, "Behaviour", "Enable behaviour analysis engine")
+    registry.register("behaviour.min_confidence", float, 0.4, "Behaviour", "Min confidence for behaviour facts", min_value=0.0, max_value=1.0)
+    
+    # Mobility Engine
+    registry.register("mobility.enabled", bool, True, "Mobility", "Enable mobility analysis engine")
+    
+    # Presence Engine
+    registry.register("presence.enabled", bool, True, "Presence", "Enable presence analysis engine")
+    
+    # Usage Engine
+    registry.register("usage.enabled", bool, True, "Usage", "Enable usage analysis engine")
+    
+    # Identity Engine
+    registry.register("identity.enabled", bool, True, "Identity", "Enable identity engine")
+    
+    # Session Engine
+    registry.register("session.enabled", bool, True, "Session", "Enable session engine")
+    registry.register("session.timeout_seconds", int, 300, "Session", "Session timeout in seconds", min_value=10)
+
     # Future layers (placeholders)
     registry.register("telegram.enabled", bool, False, "Telegram", "Enable Telegram bot")
     registry.register("webui.enabled", bool, False, "WebUI", "Enable Web UI")
