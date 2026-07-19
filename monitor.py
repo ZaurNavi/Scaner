@@ -858,7 +858,13 @@ def main() -> int:
                     engine_results["usage"] = mock_usage
                 
                 # 1. Создаём Knowledge Snapshot
-                knowledge_service = KnowledgeService()
+                # v1.6.9.8: Передаём configuration через Dependency Injection
+                knowledge_service = KnowledgeService(configuration=config)
+                
+                print("\n  [KNOWLEDGE] Configuration from Configuration Layer:")
+                print(f"         • Knowledge cache size: {config.get('knowledge.cache_size')}")
+                print(f"         • Knowledge cache TTL: {config.get('knowledge.cache_ttl')}s")
+                
                 knowledge_service.create_snapshot(
                     device_id=sample_device_id,
                     facts=all_facts,
@@ -866,6 +872,10 @@ def main() -> int:
                     version_snapshot=VersionSnapshot(),
                     history_service=history_service
                 )
+                
+                # Выводим информацию о кэше
+                cache_info = knowledge_service.cache_info()
+                print(f"         • Cache size: {cache_info['size']}/{cache_info['max_size']}")
                 
                 # 2. Строим Unified Device Profile через ProfileService
                 profile_service = ProfileService(knowledge_service)
