@@ -84,7 +84,6 @@ class BehaviourEngine:
             features.ssid_changes > 0,
             features.lifetime_seconds is not None
         ])
-        
         return (filled_features / total_features) * 100.0
     
     def _calculate_behaviour_coverage(self, facts: List) -> float:
@@ -93,14 +92,12 @@ class BehaviourEngine:
         total_categories = len(BehaviourCategory)
         unique_categories = set(f.category for f in facts)
         filled_categories = len(unique_categories)
-        
         return (filled_categories / total_categories) * 100.0 if total_categories > 0 else 0.0
     
     def _build_summary(self, facts: List) -> BehaviourSummary:
         """Формирует краткую сводку."""
         from .categories import BehaviourStatus
         summary = BehaviourSummary()
-        
         for fact in facts:
             summary.facts_total += 1
             if fact.status in (BehaviourStatus.CONFIRMED, BehaviourStatus.HIGH):
@@ -111,5 +108,4 @@ class BehaviourEngine:
                 summary.low += 1
             else:
                 summary.unknown += 1
-        
         return summary
