@@ -658,8 +658,7 @@ def main() -> int:
         if identity_service and profiles:
             try:
                 from scanner_platform.behaviour.engine import BehaviourEngine
-                from scanner_platform.behaviour.models import SourceVersions, DebugInfo as BehaviourDebugInfo
-
+                
                 sample_device_id = profiles[0].device_id
                 
                 # v1.6.9.2: Выводим информацию из Configuration Layer
