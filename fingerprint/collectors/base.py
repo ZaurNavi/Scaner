@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
 Агрегация коллекторов с поддержкой зависимостей и кэша.
+v1.7.1: Исправлен вызов get_collectors() с передачей ConfigurationManager.
 """
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+
 from models import Device
+from configuration import get_config_manager
 
 from .dns import collect_hostnames
 from .mdns import collect_mdns, MDNSInfo
@@ -22,8 +25,12 @@ class CollectedData:
     sources: dict[str, FingerprintResult] = field(default_factory=dict)
 
 
-def collect_all(ips: list[str], devices: list[Device]) -> dict[str, CollectedData]:
+def collect_all(ips: list[str], devices: list[Device], configuration=None) -> dict[str, CollectedData]:
     print(f"\n  [DEBUG] collect_all() запущен для {len(devices)} устройств")
+    
+    # v1.7.1: Получаем конфигурацию, если она не передана явно
+    if configuration is None:
+        configuration = get_config_manager()
     
     start_total = time.time()
     
@@ -40,10 +47,11 @@ def collect_all(ips: list[str], devices: list[Device]) -> dict[str, CollectedDat
     all_sources: dict[str, dict[str, FingerprintResult]] = {}
     context: dict[str, dict[str, FingerprintResult]] = {}
     
-    # Статистика для таблицы (Requirement #10)
+    # Статистика для таблицы
     collector_stats = []
 
-    for collector in get_collectors():
+    # v1.7.1: ПЕРЕДАЕМ configuration в get_collectors! (Именно здесь был "взрыв")
+    for collector in get_collectors(configuration):
         source = collector.source_name
         start = time.time()
 
