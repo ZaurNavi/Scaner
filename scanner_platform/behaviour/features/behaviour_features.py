@@ -2,7 +2,10 @@
 """Feature Builders для Behaviour Engine."""
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from .models import FeatureSet
+
+# v1.6.9.2: ИСПРАВЛЕНО — FeatureSet находится в ../models.py, а не в ./models.py
+from ..models import FeatureSet
+
 from history import HistoryService
 from identity import IdentityService
 from session import SessionEngine
@@ -124,9 +127,8 @@ class FeatureBuilder:
             if 9 <= snap_time.hour < 18:
                 office_days += 1
         
-        # Вычисляем ratios
+        # Вычисляем ratios и сохраняем в features._metrics
         if total_days > 0:
-            # Сохраняем в features как метрики (для build_* функций)
             features._metrics = {
                 'daily_presence': active_days / max(total_days, 1),
                 'night_activity': night_days / max(total_days, 1),
@@ -134,8 +136,8 @@ class FeatureBuilder:
                 'weekday_ratio': weekday_days / max(total_days, 1),
                 'office_hours_activity': office_days / max(total_days, 1),
                 'appearance_frequency': len(snapshots),
-                'idle_duration': 0.0,  # TODO: вычислить из сессий
-                'online_duration': 0.0,  # TODO: вычислить из сессий
+                'idle_duration': 0.0,
+                'online_duration': 0.0,
                 'weekly_presence': active_days / 7.0,
             }
     
