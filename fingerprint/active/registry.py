@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
 Реестр коллекторов.
+v1.7.1: Внедрение Dependency Injection через ConfigurationManager.
 """
 
 from __future__ import annotations
+
+from typing import List
+from configuration import ConfigurationManager
 
 from .base import ActiveCollector
 from .scapy_fp import ScapyFPCollector
@@ -22,31 +26,31 @@ from .https_cert import HTTPSCertCollector
 from .ntp import NTPCollector
 from .lldp_cdp import LLDP_CDPCollector
 from .dhcp_cisco import DHCPCiscoCollector
-from .favicon import FaviconCollector  # <-- ДОБАВЛЕНО
-from .dns_sd import DnsSdCollector  # <-- ДОБАВЛЕНО
+from .favicon import FaviconCollector
+from .dns_sd import DnsSdCollector
 
 
-COLLECTORS: list[ActiveCollector] = [
-    DHCPCiscoCollector(),
-    ScapyFPCollector(),
-    TTLCollector(),
-    LLDP_CDPCollector(),
-    SNMPCollector(),
-    SwitchPortCollector(),
-    NetBIOSCollector(),
-    WSDCollector(),
-    SSHCollector(),
-    SMBCollector(),
-    BannersCollector(),
-    NTPCollector(),
-    TCPCollector(),
-    SSDPCollector(),
-    HTTPCollector(),
-    HTTPSCertCollector(),
-    FaviconCollector(),  # <-- ДОБАВЛЕНО
-    DnsSdCollector(),
-]
-
-
-def get_collectors() -> list[ActiveCollector]:
-    return COLLECTORS
+def get_collectors(configuration: ConfigurationManager) -> List[ActiveCollector]:
+    """
+    Создает и возвращает список всех активных коллекторов с внедренной конфигурацией.
+    """
+    return [
+        DHCPCiscoCollector(configuration),
+        ScapyFPCollector(configuration),
+        TTLCollector(configuration),
+        LLDP_CDPCollector(configuration),
+        SNMPCollector(configuration),
+        SwitchPortCollector(configuration),
+        NetBIOSCollector(configuration),
+        WSDCollector(configuration),
+        SSHCollector(configuration),
+        SMBCollector(configuration),
+        BannersCollector(configuration),
+        NTPCollector(configuration),
+        TCPCollector(configuration),
+        SSDPCollector(configuration),
+        HTTPCollector(configuration),
+        HTTPSCertCollector(configuration),
+        FaviconCollector(configuration),
+        DnsSdCollector(configuration),
+    ]
