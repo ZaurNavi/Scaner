@@ -93,10 +93,14 @@ def register_defaults(registry: ConfigRegistry):
     # Identity Engine
     registry.register("identity.enabled", bool, True, "Identity", "Enable identity engine")
     
-    # Session Engine
+        # v1.6.9.7: Session Engine Configuration
     registry.register("session.enabled", bool, True, "Session", "Enable session engine")
-    registry.register("session.timeout_seconds", int, 300, "Session", "Session timeout in seconds", min_value=10)
-
+    registry.register("session.timeout_seconds", int, 1200, "Session", "Session timeout in seconds (20 minutes)", min_value=60)
+    registry.register("session.timeline_limit", int, 50, "Session", "Max timeline events per session", min_value=10, max_value=1000)
+    registry.register("session.inactivity_minutes", int, 20, "Session", "Inactivity threshold in minutes", min_value=1)
+    registry.register("session.merge_window", int, 300, "Session", "Merge window in seconds for session recovery", min_value=60)
+    registry.register("session.recovery_enabled", bool, True, "Session", "Enable session recovery on startup")
+    
     # Future layers (placeholders)
     registry.register("telegram.enabled", bool, False, "Telegram", "Enable Telegram bot")
     registry.register("webui.enabled", bool, False, "WebUI", "Enable Web UI")
