@@ -81,6 +81,15 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="favicon_hash", category=ObservationCategory.APPLICATION, value_type=dict, description="Favicon mmh3 hash and metadata"
 ))
+AttributeRegistry.register(AttributeDescriptor(
+    id="dhcp_lease", category=ObservationCategory.NETWORK, value_type=dict, description="DHCP lease info from Cisco router"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="lldp_cdp_info", category=ObservationCategory.TOPOLOGY, value_type=dict, description="LLDP/CDP discovery info"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="switch_port_info", category=ObservationCategory.TOPOLOGY, value_type=dict, description="Switch port mapping by MAC"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
