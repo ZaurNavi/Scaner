@@ -97,6 +97,7 @@ from configuration import get_config_manager
 
 # ES-1.8.2: Fingerprint Pipeline импорты
 from fingerprint import FingerprintService
+from fingerprint.normalization.models import ObservationCategory
 
 
 def print_header() -> None:
@@ -496,38 +497,41 @@ def main() -> int:
     enrich(devices)
 
     ips = [d.ip for d in devices]
-    collected_data = collect_all(ips, devices, configuration=config)
 
     # ==============================================================================
-    # ES-1.8.2: Fingerprint Pipeline Integration
+    # ES-1.8.2: Fingerprint Pipeline (единственный путь выполнения)
     # ==============================================================================
     print("\n  [FINGERPRINT] Executing Fingerprint Pipeline...")
+    fingerprint_batch = None
     try:
         fingerprint_service = FingerprintService(configuration=config)
-        batch = fingerprint_service.execute(ips, devices)
-        print(f"         • ✅ Pipeline completed: {batch.count()} unified observations")
+        fingerprint_batch = fingerprint_service.execute(ips, devices)
+        print(f"         • ✅ Pipeline completed: {fingerprint_batch.count()} unified observations")
         
         # Демонстрация Query API
-        if batch.count() > 0:
-            identity_observations = batch.by_category(
-                __import__('fingerprint.normalization.models', fromlist=['ObservationCategory']).ObservationCategory.IDENTITY
-            )
+        if fingerprint_batch.count() > 0:
+            identity_observations = fingerprint_batch.by_category(ObservationCategory.IDENTITY)
             print(f"         • IDENTITY category: {identity_observations.count()} observations")
             
-            discovery_observations = batch.by_category(
-                __import__('fingerprint.normalization.models', fromlist=['ObservationCategory']).ObservationCategory.DISCOVERY
-            )
+            discovery_observations = fingerprint_batch.by_category(ObservationCategory.DISCOVERY)
             print(f"         • DISCOVERY category: {discovery_observations.count()} observations")
             
             # Показываем первые 3 наблюдения для демонстрации
-            if batch.count() > 0:
-                print("         • Sample observations:")
-                for i, obs in enumerate(batch.query().all()[:3], 1):
-                    print(f"              {i}. {obs.collector_id}.{obs.attribute} = {obs.normalized_value} (confidence: {obs.confidence:.2f})")
+            print("         • Sample observations:")
+            for i, obs in enumerate(fingerprint_batch.query().all()[:3], 1):
+                print(f"              {i}. {obs.collector_id}.{obs.attribute} = {obs.normalized_value} (confidence: {obs.confidence:.2f})")
     except Exception as exc:
         print(f"  [FINGERPRINT] ❌ Pipeline failed: {exc}")
         import traceback
         traceback.print_exc()
+
+    # ==============================================================================
+    # Legacy: Traffic Collector + Omada Controller Integration
+    # ==============================================================================
+    # ES-1.8.2: collect_all() остаётся для обратной совместимости с Traffic Collector
+    # и Omada Controller. В ES-1.8.3 Active Framework Migration эти вызовы будут
+    # перенесены в Pipeline.
+    collected_data = collect_all(ips, devices, configuration=config)
 
     # ==============================================================================
     # v1.5.2: Traffic Collector Integration
