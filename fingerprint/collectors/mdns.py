@@ -2,6 +2,7 @@
 """
 mDNS (Bonjour) Collector.
 ES-1.8.0: Passive Framework Implementation.
+ES-1.8.1: Добавлена категория для Normalization Layer.
 
 Zero Knowledge Principle:
 - Не знает о Platform Core
@@ -23,6 +24,9 @@ from configuration import ConfigurationManager
 
 from .base import BasePassiveCollector, Observation
 from .registry import passive_collector
+
+# ES-1.8.1: Категория для Normalization Layer
+from ..normalization.models import ObservationCategory
 
 
 # ==============================================================================
@@ -150,8 +154,13 @@ class MDNSCollector(BasePassiveCollector):
     mDNS (Bonjour) коллектор.
     
     v1.8.0: Наследует BasePassiveCollector, реализует observe().
+    v1.8.1: Указывает category для нормализации.
     Все настройки получаются через ConfigurationManager.
     """
+    
+    # ES-1.8.1: Категория для Normalization Layer (пункт 2)
+    # mDNS — это DISCOVERY, а не IDENTITY
+    category = ObservationCategory.DISCOVERY
     
     def __init__(self, configuration: ConfigurationManager):
         super().__init__(configuration)
@@ -202,7 +211,7 @@ class MDNSCollector(BasePassiveCollector):
                 data=mdns_info,
                 metadata={
                     "ip": ip,
-                    "services_count": len(mdns_info.services),
+                    "services_count": str(len(mdns_info.services)),
                     "hostname": mdns_info.hostname
                 }
             )
