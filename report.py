@@ -3,8 +3,8 @@
 Repeater Monitor
 report.py
 
-Построение отчётов: объединение SNMP + NetFlow + Vendor,
-определение статуса устройства, вывод таблицы, сохранение в файлы.
+ES-1.8.3: Полная миграция на UnifiedObservationBatch.
+Удалены зависимости от CollectedData и FingerprintResult.
 """
 
 from __future__ import annotations
@@ -32,9 +32,8 @@ from constants import (
 from models import Device
 from vendors import get_vendor
 from fingerprint.vendor_normalizer import normalize_vendor
-from fingerprint import fingerprint_all
-from fingerprint.collectors.base import CollectedData
-from fingerprint.correlation import engine as correlation_engine
+from fingerprint import fingerprint_all, UnifiedObservationBatch
+from fingerprint.normalization.models import ObservationCategory
 
 
 # ---------------------------------------------------------
@@ -42,6 +41,86 @@ from fingerprint.correlation import engine as correlation_engine
 # ---------------------------------------------------------
 
 MAX_VENDOR_WIDTH = 18
+
+
+# ---------------------------------------------------------
+# Observation Extractor — извлечение данных из Batch
+# ---------------------------------------------------------
+
+
+class ObservationExtractor:
+    """
+    ES-1.8.3: Извлекает данные из UnifiedObservationBatch по IP.
+    Заменяет legacy CollectedData.
+    """
+    
+    def __init__(self, batch: UnifiedObservationBatch):
+        self.batch = batch
+    
+    def get_hostname(self, ip: str) -> str:
+        """Извлекает hostname из batch для IP."""
+        hostname_obs = self.batch.by_attribute("hostname").by_collector("dns").filter(
+            lambda obs: obs.metadata.ip == ip
+        ).first()
+        if hostname_obs:
+            return hostname_obs.normalized_value or ""
+        return ""
+    
+    def get_mdns_info(self, ip: str) -> dict:
+        """Извлекает mDNS информацию из batch для IP."""
+        mdns_obs = self.batch.by_attribute("model").by_collector("mdns").filter(
+            lambda obs: obs.metadata.ip == ip
+        ).first()
+        
+        if not mdns_obs:
+            return {}
+        
+        # Извлекаем все mDNS атрибуты для этого IP
+        mdns_batch = self.batch.by_collector("mdns").filter(lambda obs: obs.metadata.ip == ip)
+        
+        result = {}
+        for obs in mdns_batch:
+            if obs.attribute == "hostname":
+                result["hostname"] = obs.normalized_value
+            elif obs.attribute == "model":
+                result["model"] = obs.normalized_value
+            elif obs.attribute == "device_type":
+                result["device_type"] = obs.normalized_value
+            elif obs.attribute == "services":
+                result["services"] = obs.normalized_value
+        
+        return result
+    
+    def get_omada_info(self, ip: str) -> dict:
+        """Извлекает Omada информацию из batch для IP."""
+        # Omada пока не мигрирована, возвращаем пустой dict
+        # В будущем здесь будет извлечение из batch
+        return {}
+    
+    def get_all_sources(self, ip: str) -> dict:
+        """Извлекает все источники из batch для IP."""
+        sources = {}
+        
+        # Группируем по collector_id
+        collectors = set(obs.collector_id for obs in self.batch if obs.metadata.ip == ip)
+        
+        for collector_id in collectors:
+            collector_obs = self.batch.by_collector(collector_id).filter(
+                lambda obs: obs.metadata.ip == ip
+            )
+            
+            sources[collector_id] = {
+                "observations": [
+                    {
+                        "attribute": obs.attribute,
+                        "value": obs.normalized_value,
+                        "confidence": obs.confidence,
+                    }
+                    for obs in collector_obs
+                ]
+            }
+        
+        return sources
 
 
 # ---------------------------------------------------------
@@ -102,40 +181,32 @@ def build_devices(
 
 
 # ---------------------------------------------------------
-# Обогащение метаданных устройств из коллекторов
+# Обогащение метаданных устройств из Batch
 # ---------------------------------------------------------
 
 
-def enrich_device_metadata(devices: list[Device], collected_data: dict[str, CollectedData]) -> None:
+def enrich_device_metadata(devices: list[Device], batch: UnifiedObservationBatch) -> None:
     """
-    Заполняет пустые поля Device (Hostname, Model, Vendor) данными из коллекторов,
-    если они не были определены на этапе SNMP/NetFlow.
+    ES-1.8.3: Заполняет пустые поля Device данными из UnifiedObservationBatch.
     """
+    extractor = ObservationExtractor(batch)
+    
     for device in devices:
-        data = collected_data.get(device.ip)
-        if not data:
-            continue
-        
-        # 1. Hostname: Приоритет Omada > mDNS > DNS
+        # 1. Hostname: DNS > mDNS
         if not device.hostname or device.hostname == "Unknown":
-            # Проверяем Omada
-            omada = data.sources.get("omada")
-            if omada and omada.raw_data.get("entities"):
-                entity = omada.raw_data["entities"][0]
-                device.hostname = entity.get("hostName") or entity.get("name") or ""
-            
-            # Если всё ещё пусто, проверяем mDNS
-            if (not device.hostname or device.hostname == "Unknown") and data.mdns.hostname:
-                device.hostname = data.mdns.hostname
-
-        # 2. Model: mDNS > Omada (или используем Hostname, если он похож на модель телефона)
+            hostname = extractor.get_hostname(device.ip)
+            if hostname:
+                device.hostname = hostname
+        
+        # 2. Model: mDNS
         if not device.model or device.model == "Unknown":
-            if data.mdns.model:
-                device.model = data.mdns.model
+            mdns_info = extractor.get_mdns_info(device.ip)
+            if mdns_info.get("model"):
+                device.model = mdns_info["model"]
             elif device.hostname and any(x in device.hostname.lower() for x in ["redmi", "galaxy", "iphone", "ipad", "macbook", "note", "honor"]):
-                device.model = device.hostname  # Если имя похоже на модель, дублируем его сюда для наглядности
+                device.model = device.hostname
 
-        # 3. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени из Omada/mDNS
+        # 3. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени
         if device.vendor == "Unknown":
             name_to_check = (device.hostname or "").lower()
             if "samsung" in name_to_check or "galaxy" in name_to_check:
@@ -386,27 +457,32 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
 
 
 # ---------------------------------------------------------
-# Рендер Evidence
+# Рендер Evidence (из Batch)
 # ---------------------------------------------------------
 
 
-def render_evidence(devices: list[Device], collected_data: dict[str, CollectedData]) -> list[str]:
+def render_evidence(devices: list[Device], batch: UnifiedObservationBatch) -> list[str]:
+    """
+    ES-1.8.3: Рендерит evidence из UnifiedObservationBatch.
+    """
     lines = []
+    extractor = ObservationExtractor(batch)
+    
     for d in devices:
-        collected = collected_data.get(d.ip, CollectedData())
-        corr = correlation_engine.correlate(d, collected)
-
-        if not corr.evidence_items:
+        sources = extractor.get_all_sources(d.ip)
+        
+        if not sources:
             continue
-
+        
         lines.append(f"  📋 {d.ip} ({d.mac}) — {d.os or 'Unknown'} {d.device_type or ''} [{d.confidence}]")
-        for item in corr.evidence_items:
-            if item.details:
-                lines.append(f"     ✔ {item.description} ({item.details}) [+{item.contribution}]")
-            else:
-                lines.append(f"     ✔ {item.description} [+{item.contribution}]")
-        lines.append(f"     ─── Total: {corr.breakdown.total()}")
+        
+        for source_name, source_data in sources.items():
+            for obs in source_data["observations"]:
+                if obs["confidence"] > 0:
+                    lines.append(f"     ✔ {source_name}.{obs['attribute']} = {obs['value']} [confidence: {obs['confidence']:.2f}]")
+        
         lines.append("")
+    
     return lines
 
 
@@ -426,7 +502,7 @@ def render_table(devices: list[Device], verbose: bool = False) -> list[str]:
 # ---------------------------------------------------------
 
 
-def print_table(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
+def print_table(devices: list[Device], batch: UnifiedObservationBatch | None = None) -> None:
     if App.VERBOSE:
         header = (
             f"{'Статус':<20}"
@@ -458,8 +534,8 @@ def print_table(devices: list[Device], collected_data: dict[str, CollectedData] 
     for line in render_table(devices, verbose=App.VERBOSE):
         print(line)
 
-    if App.VERBOSE and collected_data:
-        evidence_lines = render_evidence(devices, collected_data)
+    if App.VERBOSE and batch:
+        evidence_lines = render_evidence(devices, batch)
         if evidence_lines:
             print("  🔍 Evidence Explorer:")
             print()
@@ -473,7 +549,7 @@ def print_table(devices: list[Device], collected_data: dict[str, CollectedData] 
 # ---------------------------------------------------------
 
 
-def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
+def save_txt(devices: list[Device], batch: UnifiedObservationBatch | None = None) -> Path:
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
     file_path = report_dir / REPORT_TXT
@@ -508,8 +584,8 @@ def save_txt(devices: list[Device], collected_data: dict[str, CollectedData] | N
     lines.extend(render_table(devices, verbose=App.VERBOSE))
     lines.append("")
 
-    if App.VERBOSE and collected_data:
-        evidence_lines = render_evidence(devices, collected_data)
+    if App.VERBOSE and batch:
+        evidence_lines = render_evidence(devices, batch)
         if evidence_lines:
             lines.append("  🔍 Evidence Explorer:")
             lines.append("")
@@ -548,18 +624,21 @@ def save_csv(devices: list[Device]) -> Path:
 # ---------------------------------------------------------
 
 
-def save_json(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> Path:
+def save_json(devices: list[Device], batch: UnifiedObservationBatch | None = None) -> Path:
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
     file_path = report_dir / REPORT_JSON
 
+    extractor = ObservationExtractor(batch) if batch else None
+    
     devices_data = []
     for d in devices:
         device_dict = asdict(d)
-        if collected_data:
-            collected = collected_data.get(d.ip, CollectedData())
-            corr = correlation_engine.correlate(d, collected)
-            device_dict["evidence_items"] = [e.to_dict() for e in corr.evidence_items]
+        
+        if extractor:
+            sources = extractor.get_all_sources(d.ip)
+            device_dict["sources"] = sources
+        
         devices_data.append(device_dict)
 
     data = {
@@ -576,10 +655,12 @@ def save_json(devices: list[Device], collected_data: dict[str, CollectedData] | 
 # ---------------------------------------------------------
 
 
-def save_debug_json(devices: list[Device], collected_data: dict[str, CollectedData]) -> Path:
+def save_debug_json(devices: list[Device], batch: UnifiedObservationBatch) -> Path:
     report_dir = Paths.REPORT_DIR
     report_dir.mkdir(parents=True, exist_ok=True)
     file_path = report_dir / "debug_fingerprint.json"
+
+    extractor = ObservationExtractor(batch)
 
     data = {
         "timestamp": datetime.now().strftime(DATE_FORMAT),
@@ -588,7 +669,6 @@ def save_debug_json(devices: list[Device], collected_data: dict[str, CollectedDa
     }
 
     for device in devices:
-        collected = collected_data.get(device.ip, CollectedData())
         device_data = {
             "ip": device.ip, "mac": device.mac, "vendor": device.vendor,
             "hostname": device.hostname, "model": device.model, "os": device.os,
@@ -596,35 +676,19 @@ def save_debug_json(devices: list[Device], collected_data: dict[str, CollectedDa
             "status": device.status, "reason": device.reason, "sources": {},
         }
 
-        for source_name, source_result in collected.sources.items():
-            device_data["sources"][source_name] = {
-                "elapsed_ms": source_result.elapsed_ms,
-                "confidence": source_result.confidence,
-                "os": source_result.os, "model": source_result.model,
-                "device_type": source_result.device_type, "reason": source_result.reason,
-                "ports": source_result.ports, "ttl": source_result.ttl,
-                "latency_ms": source_result.latency_ms, "raw_data": source_result.raw_data,
-            }
+        # Извлекаем все источники из batch
+        sources = extractor.get_all_sources(device.ip)
+        device_data["sources"] = sources
 
-        if collected.hostname:
-            device_data["sources"]["dns"] = {"hostname": collected.hostname}
+        # Извлекаем hostname и mDNS
+        hostname = extractor.get_hostname(device.ip)
+        if hostname:
+            device_data["sources"]["dns"] = {"hostname": hostname}
 
-        if collected.mdns.hostname or collected.mdns.model or collected.mdns.device_type:
-            device_data["sources"]["mdns"] = {
-                "hostname": collected.mdns.hostname,
-                "model": collected.mdns.model,
-                "device_type": collected.mdns.device_type,
-                "services": collected.mdns.services,
-            }
+        mdns_info = extractor.get_mdns_info(device.ip)
+        if mdns_info:
+            device_data["sources"]["mdns"] = mdns_info
 
-        corr = correlation_engine.correlate(device, collected)
-        device_data["correlation"] = {
-            "matched_rules": [r.to_dict() for r in corr.matched_rules],
-            "reasons": corr.reasons,
-            "breakdown": corr.breakdown.to_dict(),
-            "fingerprint_score": corr.fingerprint_score,
-            "evidence_items": [e.to_dict() for e in corr.evidence_items],
-        }
         data["devices"].append(device_data)
 
     file_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -636,14 +700,14 @@ def save_debug_json(devices: list[Device], collected_data: dict[str, CollectedDa
 # ---------------------------------------------------------
 
 
-def save_report(devices: list[Device], collected_data: dict[str, CollectedData] | None = None) -> None:
+def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = None) -> None:
     saved_paths = []
     if Export.TXT:
-        saved_paths.append(("TXT", save_txt(devices, collected_data)))
+        saved_paths.append(("TXT", save_txt(devices, batch)))
     if Export.CSV:
         saved_paths.append(("CSV", save_csv(devices)))
     if Export.JSON:
-        saved_paths.append(("JSON", save_json(devices, collected_data)))
+        saved_paths.append(("JSON", save_json(devices, batch)))
 
     if saved_paths:
         print(f"  📄  Отчёты сохранены:")
@@ -671,5 +735,5 @@ def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Devic
 __all__ = [
     "build_devices", "analyze_all", "filter_devices", "sort_devices",
     "print_table", "save_report", "save_debug_json", "generate_report",
-    "enrich_device_metadata",
+    "enrich_device_metadata", "ObservationExtractor",
 ]
