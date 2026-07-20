@@ -46,7 +46,7 @@ from storage.archivist import (
     Archivist,
     build_snapshot_bundle,
 )
-from storage.schema import Scan, ScanStatus, Snapshot, SnapshotType, SnapshotBundle
+from storage.schema import Scan, ScanStatus, Snapshot, DeviceType, SnapshotBundle
 from events import EventEngine
 from history import HistoryService
 from traffic import traffic_collector
