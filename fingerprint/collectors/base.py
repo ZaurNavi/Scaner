@@ -2,11 +2,11 @@
 """
 Base Passive Collector + Aggregator.
 ES-1.8.0: Единый контракт для всех Passive Collectors.
-ES-1.8.1: Интеграция с Normalization Layer.
+ES-1.8.1: Интеграция с Normalization Layer (без transport).
 
 Архитектура:
 - BasePassiveCollector: абстрактный базовый класс
-- Observation: единица наблюдения
+- Observation: единица наблюдения (БЕЗ transport)
 - CollectedData: агрегированные данные для устройства
 - collect_all(): агрегатор, запускающий все коллекторы через Factory
 """
@@ -31,15 +31,18 @@ from storage.active_cache import get as cache_get, set as cache_set
 # ES-1.8.1: Normalization Layer Integration
 # ==============================================================================
 from ..normalization import Normalizer, RuleRegistry
+from ..normalization.models import Observation as NormalizationObservation, ObservationMetadata, ObservationCategory
 from ..normalization.rules import dns, mdns  # Запускает регистрацию правил
 
 # Инициализация Normalization Layer при импорте
 print("\n  [NORMALIZATION] Initializing Normalization Layer...")
 print(f"  [NORMALIZATION] ✅ Rule Registry initialized ({RuleRegistry.count()} rules)")
+for rule in RuleRegistry.get_all_rules():
+    print(f"         • [{rule.priority}] {rule.id} - {rule.description} (protocol={rule.protocol})")
 
 
 # ==============================================================================
-# Observation — единица наблюдения от Passive Collector
+# Observation — единица наблюдения от Passive Collector (БЕЗ transport)
 # ==============================================================================
 
 @dataclass
@@ -47,6 +50,7 @@ class Observation:
     """
     Единая единица наблюдения от Passive Collector.
     
+    ES-1.8.1 (пункт 1): БЕЗ transport.
     Zero Knowledge Principle:
     - Не знает о Platform Core
     - Не знает о Knowledge Layer
@@ -81,12 +85,13 @@ class BasePassiveCollector(ABC):
     # Дескриптор устанавливается декоратором @passive_collector
     descriptor: Any = None
     
+    # ES-1.8.1: Категория для нормализации (пункт 2)
+    # Коллектор знает свою категорию, но не передаёт её в Observation
+    category: ObservationCategory = ObservationCategory.IDENTITY
+    
     def __init__(self, configuration: ConfigurationManager):
         """
         v1.8.0: Dependency Injection через ConfigurationManager.
-        
-        Args:
-            configuration: ConfigurationManager для получения настроек
         """
         self.config = configuration
     
@@ -134,11 +139,9 @@ class BasePassiveCollector(ABC):
 # CollectedData — агрегированные данные для устройства
 # ==============================================================================
 
-# Импортируем MDNSInfo из mdns.py для обратной совместимости
 try:
     from .mdns import MDNSInfo
 except ImportError:
-    # Fallback для случая, когда mdns ещё не импортирован
     @dataclass
     class MDNSInfo:
         hostname: str = ""
@@ -152,17 +155,17 @@ class CollectedData:
     """
     Агрегированные данные для устройства.
     
-    v1.8.0: Добавлено поле passive_observations для хранения
-    результатов всех Passive Collectors.
+    v1.8.0: Добавлено поле passive_observations.
+    v1.8.1: Добавлено поле unified_observations.
     
-    v1.8.1: Добавлено поле unified_observations для хранения
-    нормализованных наблюдений.
+    ES-1.8.1 (пункт 10): Начинаем отказ от CollectedData.
+    В будущем UnifiedObservation пойдёт напрямую в Knowledge.
     """
     hostname: str = ""
     mdns: MDNSInfo = field(default_factory=MDNSInfo)
     sources: Dict[str, FingerprintResult] = field(default_factory=dict)
     passive_observations: Dict[str, Observation] = field(default_factory=dict)
-    unified_observations: List[Any] = field(default_factory=list)  # ES-1.8.1: НОВОЕ ПОЛЕ
+    unified_observations: List[Any] = field(default_factory=list)  # ES-1.8.1
 
 
 # ==============================================================================
@@ -177,20 +180,11 @@ def collect_all(
     """
     Агрегирует данные от всех Passive и Active коллекторов.
     
-    v1.8.0: Использует PassiveCollectorFactory для создания экземпляров.
-    v1.8.1: Добавлена нормализация наблюдений через Normalizer.
-    
-    Args:
-        ips: Список IP-адресов
-        devices: Список устройств
-        configuration: ConfigurationManager (опционально)
-    
-    Returns:
-        Dict[ip, CollectedData] — агрегированные данные для каждого IP
+    v1.8.0: Использует PassiveCollectorFactory.
+    v1.8.1: Добавлена нормализация через Normalizer.
     """
     print(f"\n  [DEBUG] collect_all() запущен для {len(devices)} устройств")
     
-    # v1.8.0: Получаем конфигурацию, если она не передана явно
     if configuration is None:
         configuration = get_config_manager()
     
@@ -200,9 +194,9 @@ def collect_all(
     # v1.8.0: Passive Collectors через Factory
     # ======================================================================
     passive_results: Dict[str, Dict[str, Observation]] = {}
+    passive_collectors: Dict[str, BasePassiveCollector] = {}  # ES-1.8.1
     passive_stats = []
     
-    # Получаем все включённые дескрипторы из Registry
     enabled_descriptors = list(PassiveRegistry.iter_enabled_descriptors(configuration))
     
     print(f"\n  [PASSIVE] Running {len(enabled_descriptors)} Passive Collector(s)...")
@@ -217,19 +211,17 @@ def collect_all(
         print(f"         • Protocol: {descriptor.protocol}")
         print(f"         • Capabilities: {', '.join(descriptor.capabilities) if descriptor.capabilities else 'none'}")
         
-        # v1.8.0: Создаём экземпляр через Factory
         collector = PassiveCollectorFactory.create(descriptor, configuration)
+        passive_collectors[collector_id] = collector  # ES-1.8.1
         
         start = time.time()
         try:
-            # Запускаем коллектор
             observations = collector.observe(ips, context={})
             passive_results[collector_id] = observations
             
             elapsed = (time.time() - start) * 1000
             count = len(observations)
             
-            # Информируем о результате
             print(f"         • ✅ Collected {count} observations in {elapsed:.1f} ms")
             
             passive_stats.append({
@@ -260,21 +252,50 @@ def collect_all(
     
     normalizer = Normalizer(configuration)
     
+    # ES-1.8.1 (пункт 2): Строим category_map из коллекторов
+    category_map = {}
+    for collector_id, collector in passive_collectors.items():
+        category_map[collector_id] = collector.category
+    
     # Собираем все Observation из всех коллекторов
     all_observations = []
     for collector_id, observations in passive_results.items():
         for ip, obs in observations.items():
-            all_observations.append(obs)
+            # ES-1.8.1: Конвертируем Collector Observation в Normalization Observation
+            # БЕЗ transport (пункт 1)
+            norm_obs = NormalizationObservation(
+                observation_id=NormalizationObservation.generate_id(
+                    collector_id=obs.collector_id,
+                    device_id=ip,
+                    attribute="data",
+                    value=obs.data
+                ),
+                collector_id=obs.collector_id,
+                protocol=obs.protocol,
+                device_id=ip,
+                attribute="data",
+                value=obs.data,
+                timestamp=obs.timestamp,
+                metadata=ObservationMetadata(
+                    ip=ip,
+                    hostname=obs.metadata.get("hostname", ""),
+                    extra=tuple(
+                        (k, str(v)) for k, v in obs.metadata.items()
+                        if k not in ("ip", "hostname")
+                    )
+                )
+            )
+            all_observations.append(norm_obs)
     
-    # Нормализуем
-    unified_observations = normalizer.normalize_many(all_observations)
+    # Нормализуем через Batch API
+    unified_observations = normalizer.normalize_many(all_observations, category_map)
     
     print(f"         • Normalized {len(unified_observations)} observations")
     
     # Группируем по IP
     unified_by_ip = {}
     for unified in unified_observations:
-        device_id = unified.metadata.get("ip", "")
+        device_id = unified.metadata.ip
         if device_id not in unified_by_ip:
             unified_by_ip[device_id] = []
         unified_by_ip[device_id].append(unified)
@@ -290,23 +311,19 @@ def collect_all(
         source = collector.source_name
         start = time.time()
         
-        # Проверка кэша для каждого устройства
         collector_results = {}
         for d in devices:
             cached = cache_get(d.ip, source)
             if cached:
                 collector_results[d.ip] = FingerprintResult(**cached)
         
-        # Запуск коллектора только для устройств без кэша
         uncached = [d for d in devices if d.ip not in collector_results]
         if uncached:
             results = collector.scan(uncached, context=context)
             collector_results.update(results)
         
-        # Сохранение в контекст для зависимых коллекторов
         context[source] = collector_results
         
-        # Сборка all_sources
         for ip, res in collector_results.items():
             if ip not in all_sources:
                 all_sources[ip] = {}
@@ -327,23 +344,19 @@ def collect_all(
     for d in devices:
         ip = d.ip
         
-        # Извлекаем hostname из DNS observations
         hostname = ""
         if "dns" in passive_results and ip in passive_results["dns"]:
             hostname = passive_results["dns"][ip].data or ""
         
-        # Извлекаем MDNSInfo из mDNS observations
         mdns_info = MDNSInfo()
         if "mdns" in passive_results and ip in passive_results["mdns"]:
             mdns_info = passive_results["mdns"][ip].data
         
-        # Собираем все passive observations для этого IP
         ip_passive_observations = {}
         for collector_id, observations in passive_results.items():
             if ip in observations:
                 ip_passive_observations[collector_id] = observations[ip]
         
-        # ES-1.8.1: Добавляем unified observations
         ip_unified_observations = unified_by_ip.get(ip, [])
         
         result[ip] = CollectedData(
@@ -351,7 +364,7 @@ def collect_all(
             mdns=mdns_info,
             sources=all_sources.get(ip, {}),
             passive_observations=ip_passive_observations,
-            unified_observations=ip_unified_observations  # ES-1.8.1: НОВОЕ ПОЛЕ
+            unified_observations=ip_unified_observations
         )
     
     total_time = (time.time() - start_total) * 1000
