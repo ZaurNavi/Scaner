@@ -252,43 +252,121 @@ def collect_all(
     
     normalizer = Normalizer(configuration)
     
-    # ES-1.8.1 (пункт 2): Строим category_map из коллекторов
+    # ES-1.8.1: Строим category_map из коллекторов
     category_map = {}
     for collector_id, collector in passive_collectors.items():
         category_map[collector_id] = collector.category
     
-    # Собираем все Observation из всех коллекторов
-    all_observations = []
+    # ES-1.8.1: Конвертируем Collector Observation в Normalization Observation
+    # Для DNS: создаём Observation с attribute="hostname"
+    # Для mDNS: создаём несколько Observations для каждого поля
+    all_normalization_observations = []
+    
     for collector_id, observations in passive_results.items():
         for ip, obs in observations.items():
-            # ES-1.8.1: Конвертируем Collector Observation в Normalization Observation
-            # БЕЗ transport (пункт 1)
-            norm_obs = NormalizationObservation(
-                observation_id=NormalizationObservation.generate_id(
-                    collector_id=obs.collector_id,
-                    device_id=ip,
-                    attribute="data",
-                    value=obs.data
-                ),
-                collector_id=obs.collector_id,
-                protocol=obs.protocol,
-                device_id=ip,
-                attribute="data",
-                value=obs.data,
-                timestamp=obs.timestamp,
-                metadata=ObservationMetadata(
-                    ip=ip,
-                    hostname=obs.metadata.get("hostname", ""),
-                    extra=tuple(
-                        (k, str(v)) for k, v in obs.metadata.items()
-                        if k not in ("ip", "hostname")
+            timestamp = obs.timestamp
+            
+            # DNS: hostname
+            if collector_id == "dns":
+                hostname = obs.data or ""
+                if hostname:
+                    norm_obs = NormalizationObservation(
+                        observation_id=NormalizationObservation.generate_id(
+                            collector_id=collector_id,
+                            device_id=ip,
+                            attribute="hostname",
+                            value=hostname
+                        ),
+                        collector_id=collector_id,
+                        protocol=obs.protocol,
+                        device_id=ip,
+                        attribute="hostname",
+                        value=hostname,
+                        timestamp=timestamp,
+                        metadata=ObservationMetadata(ip=ip)
                     )
-                )
-            )
-            all_observations.append(norm_obs)
+                    all_normalization_observations.append(norm_obs)
+            
+            # mDNS: hostname, model, device_type, services
+            elif collector_id == "mdns":
+                mdns_info = obs.data
+                if hasattr(mdns_info, "hostname") and mdns_info.hostname:
+                    norm_obs = NormalizationObservation(
+                        observation_id=NormalizationObservation.generate_id(
+                            collector_id=collector_id,
+                            device_id=ip,
+                            attribute="hostname",
+                            value=mdns_info.hostname
+                        ),
+                        collector_id=collector_id,
+                        protocol=obs.protocol,
+                        device_id=ip,
+                        attribute="hostname",
+                        value=mdns_info.hostname,
+                        timestamp=timestamp,
+                        metadata=ObservationMetadata(ip=ip)
+                    )
+                    all_normalization_observations.append(norm_obs)
+                
+                if hasattr(mdns_info, "model") and mdns_info.model:
+                    norm_obs = NormalizationObservation(
+                        observation_id=NormalizationObservation.generate_id(
+                            collector_id=collector_id,
+                            device_id=ip,
+                            attribute="model",
+                            value=mdns_info.model
+                        ),
+                        collector_id=collector_id,
+                        protocol=obs.protocol,
+                        device_id=ip,
+                        attribute="model",
+                        value=mdns_info.model,
+                        timestamp=timestamp,
+                        metadata=ObservationMetadata(ip=ip)
+                    )
+                    all_normalization_observations.append(norm_obs)
+                
+                if hasattr(mdns_info, "device_type") and mdns_info.device_type:
+                    norm_obs = NormalizationObservation(
+                        observation_id=NormalizationObservation.generate_id(
+                            collector_id=collector_id,
+                            device_id=ip,
+                            attribute="device_type",
+                            value=mdns_info.device_type
+                        ),
+                        collector_id=collector_id,
+                        protocol=obs.protocol,
+                        device_id=ip,
+                        attribute="device_type",
+                        value=mdns_info.device_type,
+                        timestamp=timestamp,
+                        metadata=ObservationMetadata(ip=ip)
+                    )
+                    all_normalization_observations.append(norm_obs)
+                
+                if hasattr(mdns_info, "services") and mdns_info.services:
+                    norm_obs = NormalizationObservation(
+                        observation_id=NormalizationObservation.generate_id(
+                            collector_id=collector_id,
+                            device_id=ip,
+                            attribute="services",
+                            value=str(mdns_info.services)
+                        ),
+                        collector_id=collector_id,
+                        protocol=obs.protocol,
+                        device_id=ip,
+                        attribute="services",
+                        value=mdns_info.services,
+                        timestamp=timestamp,
+                        metadata=ObservationMetadata(ip=ip)
+                    )
+                    all_normalization_observations.append(norm_obs)
     
     # Нормализуем через Batch API
-    unified_observations = normalizer.normalize_many(all_observations, category_map)
+    unified_observations = normalizer.normalize_many(
+        all_normalization_observations,
+        category_map
+    )
     
     print(f"         • Normalized {len(unified_observations)} observations")
     
