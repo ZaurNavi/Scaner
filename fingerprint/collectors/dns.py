@@ -2,6 +2,7 @@
 """
 DNS Collector — Reverse DNS resolution.
 ES-1.8.0: Passive Framework Implementation.
+ES-1.8.1: Добавлена категория для Normalization Layer.
 
 Zero Knowledge Principle:
 - Не знает о Platform Core
@@ -22,6 +23,9 @@ from configuration import ConfigurationManager
 from .base import BasePassiveCollector, Observation
 from .registry import passive_collector
 
+# ES-1.8.1: Категория для Normalization Layer
+from ..normalization.models import ObservationCategory
+
 
 @passive_collector(
     id="dns",
@@ -38,8 +42,13 @@ class DNSCollector(BasePassiveCollector):
     Reverse DNS коллектор.
     
     v1.8.0: Наследует BasePassiveCollector, реализует observe().
+    v1.8.1: Указывает category для нормализации.
     Все настройки получаются через ConfigurationManager.
     """
+    
+    # ES-1.8.1: Категория для Normalization Layer (пункт 2)
+    # Коллектор знает свою категорию, Normalizer не угадывает
+    category = ObservationCategory.IDENTITY
     
     def __init__(self, configuration: ConfigurationManager):
         super().__init__(configuration)
