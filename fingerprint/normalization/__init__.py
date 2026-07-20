@@ -63,6 +63,15 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="ssdp_info", category=ObservationCategory.DISCOVERY, value_type=dict, description="SSDP/UPnP device info"
 ))
+AttributeRegistry.register(AttributeDescriptor(
+    id="netbios_info", category=ObservationCategory.IDENTITY, value_type=dict, description="NetBIOS computer name info"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="wsd_info", category=ObservationCategory.DISCOVERY, value_type=dict, description="WSD device discovery info"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="dns_sd_services", category=ObservationCategory.SERVICE, value_type=list, description="List of discovered DNS-SD services"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
