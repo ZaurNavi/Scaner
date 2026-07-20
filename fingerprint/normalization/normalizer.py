@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
 """
 Normalizer — преобразование Observation в UnifiedObservation.
-ES-1.8.1: Единый конвейер нормализации.
+ES-1.8.1: Чистая архитектура без угадывания категории.
+
+Архитектурные принципы:
+- Normalizer не знает о протоколах (DNS, mDNS и т.д.)
+- Категория определяется RuleDescriptor
+- Batch API: normalize(), normalize_many(), normalize_stream()
+- Dependency Injection через ConfigurationManager
 """
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 from configuration import ConfigurationManager
 
-from .models import Observation, ObservationCategory, UnifiedObservation
+from .models import (
+    Observation,
+    ObservationCategory,
+    ObservationMetadata,
+    UnifiedObservation,
+)
 from .registry import RuleRegistry
 
 
@@ -18,16 +29,15 @@ class Normalizer:
     """
     Преобразует Observation в UnifiedObservation.
     
-    ES-1.8.1: Batch API — normalize() и normalize_many().
-    Dependency Injection через ConfigurationManager.
+    ES-1.8.1:
+    - НЕ угадывает категорию (пункт 2)
+    - Категория из RuleDescriptor
+    - Batch API: normalize(), normalize_many(), normalize_stream()
     """
     
     def __init__(self, configuration: ConfigurationManager):
         """
         v1.8.1: Dependency Injection через ConfigurationManager.
-        
-        Args:
-            configuration: ConfigurationManager для получения настроек
         """
         self.config = configuration
         self.unknown_policy = self.config.get(
@@ -35,98 +45,127 @@ class Normalizer:
             "log"  # keep, drop, log
         )
     
-    def normalize(self, observation: Observation) -> Optional[UnifiedObservation]:
+    def normalize(
+        self,
+        observation: Observation,
+        category: ObservationCategory
+    ) -> Optional[UnifiedObservation]:
         """
         Нормализует одну Observation.
         
+        ES-1.8.1 (пункт 2): Категория передаётся явно,
+        Normalizer не угадывает её.
+        
         Args:
             observation: Сырая Observation
+            category: Категория (из RuleDescriptor или Collector)
         
         Returns:
             UnifiedObservation или None (если unknown_policy == "drop")
         """
-        # Определяем категорию из metadata или protocol
-        category = self._infer_category(observation)
-        
         # Ищем правило для этой категории и атрибута
-        rule = RuleRegistry.get_rule(category, observation.attribute)
+        rule = RuleRegistry.get_rule(
+            category=category,
+            attribute=observation.attribute,
+            protocol=observation.protocol
+        )
         
         if rule is None:
             # Unknown policy
             if self.unknown_policy == "drop":
                 return None
             elif self.unknown_policy == "log":
-                print(f"      [NORMALIZER] ⚠️ No rule for {category.value}.{observation.attribute}")
+                print(f"      [NORMALIZER] ⚠️ No rule for {category.value}.{observation.attribute} (protocol={observation.protocol})")
                 # Используем значение как есть
                 normalized_value = observation.value
+                confidence = 0.5
+                warnings = ("no_rule",)
             else:  # keep
                 normalized_value = observation.value
+                confidence = 0.5
+                warnings = ("no_rule", "kept")
         else:
             # Применяем правило
             try:
-                normalized_value = rule.handler(observation)
+                result = rule.apply(observation)
+                normalized_value = result.value
+                confidence = result.confidence
+                warnings = result.warnings
             except Exception as e:
-                print(f"      [NORMALIZER] ❌ Rule failed for {category.value}.{observation.attribute}: {e}")
+                print(f"      [NORMALIZER] ❌ Rule '{rule.id}' failed: {e}")
                 normalized_value = observation.value
+                confidence = 0.0
+                warnings = (f"rule_failed:{e}",)
         
         # Создаём UnifiedObservation
         return UnifiedObservation(
             observation_id=observation.observation_id,
             collector_id=observation.collector_id,
             protocol=observation.protocol,
-            transport=observation.transport,
             category=category,
             attribute=observation.attribute,
             normalized_value=normalized_value,
+            confidence=confidence,
             timestamp=observation.timestamp,
+            warnings=warnings,
             metadata=observation.metadata
         )
     
-    def normalize_many(self, observations: List[Observation]) -> List[UnifiedObservation]:
+    def normalize_many(
+        self,
+        observations: List[Observation],
+        category_map: dict[str, ObservationCategory] = None
+    ) -> List[UnifiedObservation]:
         """
-        Нормализует множество Observation.
+        Нормализует множество Observation (Batch API).
         
-        ES-1.8.1: Batch API для обработки больших пакетов.
+        ES-1.8.1 (пункт 7): Для больших пакетов.
         
         Args:
             observations: Список сырых Observation
+            category_map: Опциональный маппинг collector_id → category
         
         Returns:
             Список UnifiedObservation
         """
         results = []
         for obs in observations:
-            unified = self.normalize(obs)
+            # Определяем категорию
+            if category_map and obs.collector_id in category_map:
+                category = category_map[obs.collector_id]
+            else:
+                # Fallback: используем IDENTITY как дефолт
+                category = ObservationCategory.IDENTITY
+            
+            unified = self.normalize(obs, category)
             if unified is not None:
                 results.append(unified)
         return results
     
-    def _infer_category(self, observation: Observation) -> ObservationCategory:
+    def normalize_stream(
+        self,
+        observations: Iterator[Observation],
+        category_map: dict[str, ObservationCategory] = None
+    ) -> Iterator[UnifiedObservation]:
         """
-        Определяет категорию из metadata или protocol.
+        Потоковая нормализация (пункт 7).
         
-        ES-1.8.1: Если категория не указана, пытаемся определить.
+        ES-1.8.1: yield UnifiedObservation для потоковой обработки.
+        Пригодится, когда Passive станет большим.
+        
+        Args:
+            observations: Итератор сырых Observation
+            category_map: Опциональный маппинг collector_id → category
+        
+        Yields:
+            UnifiedObservation
         """
-        # Проверяем metadata
-        if "category" in observation.metadata:
-            cat_value = observation.metadata["category"]
-            if isinstance(cat_value, ObservationCategory):
-                return cat_value
-            try:
-                return ObservationCategory(cat_value)
-            except ValueError:
-                pass
-        
-        # Определяем по protocol
-        protocol_map = {
-            "DNS": ObservationCategory.IDENTITY,
-            "mDNS": ObservationCategory.IDENTITY,
-            "LLMNR": ObservationCategory.IDENTITY,
-            "NBNS": ObservationCategory.IDENTITY,
-            "DHCP": ObservationCategory.NETWORK,
-            "SSDP": ObservationCategory.SERVICE,
-            "HTTP": ObservationCategory.APPLICATION,
-            "TLS": ObservationCategory.SECURITY,
-        }
-        
-        return protocol_map.get(observation.protocol, ObservationCategory.IDENTITY)
+        for obs in observations:
+            if category_map and obs.collector_id in category_map:
+                category = category_map[obs.collector_id]
+            else:
+                category = ObservationCategory.IDENTITY
+            
+            unified = self.normalize(obs, category)
+            if unified is not None:
+                yield unified
