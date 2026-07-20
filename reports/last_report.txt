@@ -1,137 +1,362 @@
 =====================================================================================================================================================================
                                                                           Repeater Monitor                                                                           
-                                                                         20.07.2026 17:12:03                                                                         
+                                                                         20.07.2026 22:18:41                                                                         
                                                                            [VERBOSE MODE]                                                                            
 =====================================================================================================================================================================
 
 Статус              IP              MAC                 Vendor              Hostname          Model           OS          Type           Conf  Flows    MB/h  Причина
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.46    FE:3E:7C:8D:9C:C8   Xiaomi              Redmi-14C         Redmi-14C       Android     Smartphone       70    101    3.63  Производитель: Xiaomi
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.51    7C:D6:61:58:8F:9C   Xiaomi              7C-D6-61-58-8F-9C                 Android     Smartphone       80     29    3.31  Производитель: Xiaomi
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.246   46:8A:0C:8D:B0:D7   Samsung             Samsung-M14                       Android     Smartphone       95    214    2.65  Много flows (214) при низком трафике
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.48    72:32:37:36:52:DC   Xiaomi              Xiaomi-14T-Pro                    Android     Smartphone       95    192    2.38  Производитель: Xiaomi
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.253   FA:26:3B:DC:D4:A8   Xiaomi              Redmi-A3          Redmi-A3        Android     Smartphone       70    170    2.07  Производитель: Xiaomi
-🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.44    E6:10:22:9A:84:05   Xiaomi              Redmi-Note-10     Redmi-Note-10   Android     Smartphone       70      6    1.02  Производитель: Xiaomi
-🟢 НОРМАЛЬНЫЙ        192.168.1.54    F2:CE:43:DB:3D:A6   Unknown             F2-CE-43-DB-3D-A6                 Linux       Network Device   40     99    5.93  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.14    12:79:08:92:4E:6F   Huawei              HONOR-X8a         HONOR-X8a       Android     Smartphone       90     95    3.87  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.50    82:D9:39:5C:A0:F5   Unknown             82-D9-39-5C-A0-F5                 Unknown     Mobile Device    45     60    3.73  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.29    1A:B9:88:4E:96:A8   Huawei              HONOR-X7c         HONOR-X7c       Android     Smartphone       90      2    2.53  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.53    F6:21:56:B0:7D:61   Unknown             F6-21-56-B0-7D-61                 Linux       Network Device   40     76    2.50  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.52    FC:94:35:21:18:53   Huawei              HUAWEI_P30_lite-..                Android     Smartphone       80     18    2.40  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.30    9A:66:32:93:5B:4F   Unknown             9A-66-32-93-5B-4F                 Unknown     Mobile Device    45     15    2.01  —
-🟢 НОРМАЛЬНЫЙ        192.168.1.49    3E:26:4B:4E:A6:B8   Unknown             3E-26-4B-4E-A6-B8                 Unknown     Mobile Device    45     12    0.80  —
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.161   4A:31:CC:E5:38:8B   Xiaomi              Redmi-12C         Redmi-12C       Android     Smartphone       95     68   20.59  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.40    D6:0C:E3:7C:88:A9   Unknown             D6-0C-E3-7C-88-A9                 Unknown     Mobile Device    55    304   18.62  Много flows (304) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.217   72:1C:20:AF:C7:7C   Samsung             Galaxy-A52        Galaxy-A52      Android     Smartphone       95    231   14.46  Много flows (231) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.235   BE:57:FF:9F:38:8E   Xiaomi              Redmi-13C         Redmi-13C       Android     Smartphone       70    132   11.01  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.213   2A:32:EC:67:50:8D   Unknown             2A-32-EC-67-50-8D                 Linux       Network Device   50    174   10.67  Много flows (174) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.150   0A:41:18:3B:A6:DD   Xiaomi              Redmi-Note-12     Redmi-Note-12   Android     Smartphone       95    144   10.58  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.152   8A:87:0A:B9:E7:7C   Samsung             Galaxy-A32        Galaxy-A32      Android     Smartphone       95    121    9.70  Много flows (121) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.229   BA:7B:E7:FB:F4:C2   Unknown             BA-7B-E7-FB-F4-C2                 Unknown     Mobile Device    55    224    8.83  Много flows (224) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.246   86:E8:A9:B9:EF:56   Xiaomi              Redmi-Note-11     Redmi-Note-11   Android     Smartphone       70     33    6.66  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.224   12:DA:10:D8:5A:93   Unknown             12-DA-10-D8-5A-93                 Unknown     Mobile Device    55    112    6.45  Много flows (112) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.101   46:B4:AC:48:00:15   Xiaomi              Redmi-Note-13-Pro Redmi-Note-13-..Android     Smartphone       95     67    5.08  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.139   76:DF:D6:46:12:31   Unknown             76-DF-D6-46-12-31                 Unknown     Mobile Device    55    345    4.77  Много flows (345) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.132   0A:2C:C1:E5:58:1F   Unknown             0A-2C-C1-E5-58-1F                 Unknown     Mobile Device    55    124    4.65  Много flows (124) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.205   8A:17:D9:CD:EA:30   Unknown             8A-17-D9-CD-EA-30                 Linux       Network Device   50    238    3.86  Много flows (238) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.218   92:61:26:E3:82:2E   Unknown             fsan-nin-A05s                     Linux       Network Device   50    308    3.77  Много flows (308) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.237   2E:DD:55:5F:AB:3C   Unknown             2E-DD-55-5F-AB-3C                 Unknown     Mobile Device    45    348    3.19  Много flows (348) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.245   1E:EF:80:82:5D:3D   Xiaomi              Redmi-15          Redmi-15        Android     Smartphone       70     50    3.11  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.234   B2:FD:0B:BC:FD:02   Unknown             B2-FD-0B-BC-FD-02                 Unknown     Mobile Device    45    107    2.27  Много flows (107) при низком трафике
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.204   BA:DA:1A:9C:18:CC   Xiaomi              REDMI-15C         REDMI-15C       Android     Smartphone       95     10    1.96  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.146   0A:CB:78:89:CB:2B   Xiaomi              POCO-F7                           Android     Smartphone       95     25    1.92  Производитель: Xiaomi
+🔴 ПОДОЗРИТЕЛЬНЫЙ    192.168.1.164   2A:12:29:CE:E2:D0   Unknown             2A-12-29-CE-E2-D0                 Unknown     Mobile Device    55    107    1.92  Много flows (107) при низком трафике
+🟢 НОРМАЛЬНЫЙ        192.168.1.233   0A:DD:B3:C7:EF:CB   Unknown             0A-DD-B3-C7-EF-CB                 Unknown     Mobile Device    45    202   61.70  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.202   52:9E:FC:36:99:57   Unknown             52-9E-FC-36-99-57                 Unknown     Mobile Device    55     26    9.64  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.219   9E:4A:3A:7E:69:0F   Unknown             9E-4A-3A-7E-69-0F                 Unknown     Mobile Device    45      1    9.46  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.168   F6:C9:96:55:B2:94   Samsung             Galaxy-S25-Ultra  Galaxy-S25-UltraAndroid     Smartphone       95     21    8.77  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.238   62:23:67:E7:80:C9   Samsung             Galaxy-A07        Galaxy-A07      Android     Smartphone       95     33    8.75  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.209   42:48:D0:17:27:29   Unknown             42-48-D0-17-27-29                 Unknown     Mobile Device    55      2    5.94  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.243   E2:80:A3:80:F2:24   Unknown             E2-80-A3-80-F2-24                 Linux       Network Device   50     80    5.74  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.211   D6:57:DB:5D:C7:E4   Unknown             D6-57-DB-5D-C7-E4                 Unknown     Mobile Device    55     32    5.62  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.236   7E:72:E5:2C:F3:C2   Samsung             Galaxy-A10        Galaxy-A10      Android     Smartphone       70     26    2.15  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.239   3A:66:A8:FE:02:0E   Unknown             3A-66-A8-FE-02-0E                 Unknown     Mobile Device    45     60    2.15  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.242   5E:AE:1C:BC:A1:FB   Samsung             Galaxy-A12        Galaxy-A12      Android     Smartphone       95     15    1.92  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.185   56:BA:04:EA:78:6F   Unknown             56-BA-04-EA-78-6F                 Unknown     Mobile Device    55     55    1.89  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.207   C6:D0:14:5C:46:0B   Huawei              HONOR-X6b         HONOR-X6b       Android     Smartphone       90     13    1.36  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.162   4E:8E:4A:8E:B0:CE   Samsung             Samsung-S22                       Android     Smartphone       95     25    1.35  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.33    1E:57:D9:7D:F2:9D   Unknown             OPPO-A38                          Unknown     Mobile Device    55     24    0.82  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.46    0A:76:53:E4:09:81   Samsung             Galaxy-A121       Galaxy-A121     Android     Smartphone       95     11    0.76  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.80    12:6A:B8:30:40:3B   Unknown             lezginka                          Unknown     Mobile Device    55     18    0.49  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.210   E6:0D:18:6B:94:DF   Unknown             elya                              Unknown     Mobile Device    55     33    0.46  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.231   CA:3B:68:50:DB:DF   Unknown             Leyla-adli-kisiy..                Unknown     Mobile Device    45     64    0.45  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.199   26:42:1A:3D:01:A5   Unknown             26-42-1A-3D-01-A5                 Unknown     Mobile Device    55     27    0.41  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.232   52:9F:D8:2F:C2:FF   Unknown             52-9F-D8-2F-C2-FF                 Unknown     Mobile Device    55      1    0.32  —
+🟢 НОРМАЛЬНЫЙ        192.168.1.177   DA:FE:6C:76:67:32   Unknown             DA-FE-6C-76-67-32                 Unknown     Mobile Device    55      4    0.14  —
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Всего: 14 | 🔴 Подозрительных: 6 | 🟡 Неопределённых: 0 | 🟢 Нормальных: 8
+Всего: 43 | 🔴 Подозрительных: 21 | 🟡 Неопределённых: 0 | 🟢 Нормальных: 22
 
   🔍 Evidence Explorer:
 
-  📋 192.168.1.46 (FE:3E:7C:8D:9C:C8) — Android Smartphone [70]
-     ✔ Vendor = Xiaomi (MAC: FE:3E:7C) [+10]
-     ✔ Hostname = Redmi-14C [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-14C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -95dBm, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 13Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784553059332, Active: True, Down: 0.7MB, Up: 0.5MB, PktDown: 1644, PktUp: 1698, PowerSave: False, Wireless: True, Guest: False) [+70]
+  📋 192.168.1.161 (4A:31:CC:E5:38:8B) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: 4A:31:CC) [+10]
+     ✔ Hostname = Redmi-12C [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-12C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -75dBm, Signal: 37, Rank: 2, SNR: 20dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 32min, LastSeen: 1784571494886, Active: True, Down: 4.7MB, Up: 1.4MB, PktDown: 5611, PktUp: 4436, PowerSave: True, Wireless: True, Guest: False) [+70]
      ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
      ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
      ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 95
 
-  📋 192.168.1.51 (7C:D6:61:58:8F:9C) — Android Smartphone [80]
-     ✔ Vendor = Xiaomi (MAC: 7C:D6:61) [+10]
-     ✔ Hostname = 7C-D6-61-58-8F-9C [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: 7C-D6-61-58-8F-9C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -89dBm, Signal: 2, Rank: 1, SNR: 6dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 4min, LastSeen: 1784553059332, Active: True, Down: 18.2MB, Up: 0.7MB, PktDown: 13368, PktUp: 8258, PowerSave: True, Wireless: True, Guest: False) [+30]
-     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ─── Total: 90
+  📋 192.168.1.40 (D6:0C:E3:7C:88:A9) — Unknown Mobile Device [55]
+     ✔ Hostname = D6-0C-E3-7C-88-A9 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: D6-0C-E3-7C-88-A9, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -69dBm, Signal: 52, Rank: 3, SNR: 26dB, Ch: 11, Radio: 2.4GHz, TX: 86Mbps, RX: 34Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 79min, LastSeen: 1784571494886, Active: True, Down: 79.6MB, Up: 16.3MB, PktDown: 76639, PktUp: 43545, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
 
-  📋 192.168.1.246 (46:8A:0C:8D:B0:D7) — Android Smartphone [95]
-     ✔ Vendor = Samsung (MAC: 46:8A:0C) [+10]
-     ✔ Hostname = Samsung-M14 [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: Samsung-M14, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 11, Radio: 2.4GHz, TX: 14Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 24min, LastSeen: 1784553059332, Active: True, Down: 105.4MB, Up: 8.0MB, PktDown: 96611, PktUp: 54950, PowerSave: True, Wireless: True, Guest: False) [+70]
+  📋 192.168.1.217 (72:1C:20:AF:C7:7C) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 72:1C:20) [+10]
+     ✔ Hostname = Galaxy-A52 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A52, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 16min, LastSeen: 1784571494886, Active: True, Down: 30.3MB, Up: 17.2MB, PktDown: 39730, PktUp: 42560, PowerSave: False, Wireless: True, Guest: False) [+70]
      ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
      ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 95
 
-  📋 192.168.1.48 (72:32:37:36:52:DC) — Android Smartphone [95]
-     ✔ Vendor = Xiaomi (MAC: 72:32:37) [+10]
-     ✔ Hostname = Xiaomi-14T-Pro [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: Xiaomi-14T-Pro, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 11, Radio: 2.4GHz, TX: 114Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784553059332, Active: True, Down: 12.4MB, Up: 1.6MB, PktDown: 11766, PktUp: 8052, PowerSave: True, Wireless: True, Guest: False) [+70]
+  📋 192.168.1.235 (BE:57:FF:9F:38:8E) — Android Smartphone [70]
+     ✔ Vendor = Xiaomi (MAC: BE:57:FF) [+10]
+     ✔ Hostname = Redmi-13C [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-13C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -91dBm, SNR: 4dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 6.1MB, Up: 2.1MB, PktDown: 7609, PktUp: 5556, PowerSave: False, Wireless: True, Guest: False) [+70]
      ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
      ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 95
 
-  📋 192.168.1.253 (FA:26:3B:DC:D4:A8) — Android Smartphone [70]
-     ✔ Vendor = Xiaomi (MAC: FA:26:3B) [+10]
-     ✔ Hostname = Redmi-A3 [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-A3, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -75dBm, Signal: 37, Rank: 2, SNR: 20dB, Ch: 11, Radio: 2.4GHz, TX: 19Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 24min, LastSeen: 1784553059332, Active: True, Down: 35.3MB, Up: 51.1MB, PktDown: 76396, PktUp: 131557, PowerSave: False, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
-     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 95
-
-  📋 192.168.1.44 (E6:10:22:9A:84:05) — Android Smartphone [70]
-     ✔ Vendor = Xiaomi (MAC: E6:10:22) [+10]
-     ✔ Hostname = Redmi-Note-10 [+10]
-     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-10, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -89dBm, Signal: 2, Rank: 1, SNR: 6dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 13min, LastSeen: 1784553059332, Active: True, Down: 0.6MB, Up: 0.3MB, PktDown: 1111, PktUp: 1171, PowerSave: True, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
-     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 95
-
-  📋 192.168.1.54 (F2:CE:43:DB:3D:A6) — Linux Network Device [40]
-     ✔ Hostname = F2-CE-43-DB-3D-A6 [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: F2-CE-43-DB-3D-A6, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -76dBm, Signal: 35, Rank: 2, SNR: 19dB, Ch: 11, Radio: 2.4GHz, TX: 25Mbps, RX: 17Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 1min, LastSeen: 1784553059332, Active: True, Down: 2.1MB, Up: 0.6MB, PktDown: 2690, PktUp: 2765, PowerSave: False, Wireless: True, Guest: False) [+30]
+  📋 192.168.1.213 (2A:32:EC:67:50:8D) — Linux Network Device [50]
+     ✔ Hostname = 2A-32-EC-67-50-8D [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 2A-32-EC-67-50-8D, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -93dBm, SNR: 2dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 17min, LastSeen: 1784571494886, Active: True, Down: 53.5MB, Up: 7.0MB, PktDown: 52681, PktUp: 21461, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
      ─── Total: 50
 
-  📋 192.168.1.14 (12:79:08:92:4E:6F) — Android Smartphone [90]
-     ✔ Vendor = Huawei (MAC: 12:79:08) [+10]
-     ✔ Hostname = HONOR-X8a [+10]
-     ✔ Omada Controller identifies device (type: android, hostname: HONOR-X8a, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -93dBm, SNR: 2dB, Ch: 44, Radio: 5GHz, TX: 14Mbps, RX: 13Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 24min, LastSeen: 1784553028690, Active: True, Down: 63.2MB, Up: 6.9MB, PktDown: 64401, PktUp: 37358, PowerSave: False, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_huawei (Huawei vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 90
+  📋 192.168.1.150 (0A:41:18:3B:A6:DD) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: 0A:41:18) [+10]
+     ✔ Hostname = Redmi-Note-12 [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-12, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -86dBm, Signal: 10, Rank: 1, SNR: 9dB, Ch: 44, Radio: 5GHz, TX: 195Mbps, RX: 58Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784571494886, Active: True, Down: 44.4MB, Up: 5.0MB, PktDown: 41100, PktUp: 14915, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
 
-  📋 192.168.1.50 (82:D9:39:5C:A0:F5) — Unknown Mobile Device [45]
-     ✔ Hostname = 82-D9-39-5C-A0-F5 [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: 82-D9-39-5C-A0-F5, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -87dBm, Signal: 7, Rank: 1, SNR: 8dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 5min, LastSeen: 1784553059332, Active: True, Down: 1.5MB, Up: 0.3MB, PktDown: 2046, PktUp: 1590, PowerSave: True, Wireless: True, Guest: False) [+30]
+  📋 192.168.1.152 (8A:87:0A:B9:E7:7C) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 8A:87:0A) [+10]
+     ✔ Hostname = Galaxy-A32 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A32, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 11min, LastSeen: 1784571494886, Active: True, Down: 83.2MB, Up: 6.8MB, PktDown: 73556, PktUp: 27868, PowerSave: True, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.229 (BA:7B:E7:FB:F4:C2) — Unknown Mobile Device [55]
+     ✔ Hostname = BA-7B-E7-FB-F4-C2 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: BA-7B-E7-FB-F4-C2, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 144Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 10min, LastSeen: 1784571494886, Active: True, Down: 34.9MB, Up: 1.9MB, PktDown: 28461, PktUp: 9751, PowerSave: False, Wireless: True, Guest: False) [+30]
      ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 55
 
-  📋 192.168.1.29 (1A:B9:88:4E:96:A8) — Android Smartphone [90]
-     ✔ Vendor = Huawei (MAC: 1A:B9:88) [+10]
-     ✔ Hostname = HONOR-X7c [+10]
-     ✔ Omada Controller identifies device (type: android, hostname: HONOR-X7c, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -81dBm, Signal: 22, Rank: 2, SNR: 14dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784553059332, Active: True, Down: 17.6MB, Up: 0.5MB, PktDown: 14818, PktUp: 5261, PowerSave: True, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_huawei (Huawei vendor + no HTTP ports (Android firewall)) [+70]
-     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
-     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
-     ─── Total: 90
+  📋 192.168.1.246 (86:E8:A9:B9:EF:56) — Android Smartphone [70]
+     ✔ Vendor = Xiaomi (MAC: 86:E8:A9) [+10]
+     ✔ Hostname = Redmi-Note-11 [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-11, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -94dBm, SNR: 1dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 4min, LastSeen: 1784571494886, Active: True, Down: 1.6MB, Up: 0.3MB, PktDown: 1816, PktUp: 987, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
 
-  📋 192.168.1.53 (F6:21:56:B0:7D:61) — Linux Network Device [40]
-     ✔ Hostname = F6-21-56-B0-7D-61 [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: F6-21-56-B0-7D-61, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 44, Radio: 5GHz, TX: 34Mbps, RX: 12Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 2min, LastSeen: 1784553059332, Active: True, Down: 0.4MB, Up: 0.2MB, PktDown: 795, PktUp: 788, PowerSave: True, Wireless: True, Guest: False) [+30]
+  📋 192.168.1.224 (12:DA:10:D8:5A:93) — Unknown Mobile Device [55]
+     ✔ Hostname = 12-DA-10-D8-5A-93 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 12-DA-10-D8-5A-93, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -95dBm, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 12min, LastSeen: 1784571494886, Active: True, Down: 2.0MB, Up: 1.6MB, PktDown: 4382, PktUp: 4577, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.101 (46:B4:AC:48:00:15) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: 46:B4:AC) [+10]
+     ✔ Hostname = Redmi-Note-13-Pro [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-Note-13-Pro, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -85dBm, Signal: 12, Rank: 1, SNR: 10dB, Ch: 44, Radio: 5GHz, TX: 14Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 4.4MB, Up: 1.2MB, PktDown: 6087, PktUp: 5032, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.139 (76:DF:D6:46:12:31) — Unknown Mobile Device [55]
+     ✔ Hostname = 76-DF-D6-46-12-31 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 76-DF-D6-46-12-31, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -75dBm, Signal: 37, Rank: 2, SNR: 20dB, Ch: 11, Radio: 2.4GHz, TX: 51Mbps, RX: 24Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784571494886, Active: True, Down: 43.7MB, Up: 5.3MB, PktDown: 41781, PktUp: 25463, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.132 (0A:2C:C1:E5:58:1F) — Unknown Mobile Device [55]
+     ✔ Hostname = 0A-2C-C1-E5-58-1F [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 0A-2C-C1-E5-58-1F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -75dBm, Signal: 37, Rank: 2, SNR: 20dB, Ch: 11, Radio: 2.4GHz, TX: 68Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 48min, LastSeen: 1784571494886, Active: True, Down: 49.0MB, Up: 4.3MB, PktDown: 44626, PktUp: 22902, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.205 (8A:17:D9:CD:EA:30) — Linux Network Device [50]
+     ✔ Hostname = 8A-17-D9-CD-EA-30 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 8A-17-D9-CD-EA-30, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -91dBm, SNR: 4dB, Ch: 44, Radio: 5GHz, TX: 17Mbps, RX: 7Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784571494886, Active: True, Down: 37.0MB, Up: 8.4MB, PktDown: 44257, PktUp: 28733, PowerSave: False, Wireless: True, Guest: False) [+30]
      ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
      ─── Total: 50
 
-  📋 192.168.1.52 (FC:94:35:21:18:53) — Android Smartphone [80]
-     ✔ Vendor = Huawei (MAC: FC:94:35) [+10]
-     ✔ Hostname = HUAWEI_P30_lite-685b630f2 [+10]
-     ✔ Omada Controller identifies device (type: android, hostname: HUAWEI_P30_lite-685b630f2, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -85dBm, Signal: 12, Rank: 1, SNR: 10dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 3min, LastSeen: 1784553059332, Active: True, Down: 0.0MB, Up: 0.0MB, PktDown: 214, PktUp: 252, PowerSave: True, Wireless: True, Guest: False) [+70]
-     ✔ Rule: android_huawei (Huawei vendor + no HTTP ports (Android firewall)) [+70]
-     ─── Total: 90
+  📋 192.168.1.218 (92:61:26:E3:82:2E) — Linux Network Device [50]
+     ✔ Hostname = fsan-nin-A05s [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: fsan-nin-A05s, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -82dBm, Signal: 20, Rank: 1, SNR: 13dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 29Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 14min, LastSeen: 1784571494886, Active: True, Down: 77.9MB, Up: 9.7MB, PktDown: 74454, PktUp: 32587, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
+     ─── Total: 50
 
-  📋 192.168.1.30 (9A:66:32:93:5B:4F) — Unknown Mobile Device [45]
-     ✔ Hostname = 9A-66-32-93-5B-4F [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: 9A-66-32-93-5B-4F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -84dBm, Signal: 15, Rank: 1, SNR: 11dB, Ch: 11, Radio: 2.4GHz, TX: 17Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 22min, LastSeen: 1784553059332, Active: True, Down: 1.4MB, Up: 1.2MB, PktDown: 2889, PktUp: 2984, PowerSave: True, Wireless: True, Guest: False) [+30]
+  📋 192.168.1.237 (2E:DD:55:5F:AB:3C) — Unknown Mobile Device [45]
+     ✔ Hostname = 2E-DD-55-5F-AB-3C [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 2E-DD-55-5F-AB-3C, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -95dBm, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 13.2MB, Up: 1.9MB, PktDown: 13427, PktUp: 10579, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 55
 
-  📋 192.168.1.49 (3E:26:4B:4E:A6:B8) — Unknown Mobile Device [45]
-     ✔ Hostname = 3E-26-4B-4E-A6-B8 [+10]
-     ✔ Omada Controller provides telemetry (type: unknown, hostname: 3E-26-4B-4E-A6-B8, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784553059332, Active: True, Down: 0.1MB, Up: 0.0MB, PktDown: 145, PktUp: 232, PowerSave: False, Wireless: True, Guest: False) [+30]
+  📋 192.168.1.245 (1E:EF:80:82:5D:3D) — Android Smartphone [70]
+     ✔ Vendor = Xiaomi (MAC: 1E:EF:80) [+10]
+     ✔ Hostname = Redmi-15 [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Redmi-15, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -94dBm, SNR: 1dB, Ch: 44, Radio: 5GHz, TX: 32Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 4min, LastSeen: 1784571494886, Active: True, Down: 0.7MB, Up: 0.5MB, PktDown: 2040, PktUp: 2125, PowerSave: True, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: linux_vendor_silent (Vendor + TTL=64 + no open TCP ports (likely Android)) [+65]
+     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
+     ─── Total: 95
+
+  📋 192.168.1.234 (B2:FD:0B:BC:FD:02) — Unknown Mobile Device [45]
+     ✔ Hostname = B2-FD-0B-BC-FD-02 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: B2-FD-0B-BC-FD-02, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 6Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 0.4MB, Up: 0.3MB, PktDown: 975, PktUp: 1059, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.204 (BA:DA:1A:9C:18:CC) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: BA:DA:1A) [+10]
+     ✔ Hostname = REDMI-15C [+10]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.146 (0A:CB:78:89:CB:2B) — Android Smartphone [95]
+     ✔ Vendor = Xiaomi (MAC: 0A:CB:78) [+10]
+     ✔ Hostname = POCO-F7 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: POCO-F7, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 8Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 32min, LastSeen: 1784571494886, Active: True, Down: 96.7MB, Up: 15.8MB, PktDown: 102290, PktUp: 75279, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: android_redmi_poco (Hostname indicates Xiaomi device) [+75]
+     ✔ Rule: android_xiaomi (Xiaomi vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.164 (2A:12:29:CE:E2:D0) — Unknown Mobile Device [55]
+     ✔ Hostname = 2A-12-29-CE-E2-D0 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 2A-12-29-CE-E2-D0, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -68dBm, Signal: 55, Rank: 3, SNR: 27dB, Ch: 11, Radio: 2.4GHz, TX: 68Mbps, RX: 12Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 32min, LastSeen: 1784571494886, Active: True, Down: 9.8MB, Up: 4.2MB, PktDown: 19188, PktUp: 17262, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.233 (0A:DD:B3:C7:EF:CB) — Unknown Mobile Device [45]
+     ✔ Hostname = 0A-DD-B3-C7-EF-CB [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 0A-DD-B3-C7-EF-CB, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -83dBm, Signal: 17, Rank: 1, SNR: 12dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 25.6MB, Up: 57.5MB, PktDown: 35393, PktUp: 58100, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.202 (52:9E:FC:36:99:57) — Unknown Mobile Device [55]
+     ✔ Hostname = 52-9E-FC-36-99-57 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 52-9E-FC-36-99-57, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -70dBm, Signal: 50, Rank: 3, SNR: 25dB, Ch: 44, Radio: 5GHz, TX: 216Mbps, RX: 24Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784571494886, Active: True, Down: 0.7MB, Up: 0.3MB, PktDown: 1145, PktUp: 953, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.219 (9E:4A:3A:7E:69:0F) — Unknown Mobile Device [45]
+     ✔ Hostname = 9E-4A-3A-7E-69-0F [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 9E-4A-3A-7E-69-0F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -80dBm, Signal: 25, Rank: 2, SNR: 15dB, Ch: 11, Radio: 2.4GHz, TX: 25Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 10min, LastSeen: 1784571310720, Active: True, Down: 0.1MB, Up: 0.1MB, PktDown: 346, PktUp: 412, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.168 (F6:C9:96:55:B2:94) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: F6:C9:96) [+10]
+     ✔ Hostname = Galaxy-S25-Ultra [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-S25-Ultra, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -73dBm, Signal: 42, Rank: 3, SNR: 22dB, Ch: 11, Radio: 2.4GHz, TX: 34Mbps, RX: 68Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 30min, LastSeen: 1784571494886, Active: True, Down: 5.0MB, Up: 2.7MB, PktDown: 9012, PktUp: 8724, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.238 (62:23:67:E7:80:C9) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 62:23:67) [+10]
+     ✔ Hostname = Galaxy-A07 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A07, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -96dBm, SNR: 255dB, Ch: 44, Radio: 5GHz, TX: 6Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784571494886, Active: True, Down: 1.6MB, Up: 0.2MB, PktDown: 1645, PktUp: 1137, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.209 (42:48:D0:17:27:29) — Unknown Mobile Device [55]
+     ✔ Hostname = 42-48-D0-17-27-29 [+10]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.243 (E2:80:A3:80:F2:24) — Linux Network Device [50]
+     ✔ Hostname = E2-80-A3-80-F2-24 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: E2-80-A3-80-F2-24, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -86dBm, Signal: 10, Rank: 1, SNR: 9dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 6Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 3min, LastSeen: 1784571494886, Active: True, Down: 17.4MB, Up: 1.7MB, PktDown: 17379, PktUp: 9901, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: linux_ttl_generic (TTL=55-64 (Linux)) [+40]
+     ─── Total: 50
+
+  📋 192.168.1.211 (D6:57:DB:5D:C7:E4) — Unknown Mobile Device [55]
+     ✔ Hostname = D6-57-DB-5D-C7-E4 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: D6-57-DB-5D-C7-E4, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -90dBm, SNR: 5dB, Ch: 44, Radio: 5GHz, TX: 72Mbps, RX: 12Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 17min, LastSeen: 1784571494886, Active: True, Down: 2.2MB, Up: 0.7MB, PktDown: 2955, PktUp: 2135, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.236 (7E:72:E5:2C:F3:C2) — Android Smartphone [70]
+     ✔ Vendor = Samsung (MAC: 7E:72:E5) [+10]
+     ✔ Hostname = Galaxy-A10 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A10, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -84dBm, Signal: 15, Rank: 1, SNR: 11dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 8min, LastSeen: 1784571494886, Active: True, Down: 1.3MB, Up: 0.2MB, PktDown: 1402, PktUp: 928, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.239 (3A:66:A8:FE:02:0E) — Unknown Mobile Device [45]
+     ✔ Hostname = 3A-66-A8-FE-02-0E [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 3A-66-A8-FE-02-0E, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -79dBm, Signal: 27, Rank: 2, SNR: 16dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784571494886, Active: True, Down: 1.0MB, Up: 0.4MB, PktDown: 1774, PktUp: 1778, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.242 (5E:AE:1C:BC:A1:FB) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 5E:AE:1C) [+10]
+     ✔ Hostname = Galaxy-A12 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A12, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 4min, LastSeen: 1784571494886, Active: True, Down: 0.8MB, Up: 0.1MB, PktDown: 1012, PktUp: 620, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.185 (56:BA:04:EA:78:6F) — Unknown Mobile Device [55]
+     ✔ Hostname = 56-BA-04-EA-78-6F [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 56-BA-04-EA-78-6F, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -70dBm, Signal: 50, Rank: 3, SNR: 25dB, Ch: 44, Radio: 5GHz, TX: 216Mbps, RX: 271Mbps, WiFi: Mode6, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 7min, LastSeen: 1784571494886, Active: True, Down: 0.8MB, Up: 0.4MB, PktDown: 1387, PktUp: 1291, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.207 (C6:D0:14:5C:46:0B) — Android Smartphone [90]
+     ✔ Vendor = Huawei (MAC: C6:D0:14) [+10]
+     ✔ Hostname = HONOR-X6b [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: HONOR-X6b, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -77dBm, Signal: 32, Rank: 2, SNR: 18dB, Ch: 11, Radio: 2.4GHz, TX: 6Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 17min, LastSeen: 1784571494886, Active: True, Down: 2.5MB, Up: 0.8MB, PktDown: 5124, PktUp: 4824, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_huawei (Huawei vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 90
+
+  📋 192.168.1.162 (4E:8E:4A:8E:B0:CE) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 4E:8E:4A) [+10]
+     ✔ Hostname = Samsung-S22 [+10]
+     ✔ Omada Controller identifies device (type: unknown, hostname: Samsung-S22, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -68dBm, Signal: 55, Rank: 3, SNR: 27dB, Ch: 11, Radio: 2.4GHz, TX: 154Mbps, RX: 1Mbps, WiFi: Mode7, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 32min, LastSeen: 1784571494886, Active: True, Down: 2.7MB, Up: 1.7MB, PktDown: 8691, PktUp: 8448, PowerSave: False, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.33 (1E:57:D9:7D:F2:9D) — Unknown Mobile Device [55]
+     ✔ Hostname = OPPO-A38 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: OPPO-A38, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -93dBm, SNR: 2dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 14min, LastSeen: 1784571494886, Active: True, Down: 0.1MB, Up: 0.1MB, PktDown: 377, PktUp: 597, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.46 (0A:76:53:E4:09:81) — Android Smartphone [95]
+     ✔ Vendor = Samsung (MAC: 0A:76:53) [+10]
+     ✔ Hostname = Galaxy-A121 [+10]
+     ✔ Omada Controller identifies device (type: android, hostname: Galaxy-A121, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -70dBm, Signal: 50, Rank: 3, SNR: 25dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 6min, LastSeen: 1784571494886, Active: True, Down: 0.2MB, Up: 0.2MB, PktDown: 486, PktUp: 648, PowerSave: True, Wireless: True, Guest: False) [+70]
+     ✔ Rule: android_samsung_hostname (Hostname indicates Samsung device) [+75]
+     ✔ Rule: android_samsung (Samsung vendor + no HTTP ports (Android firewall)) [+70]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 95
+
+  📋 192.168.1.80 (12:6A:B8:30:40:3B) — Unknown Mobile Device [55]
+     ✔ Hostname = lezginka [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: lezginka, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -81dBm, Signal: 22, Rank: 2, SNR: 14dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 27min, LastSeen: 1784571494886, Active: True, Down: 2.6MB, Up: 0.5MB, PktDown: 4080, PktUp: 4756, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.210 (E6:0D:18:6B:94:DF) — Unknown Mobile Device [55]
+     ✔ Hostname = elya [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: elya, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -76dBm, Signal: 35, Rank: 2, SNR: 19dB, Ch: 11, Radio: 2.4GHz, TX: 26Mbps, RX: 6Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 16min, LastSeen: 1784571402822, Active: True, Down: 2.3MB, Up: 5.0MB, PktDown: 6505, PktUp: 9953, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.231 (CA:3B:68:50:DB:DF) — Unknown Mobile Device [45]
+     ✔ Hostname = Leyla-adli-kisiye-ait-A32 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: Leyla-adli-kisiye-ait-A32, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -92dBm, SNR: 3dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784571494886, Active: True, Down: 0.8MB, Up: 0.5MB, PktDown: 2389, PktUp: 2415, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.199 (26:42:1A:3D:01:A5) — Unknown Mobile Device [55]
+     ✔ Hostname = 26-42-1A-3D-01-A5 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 26-42-1A-3D-01-A5, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -87dBm, Signal: 7, Rank: 1, SNR: 8dB, Ch: 11, Radio: 2.4GHz, TX: 1Mbps, RX: 1Mbps, WiFi: 802.11ac, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 19min, LastSeen: 1784571372064, Active: True, Down: 0.7MB, Up: 0.5MB, PktDown: 2168, PktUp: 2175, PowerSave: False, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.232 (52:9F:D8:2F:C2:FF) — Unknown Mobile Device [55]
+     ✔ Hostname = 52-9F-D8-2F-C2-FF [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: 52-9F-D8-2F-C2-FF, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -88dBm, Signal: 5, Rank: 1, SNR: 7dB, Ch: 44, Radio: 5GHz, TX: 29Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 9min, LastSeen: 1784571494886, Active: True, Down: 3.0MB, Up: 0.7MB, PktDown: 3603, PktUp: 2828, PowerSave: True, Wireless: True, Guest: False) [+30]
+     ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
+     ─── Total: 55
+
+  📋 192.168.1.177 (DA:FE:6C:76:67:32) — Unknown Mobile Device [55]
+     ✔ Hostname = DA-FE-6C-76-67-32 [+10]
+     ✔ Omada Controller provides telemetry (type: unknown, hostname: DA-FE-6C-76-67-32, AP: EC-75-0C-18-6F-F8, AP-MAC: EC-75-0C-18-6F-F8, SSID: Zefer_Parki, VLAN: 20, RSSI: -88dBm, Signal: 5, Rank: 1, SNR: 7dB, Ch: 44, Radio: 5GHz, TX: 30Mbps, RX: 6Mbps, WiFi: 802.11ax, Conn: wireless, ConnTo: ap, Auth: authenticated, Uptime: 28min, LastSeen: 1784571494886, Active: True, Down: 1.2MB, Up: 0.4MB, PktDown: 2088, PktUp: 1800, PowerSave: True, Wireless: True, Guest: False) [+30]
      ✔ Rule: mac_randomization (Locally administered MAC + no ICMP/TCP (likely phone with MAC randomization)) [+45]
      ─── Total: 55
