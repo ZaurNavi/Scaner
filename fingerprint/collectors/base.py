@@ -7,7 +7,7 @@ ES-1.8.0: Единый контракт для всех Passive Collectors.
 - BasePassiveCollector: абстрактный базовый класс
 - Observation: единица наблюдения
 - CollectedData: агрегированные данные для устройства
-- collect_all(): агрегатор, запускающий все коллекторы
+- collect_all(): агрегатор, запускающий все коллекторы через Factory
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from models import Device
 from configuration import ConfigurationManager, get_config_manager
 
 from .registry import PassiveRegistry
+from .factory import PassiveCollectorFactory
 from ..active import FingerprintResult, get_collectors
 from storage.active_cache import get as cache_get, set as cache_set
 
@@ -111,6 +112,11 @@ class BasePassiveCollector(ABC):
     def protocol(self) -> str:
         """Протокол коллектора."""
         return self.descriptor.protocol if self.descriptor else "unknown"
+    
+    @property
+    def capabilities(self) -> tuple:
+        """Возможности коллектора."""
+        return self.descriptor.capabilities if self.descriptor else ()
 
 
 # ==============================================================================
@@ -118,7 +124,6 @@ class BasePassiveCollector(ABC):
 # ==============================================================================
 
 # Импортируем MDNSInfo из mdns.py для обратной совместимости
-# (чтобы избежать циклического импорта, используем forward reference)
 try:
     from .mdns import MDNSInfo
 except ImportError:
@@ -157,8 +162,7 @@ def collect_all(
     """
     Агрегирует данные от всех Passive и Active коллекторов.
     
-    v1.8.0: Использует PassiveRegistry для автоматического запуска
-    всех зарегистрированных Passive Collectors.
+    v1.8.0: Использует PassiveCollectorFactory для создания экземпляров.
     
     Args:
         ips: Список IP-адресов
@@ -177,18 +181,28 @@ def collect_all(
     start_total = time.time()
     
     # ======================================================================
-    # v1.8.0: Passive Collectors через Registry
+    # v1.8.0: Passive Collectors через Factory
     # ======================================================================
     passive_results: Dict[str, Dict[str, Observation]] = {}
     passive_stats = []
     
-    # Получаем все включённые Passive Collectors из Registry
-    for collector in PassiveRegistry.iter_enabled(configuration):
-        collector_id = collector.id
-        collector_name = collector.name
-        collector_version = collector.version
+    # Получаем все включённые дескрипторы из Registry
+    enabled_descriptors = list(PassiveRegistry.iter_enabled_descriptors(configuration))
+    
+    print(f"\n  [PASSIVE] Running {len(enabled_descriptors)} Passive Collector(s)...")
+    
+    for descriptor in enabled_descriptors:
+        collector_id = descriptor.id
+        collector_name = descriptor.name
+        collector_version = descriptor.version
+        collector_priority = descriptor.priority
         
-        print(f"\n  [PASSIVE] Running {collector_name} (v{collector_version})...")
+        print(f"\n  [PASSIVE] [{collector_priority}] {collector_name} (v{collector_version})")
+        print(f"         • Protocol: {descriptor.protocol}")
+        print(f"         • Capabilities: {', '.join(descriptor.capabilities) if descriptor.capabilities else 'none'}")
+        
+        # v1.8.0: Создаём экземпляр через Factory
+        collector = PassiveCollectorFactory.create(descriptor, configuration)
         
         start = time.time()
         try:
@@ -200,11 +214,12 @@ def collect_all(
             count = len(observations)
             
             # Информируем о результате
-            print(f"         • Collected {count} observations in {elapsed:.1f} ms")
+            print(f"         • ✅ Collected {count} observations in {elapsed:.1f} ms")
             
             passive_stats.append({
                 "name": collector_name,
                 "id": collector_id,
+                "priority": collector_priority,
                 "elapsed": elapsed,
                 "count": count,
                 "status": "✅ OK" if elapsed < 5000 else "⚠️ Slow"
@@ -216,6 +231,7 @@ def collect_all(
             passive_stats.append({
                 "name": collector_name,
                 "id": collector_id,
+                "priority": collector_priority,
                 "elapsed": elapsed,
                 "count": 0,
                 "status": f"❌ Error: {e}"
@@ -298,11 +314,11 @@ def collect_all(
     # Вывод статистики
     # ======================================================================
     print(f"\n  [STATS] Passive Collectors Performance:")
-    print(f"  {'Collector':<20} | {'ID':<10} | {'Elapsed':<10} | {'Count':<8} | {'Status'}")
-    print(f"  " + "-" * 72)
-    for stat in passive_stats:
-        print(f"  {stat['name']:<20} | {stat['id']:<10} | {stat['elapsed']:>7.1f} ms | {stat['count']:>6} | {stat['status']}")
-    print(f"  " + "-" * 72)
+    print(f"  {'Priority':<8} | {'Collector':<20} | {'ID':<10} | {'Elapsed':<10} | {'Count':<8} | {'Status'}")
+    print(f"  " + "-" * 82)
+    for stat in sorted(passive_stats, key=lambda x: x["priority"]):
+        print(f"  {stat['priority']:<8} | {stat['name']:<20} | {stat['id']:<10} | {stat['elapsed']:>7.1f} ms | {stat['count']:>6} | {stat['status']}")
+    print(f"  " + "-" * 82)
     
     print(f"\n  [STATS] Active Collectors Performance:")
     print(f"  {'Collector':<15} | {'Elapsed':<10} | {'Uncached':<10} | {'Status'}")
