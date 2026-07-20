@@ -249,14 +249,21 @@ def collect_all(
     # Для mDNS: создаём несколько Observations для каждого поля
     all_normalization_observations = []
     
+    # ES-1.8.1: Счётчики для отладки DNS
+    dns_total = 0
+    dns_with_hostname = 0
+    dns_empty_hostname = 0
+    
     for collector_id, observations in passive_results.items():
         for ip, obs in observations.items():
             timestamp = obs.timestamp
             
             # DNS: hostname
             if collector_id == "dns":
+                dns_total += 1
                 hostname = obs.data or ""
                 if hostname:
+                    dns_with_hostname += 1
                     norm_obs = NormalizationObservation(
                         observation_id=NormalizationObservation.generate_id(
                             collector_id=collector_id,
@@ -273,6 +280,8 @@ def collect_all(
                         metadata=ObservationMetadata(ip=ip)
                     )
                     all_normalization_observations.append(norm_obs)
+                else:
+                    dns_empty_hostname += 1
             
             # mDNS: hostname, model, device_type, services
             elif collector_id == "mdns":
@@ -348,6 +357,10 @@ def collect_all(
                         metadata=ObservationMetadata(ip=ip)
                     )
                     all_normalization_observations.append(norm_obs)
+    
+    # ES-1.8.1: Отладочный вывод DNS статистики
+    if dns_total > 0:
+        print(f"         • DNS stats: {dns_total} total, {dns_with_hostname} with hostname, {dns_empty_hostname} empty")
     
     # Нормализуем через Batch API
     unified_observations = normalizer.normalize_many(
