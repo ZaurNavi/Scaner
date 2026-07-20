@@ -2,10 +2,10 @@
 """
 Passive Registry — реестр дескрипторов Passive Collectors.
 ES-1.8.0: Registry хранит ТОЛЬКО дескрипторы (SRP).
-Создание экземпляров — задача PassiveCollectorFactory.
+ES-1.8.2: Добавлен default_category — категория идёт из Descriptor.
 
 Архитектура:
-    Registry → Descriptor → Factory → Collector
+Registry → Descriptor → Factory → Collector
 """
 
 from __future__ import annotations
@@ -16,10 +16,17 @@ from typing import Dict, Iterator, List, Optional, Type
 from configuration import ConfigurationManager
 
 
+# ==============================================================================
+# PassiveCollectorDescriptor — полные метаданные коллектора
+# ==============================================================================
+
 @dataclass(frozen=True)
 class PassiveCollectorDescriptor:
     """
     Полные метаданные Passive Collector'а.
+    
+    ES-1.8.2: Добавлено поле default_category.
+    Категория идёт из Descriptor, а не строится вручную в Pipeline.
     
     Обязательные поля:
     - id: уникальный идентификатор
@@ -31,6 +38,7 @@ class PassiveCollectorDescriptor:
     - enabled_by_default: включён ли по умолчанию
     - capabilities: кортеж возможностей
     - collector_cls: ссылка на класс коллектора
+    - default_category: категория для нормализации (ES-1.8.2)
     """
     id: str
     name: str
@@ -41,7 +49,12 @@ class PassiveCollectorDescriptor:
     enabled_by_default: bool = True
     capabilities: tuple = ()
     collector_cls: Type = None
+    default_category: str = "identity"  # ES-1.8.2: Категория для нормализации
 
+
+# ==============================================================================
+# PassiveRegistry — реестр дескрипторов
+# ==============================================================================
 
 class PassiveRegistry:
     """
@@ -49,7 +62,6 @@ class PassiveRegistry:
     
     v1.8.0: Registry хранит ТОЛЬКО дескрипторы.
     Создание экземпляров — задача PassiveCollectorFactory.
-    
     SRP: Registry отвечает только за регистрацию и поиск.
     """
     
@@ -132,7 +144,26 @@ class PassiveRegistry:
     def is_registered(cls, collector_id: str) -> bool:
         """Проверяет, зарегистрирован ли коллектор."""
         return collector_id in cls._descriptors
+    
+    @classmethod
+    def get_category_map(cls) -> Dict[str, str]:
+        """
+        ES-1.8.2: Строит category_map автоматически из Descriptor.
+        
+        Pipeline не строит map вручную — категория идёт из Descriptor.
+        
+        Returns:
+            Dict[collector_id, default_category]
+        """
+        return {
+            descriptor.id: descriptor.default_category
+            for descriptor in cls._descriptors.values()
+        }
 
+
+# ==============================================================================
+# Декоратор для автоматической регистрации
+# ==============================================================================
 
 def passive_collector(
     id: str,
@@ -142,10 +173,13 @@ def passive_collector(
     category: str = "passive",
     priority: int = 100,
     enabled_by_default: bool = True,
-    capabilities: tuple = ()
+    capabilities: tuple = (),
+    default_category: str = "identity"  # ES-1.8.2: Категория для нормализации
 ):
     """
     Декоратор для автоматической регистрации Passive Collector.
+    
+    ES-1.8.2: Добавлен параметр default_category.
     
     Использование:
         @passive_collector(
@@ -155,7 +189,8 @@ def passive_collector(
             protocol="DNS",
             priority=10,
             enabled_by_default=True,
-            capabilities=("dns_resolution", "hostname_discovery")
+            capabilities=("dns_resolution", "hostname_discovery"),
+            default_category="identity"  # ES-1.8.2
         )
         class DNSCollector(BasePassiveCollector):
             def observe(self, ips, context):
@@ -170,9 +205,10 @@ def passive_collector(
         priority: Приоритет (меньше = раньше)
         enabled_by_default: Включён ли по умолчанию
         capabilities: Кортеж возможностей
+        default_category: Категория для нормализации (ES-1.8.2)
     """
     def decorator(cls):
-        # Создаём дескриптор с collector_cls
+        # Создаём дескриптор с collector_cls и default_category
         descriptor = PassiveCollectorDescriptor(
             id=id,
             name=name,
@@ -182,7 +218,8 @@ def passive_collector(
             priority=priority,
             enabled_by_default=enabled_by_default,
             capabilities=tuple(capabilities),
-            collector_cls=cls
+            collector_cls=cls,
+            default_category=default_category  # ES-1.8.2
         )
         
         # Регистрируем в реестре
