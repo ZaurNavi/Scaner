@@ -1,27 +1,32 @@
 #!/usr/bin/env python3
 """
 Fingerprint Collectors Module.
-ES-1.8.0: Passive Framework с автоматической регистрацией.
+ES-1.8.0: Passive Framework с автоматической регистрацией через pkgutil.
 
 Архитектура:
 - Passive Framework: DNS, mDNS (и будущие LLMNR, NBNS, DHCP и т.д.)
 - Active Framework: TCP, HTTP, SNMP, SSH, SMB, и т.д.
 
-Автоматическая регистрация:
+Auto Discovery:
 При импорте этого модуля все Passive Collectors автоматически
-регистрируются в PassiveRegistry через декоратор @passive_collector.
+обнаруживаются через pkgutil и регистрируются в PassiveRegistry.
 """
+
+import pkgutil
+import importlib
 
 from configuration import get_config_manager
 
 # ==============================================================================
-# Passive Framework — импорт для автоматической регистрации
+# Passive Framework — базовые компоненты
 # ==============================================================================
 from .registry import (
     PassiveRegistry,
     PassiveCollectorDescriptor,
     passive_collector
 )
+
+from .factory import PassiveCollectorFactory
 
 from .base import (
     BasePassiveCollector,
@@ -30,15 +35,42 @@ from .base import (
     collect_all
 )
 
-# Импорты коллекторов — это запускает декораторы @passive_collector
-# и автоматически регистрирует их в PassiveRegistry
-from .dns import DNSCollector, collect_hostnames
-from .mdns import MDNSCollector, MDNSInfo, collect_mdns
-
 # ==============================================================================
 # Active Framework — импорт для обратной совместимости
 # ==============================================================================
 from ..active import FingerprintResult, get_collectors
+
+# ==============================================================================
+# Auto Discovery — автоматическая регистрация Passive Collectors
+# ==============================================================================
+
+def _discover_passive_collectors():
+    """
+    Автоматически обнаруживает и импортирует все Passive Collectors.
+    
+    v1.8.0: Использует pkgutil для сканирования пакета.
+    Каждый модуль, содержащий класс с декоратором @passive_collector,
+    автоматически регистрируется в PassiveRegistry.
+    
+    Исключения:
+    - base.py (базовый класс)
+    - registry.py (реестр)
+    - factory.py (фабрика)
+    - __init__.py (текущий файл)
+    """
+    excluded_modules = {'base', 'registry', 'factory', '__init__'}
+    
+    for _, module_name, _ in pkgutil.iter_modules(__path__):
+        if module_name not in excluded_modules:
+            try:
+                # Импортируем модуль — это запускает декораторы @passive_collector
+                importlib.import_module(f"{__name__}.{module_name}")
+            except Exception as e:
+                print(f"  [PASSIVE] ⚠️ Failed to import {module_name}: {e}")
+
+
+# Автоматическое обнаружение коллекторов при импорте
+_discover_passive_collectors()
 
 # ==============================================================================
 # Инициализация Passive Framework
@@ -58,14 +90,16 @@ def initialize_passive_framework():
         print("  [PASSIVE] ⚠️ No Passive Collectors registered")
         return
     
-    print("  [PASSIVE] Registered collectors:")
-    for cid, descriptor in sorted(descriptors.items(), key=lambda x: x[1].priority):
+    print("  [PASSIVE] Registered collectors (sorted by priority):")
+    for descriptor in PassiveRegistry.get_sorted_descriptors():
         enabled_status = "enabled" if descriptor.enabled_by_default else "disabled"
         capabilities = ", ".join(descriptor.capabilities) if descriptor.capabilities else "none"
-        print(f"         • {cid} (v{descriptor.version}) - {descriptor.name} - priority {descriptor.priority} - {enabled_status}")
+        print(f"         • [{descriptor.priority}] {descriptor.id} (v{descriptor.version}) - {descriptor.name} - {enabled_status}")
         print(f"              Protocol: {descriptor.protocol} | Capabilities: {capabilities}")
+        print(f"              Class: {descriptor.collector_cls.__name__}")
     
     print(f"  [PASSIVE] ✅ Passive Framework initialized ({len(descriptors)} collectors)")
+    print(f"  [PASSIVE] Factory: PassiveCollectorFactory ready")
 
 
 # Автоматическая инициализация при импорте
@@ -80,15 +114,11 @@ __all__ = [
     "PassiveRegistry",
     "PassiveCollectorDescriptor",
     "passive_collector",
+    "PassiveCollectorFactory",
     "BasePassiveCollector",
     "Observation",
     "CollectedData",
     "collect_all",
-    "DNSCollector",
-    "collect_hostnames",
-    "MDNSCollector",
-    "MDNSInfo",
-    "collect_mdns",
     # Active Framework
     "FingerprintResult",
     "get_collectors",
