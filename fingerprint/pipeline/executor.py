@@ -28,7 +28,7 @@ class PassiveCollectorExecutor(CollectorExecutor):
 
         for descriptor in enabled_descriptors:
             collector = PassiveCollectorFactory.create(descriptor, configuration)
-            # ES-1.8.3: observe теперь возвращает List[Observation]
+            # ES-1.8.3: observe() возвращает List[Observation]
             observations = collector.observe(ips, context={})
             all_observations.extend(observations)
 
