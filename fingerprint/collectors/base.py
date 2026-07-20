@@ -289,7 +289,7 @@ def collect_all(
         unified_by_ip[device_id].append(unified)
     
     # ======================================================================
-    # Active Collectors (без изменений)
+    # Active Collectors (с адаптером для обратной совместимости)
     # ======================================================================
     all_sources: Dict[str, Dict[str, FingerprintResult]] = {}
     context: Dict[str, Dict[str, FingerprintResult]] = {}
@@ -307,8 +307,29 @@ def collect_all(
         
         uncached = [d for d in devices if d.ip not in collector_results]
         if uncached:
-            results = collector.scan(uncached, context=context)
-            collector_results.update(results)
+            # ES-1.8.3: scan() теперь возвращает List[Observation]
+            observations = collector.scan(uncached, context=context)
+            
+            # АДАПТЕР: Конвертируем List[Observation] → dict[ip, FingerprintResult]
+            # для обратной совместимости с legacy-системой
+            for obs in observations:
+                ip = obs.device_id
+                if ip not in collector_results:
+                    # Создаём FingerprintResult из Observation
+                    # (временное решение до полной миграции legacy-кода)
+                    collector_results[ip] = FingerprintResult(
+                        source=source,
+                        raw_data={
+                            "responded": True,
+                            "observation_id": obs.observation_id,
+                            "attribute": obs.attribute,
+                            "value": obs.value,
+                            "protocol": obs.protocol,
+                        },
+                        elapsed_ms=0.0,
+                        confidence=100,
+                        capabilities=[f"supports_{source}"]
+                    )
         
         context[source] = collector_results
         
