@@ -54,6 +54,15 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="ntp_info", category=ObservationCategory.TIMING, value_type=dict, description="NTP stratum and reference info"
 ))
+AttributeRegistry.register(AttributeDescriptor(
+    id="http_services", category=ObservationCategory.SERVICE, value_type=dict, description="HTTP services per port"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="snmp_info", category=ObservationCategory.IDENTITY, value_type=dict, description="SNMP MIB-II data"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="ssdp_info", category=ObservationCategory.DISCOVERY, value_type=dict, description="SSDP/UPnP device info"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
