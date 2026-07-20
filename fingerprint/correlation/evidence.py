@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-Evidence — факты об устройстве, собранные из всех источников.
+Evidence — факты об устройстве, собранные из UnifiedObservationBatch.
+ES-1.8.3: Полная миграция с CollectedData на UnifiedObservationBatch.
 """
 
 from __future__ import annotations
 from dataclasses import dataclass, field
 
 from models import Device
-from fingerprint.collectors.base import CollectedData
+from fingerprint import UnifiedObservationBatch
 
 
 @dataclass
 class Evidence:
     """
-    Сырые факты об устройстве.
+    Сырые факты об устройстве, извлечённые из Batch.
     """
 
     # Сетевое присутствие
@@ -73,9 +74,9 @@ class Evidence:
     flows_count: int = 0
 
     @classmethod
-    def from_device(cls, device: Device, collected: CollectedData) -> Evidence:
+    def from_device(cls, device: Device, batch: UnifiedObservationBatch) -> Evidence:
         """
-        Создаёт Evidence из Device и CollectedData.
+        ES-1.8.3: Создаёт Evidence из Device и UnifiedObservationBatch.
         """
         e = cls()
 
@@ -90,75 +91,84 @@ class Evidence:
         e.arp = True
         e.flows = device.flows > 0
 
+        # Helper для извлечения значения из batch
+        def get_val(collector_id: str, attribute: str):
+            obs = batch.by_collector(collector_id).by_attribute(attribute).filter(
+                lambda o: o.metadata.ip == device.ip
+            ).first()
+            return obs.normalized_value if obs else None
+
         # TTL
-        ttl_result = collected.sources.get("ttl")
-        if ttl_result:
-            e.ping = ttl_result.raw_data.get("alive", False)
-            e.ttl = ttl_result.ttl
+        ttl_val = get_val("ttl", "ttl")
+        if ttl_val is not None:
+            e.ping = True
+            e.ttl = ttl_val
 
         # TCP
-        tcp_result = collected.sources.get("tcp")
-        if tcp_result:
-            e.tcp_ports = tcp_result.services
+        tcp_ports = get_val("tcp", "open_ports")
+        if tcp_ports is not None and isinstance(tcp_ports, list):
+            e.tcp_ports = {str(p): {"state": "open"} for p in tcp_ports}
 
         # HTTP
-        http_result = collected.sources.get("http")
-        if http_result:
-            for port, data in http_result.services.items():
+        http_services = get_val("http", "http_services")
+        if http_services and isinstance(http_services, dict):
+            for port, data in http_services.items():
                 if isinstance(data, dict):
                     e.http_server = data.get("server", "") or e.http_server
                     e.http_title = data.get("title", "") or e.http_title
 
         # SSDP/UPnP
-        ssdp_result = collected.sources.get("ssdp")
-        if ssdp_result:
-            raw = ssdp_result.raw_data or {}
-            e.ssdp_responded = raw.get("responded", False)
+        ssdp_info = get_val("ssdp", "ssdp_info")
+        if ssdp_info and isinstance(ssdp_info, dict):
+            e.ssdp_responded = ssdp_info.get("responded", False)
             if e.ssdp_responded:
-                e.ssdp_server = raw.get("server", "")
-                e.ssdp_location = raw.get("location", "")
-                e.ssdp_st = raw.get("st", "")
-                e.ssdp_usn = raw.get("usn", "")
-                e.ssdp_manufacturer = raw.get("manufacturer", "")
-                e.ssdp_model_name = raw.get("model_name", "")
-                e.ssdp_friendly_name = raw.get("friendly_name", "")
-                e.ssdp_model_number = raw.get("model_number", "")
-                e.ssdp_serial_number = raw.get("serial_number", "")
+                e.ssdp_server = ssdp_info.get("server", "")
+                e.ssdp_location = ssdp_info.get("location", "")
+                e.ssdp_st = ssdp_info.get("st", "")
+                e.ssdp_usn = ssdp_info.get("usn", "")
+                e.ssdp_manufacturer = ssdp_info.get("manufacturer", "")
+                e.ssdp_model_name = ssdp_info.get("model_name", "")
+                e.ssdp_friendly_name = ssdp_info.get("friendly_name", "")
+                e.ssdp_model_number = ssdp_info.get("model_number", "")
+                e.ssdp_serial_number = ssdp_info.get("serial_number", "")
 
-        # SNMP (сырые данные — интерпретация в правилах)
-        snmp_result = collected.sources.get("snmp")
-        if snmp_result:
-            raw = snmp_result.raw_data or {}
-            e.snmp_responded = raw.get("responded", False)
+        # SNMP
+        snmp_info = get_val("snmp", "snmp_info")
+        if snmp_info and isinstance(snmp_info, dict):
+            e.snmp_responded = snmp_info.get("responded", False)
             if e.snmp_responded:
-                e.snmp_community = raw.get("community", "")
-                e.snmp_sys_descr = raw.get("sysDescr", "")
-                e.snmp_sys_object_id = raw.get("sysObjectID", "")
-                e.snmp_sys_up_time = raw.get("sysUpTime", 0)
-                e.snmp_sys_name = raw.get("sysName", "")
-                e.snmp_sys_services = raw.get("sysServices", 0)
+                e.snmp_community = snmp_info.get("community", "")
+                e.snmp_sys_descr = snmp_info.get("sysDescr", "")
+                e.snmp_sys_object_id = snmp_info.get("sysObjectID", "")
+                e.snmp_sys_up_time = snmp_info.get("sysUpTime", 0)
+                e.snmp_sys_name = snmp_info.get("sysName", "")
+                e.snmp_sys_services = snmp_info.get("sysServices", 0)
 
         # mDNS
-        if collected.mdns.hostname or collected.mdns.model or collected.mdns.device_type:
+        mdns_hostname = get_val("mdns", "hostname")
+        mdns_model = get_val("mdns", "model")
+        mdns_device_type = get_val("mdns", "device_type")
+        if mdns_hostname or mdns_model or mdns_device_type:
             e.mdns = True
-            e.mdns_hostname = collected.mdns.hostname
-            e.mdns_model = collected.mdns.model
-            e.mdns_device_type = collected.mdns.device_type
+            e.mdns_hostname = mdns_hostname or ""
+            e.mdns_model = mdns_model or ""
+            e.mdns_device_type = mdns_device_type or ""
 
         # DNS
-        if collected.hostname:
-            e.dns_hostname = collected.hostname
+        dns_hostname = get_val("dns", "hostname")
+        if dns_hostname:
+            e.dns_hostname = dns_hostname
 
         return e
 
     def has_port(self, port: int) -> bool:
         """Проверяет, открыт ли порт."""
-        info = self.tcp_ports.get(port, {})
+        info = self.tcp_ports.get(str(port), {})
         return info.get("state") == "open"
 
     def open_ports(self) -> list[int]:
         """Возвращает список открытых портов."""
-        return [p for p, info in self.tcp_ports.items() if info.get("state") == "open"]
+        return [int(p) for p, info in self.tcp_ports.items() if info.get("state") == "open"]
 
     def has_open_ports(self) -> bool:
         """Проверяет, есть ли хотя бы один открытый порт."""
