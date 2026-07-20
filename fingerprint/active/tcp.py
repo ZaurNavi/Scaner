@@ -17,6 +17,12 @@ from storage.active_cache import get as cache_get, set as cache_set
 from configuration import ConfigurationManager
 
 
+# v1.7.1: Экспортируемые константы для обратной совместимости (Category B — Domain Constants)
+CORE_PORTS = (22, 53, 80, 443, 445, 554, 631, 9100)
+OPTIONAL_PORTS = (81, 139, 8080, 8081, 8443, 8291, 8728, 3389, 5357, 8008, 8009, 32400, 5000, 5001)
+ALL_PORTS = CORE_PORTS + OPTIONAL_PORTS
+
+
 class TCPCollector(ActiveCollector):
     PRIORITY = 50
     RELIABILITY = 60
@@ -27,9 +33,21 @@ class TCPCollector(ActiveCollector):
         self.timeout = self.config.get("collector.tcp.timeout", 1.0)
         self.max_connections = self.config.get("collector.tcp.max_connections", 32)
         
-        core_ports = [int(x) for x in self.config.get("collector.tcp.core_ports", "22,53,80,443,445,554,631,9100").split(",")]
-        optional_ports = [int(x) for x in self.config.get("collector.tcp.optional_ports", "81,139,8080,8081,8443,8291,8728,3389,5357,8008,8009,32400,5000,5001").split(",")]
-        self.ports = core_ports if fast else core_ports + optional_ports
+        # v1.7.1: Читаем порты из Configuration Layer (если настроено)
+        core_ports_str = self.config.get("collector.tcp.core_ports", "")
+        optional_ports_str = self.config.get("collector.tcp.optional_ports", "")
+        
+        if core_ports_str:
+            core = tuple(int(x) for x in core_ports_str.split(",") if x.strip())
+        else:
+            core = CORE_PORTS
+        
+        if optional_ports_str:
+            optional = tuple(int(x) for x in optional_ports_str.split(",") if x.strip())
+        else:
+            optional = OPTIONAL_PORTS
+        
+        self.ports = core if fast else core + optional
 
     def _scan_port(self, ip: str, port: int) -> tuple[int, str, float]:
         start = time.time()
@@ -39,7 +57,7 @@ class TCPCollector(ActiveCollector):
             sock.close()
             return port, "open", latency
         except socket.timeout:
-            return port, "filtered", 0. if self.fast else 0.0
+            return port, "filtered", 0.0
         except (ConnectionRefusedError, socket.error, OSError):
             return port, "closed", 0.0
 
