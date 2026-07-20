@@ -558,7 +558,7 @@ def main() -> int:
                 ip=device.ip,
                 mac=device.mac or "",
                 hostname=device.hostname or "",
-                device_type=SnapshotType.UNKNOWN,
+                device_type=DeviceType.UNKNOWN,
                 vendor=device.vendor or "",
                 timestamp=datetime.now(),
             )
