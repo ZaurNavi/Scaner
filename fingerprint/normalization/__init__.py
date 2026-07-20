@@ -72,6 +72,15 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="dns_sd_services", category=ObservationCategory.SERVICE, value_type=list, description="List of discovered DNS-SD services"
 ))
+AttributeRegistry.register(AttributeDescriptor(
+    id="service_banners", category=ObservationCategory.SERVICE, value_type=dict, description="Service banners from various ports"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="tls_cert_info", category=ObservationCategory.SECURITY, value_type=dict, description="TLS certificate and cipher info"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="favicon_hash", category=ObservationCategory.APPLICATION, value_type=dict, description="Favicon mmh3 hash and metadata"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
