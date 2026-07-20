@@ -1,14 +1,30 @@
+#!/usr/bin/env python3
 """
-Repeater Monitor
-fingerprint/
-
-Определение характеристик устройства по доступным данным.
+Fingerprint — подсистема определения характеристик устройства.
+ES-1.8.2: FingerprintService — единственный публичный API.
 
 Архитектура:
-1. Collection — сбор данных из всех источников (один раз для всей сети)
-2. Analysis — применение эвристик к каждому устройству
+- FingerprintService (публичный API)
+- FingerprintPipeline (внутренний координатор)
+- Active Framework (внутренний)
+- Passive Framework (внутренний)
+- Normalization Layer (внутренний)
+
+Monitor работает исключительно с FingerprintService.
 """
 
-from .analysis import fingerprint_all
+from .service import FingerprintService
+from .pipeline import (
+    FingerprintContext,
+    UnifiedObservationBatch,
+    UnifiedObservationBatchBuilder,
+    BuilderAlreadyBuiltError,
+)
 
-__all__ = ["fingerprint_all"]
+__all__ = [
+    "FingerprintService",
+    "FingerprintContext",
+    "UnifiedObservationBatch",
+    "UnifiedObservationBatchBuilder",
+    "BuilderAlreadyBuiltError",
+]
