@@ -1,117 +1,46 @@
 #!/usr/bin/env python3
-"""
-DNS Collector — Reverse DNS resolution.
-ES-1.8.0: Passive Framework Implementation.
-ES-1.8.2: Добавлена default_category для Normalization Layer.
-
-Zero Knowledge Principle:
-- Не знает о Platform Core
-- Не знает о Knowledge Layer
-- Не знает о Event Engine
-- Только собирает hostname через reverse DNS
-"""
-
 from __future__ import annotations
-
 import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
-from typing import Dict, List, Any
-
+from typing import List, Any
 from configuration import ConfigurationManager
-
-from .base import BasePassiveCollector, Observation
+from .base import BasePassiveCollector
 from .registry import passive_collector
-
+from ..normalization import ObservationFactory, ObservationCategory
 
 @passive_collector(
-    id="dns",
-    name="DNS Collector",
-    version="1.0.0",
-    protocol="DNS",
-    category="passive",
-    priority=10,  # Запускается первым
-    enabled_by_default=True,
+    id="dns", name="DNS Collector", version="1.0.0", protocol="DNS",
+    category="passive", priority=10, enabled_by_default=True,
     capabilities=("dns_resolution", "hostname_discovery"),
-    default_category="identity"  # ES-1.8.2: Категория для нормализации
+    default_category="identity"
 )
 class DNSCollector(BasePassiveCollector):
-    """
-    Reverse DNS коллектор.
-    
-    v1.8.0: Наследует BasePassiveCollector, реализует observe().
-    v1.8.2: Указывает default_category для нормализации.
-    Все настройки получаются через ConfigurationManager.
-    """
-    
     def __init__(self, configuration: ConfigurationManager):
         super().__init__(configuration)
-        # v1.8.0: Настройки из Configuration Layer
         self.workers = self.config.get("fingerprint.collectors.dns.workers", 32)
-    
-    def _resolve_single(self, ip: str) -> tuple[str, str]:
-        """
-        Резолвит один IP через reverse DNS.
-        Возвращает (ip, hostname).
-        """
+
+    def _resolve_single(self, ip: str) -> str:
         try:
             hostname, _, _ = socket.gethostbyaddr(ip)
-            return ip, hostname
+            return hostname
         except (socket.herror, socket.gaierror, OSError):
-            return ip, ""
-    
-    def observe(self, ips: List[str], context: Dict[str, Any] = None) -> Dict[str, Observation]:
-        """
-        Наблюдает за сетью и возвращает hostname для каждого IP.
+            return ""
+
+    # ES-1.8.3: Возвращает ТОЛЬКО List[Observation]
+    def observe(self, ips: List[str], context: dict[str, Any] = None) -> List:
+        if not ips: return []
         
-        Args:
-            ips: Список IP-адресов
-            context: Не используется (Zero Knowledge Principle)
-        
-        Returns:
-            Dict[ip, Observation] где Observation.data = hostname
-        """
-        if not ips:
-            return {}
-        
-        result: Dict[str, Observation] = {}
+        observations = []
         workers = min(self.workers, len(ips))
-        timestamp = datetime.now()
         
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {
-                executor.submit(self._resolve_single, ip): ip
-                for ip in ips
-            }
-            
+            futures = {executor.submit(self._resolve_single, ip): ip for ip in ips}
             for future in as_completed(futures):
-                ip, hostname = future.result()
-                result[ip] = Observation(
-                    collector_id=self.id,
-                    protocol=self.protocol,
-                    timestamp=timestamp,
-                    data=hostname,
-                    metadata={"ip": ip}
-                )
-        
-        return result
-
-
-# ==============================================================================
-# Обратная совместимость — legacy функция collect_hostnames
-# ==============================================================================
-
-def collect_hostnames(ips: List[str]) -> Dict[str, str]:
-    """
-    Legacy функция для обратной совместимости.
-    
-    v1.8.0: Использует DNSCollector через PassiveRegistry.
-    """
-    from configuration import get_config_manager
-    
-    config = get_config_manager()
-    collector = DNSCollector(config)
-    observations = collector.observe(ips)
-    
-    # Преобразуем Observation в dict[ip, hostname]
-    return {ip: obs.data for ip, obs in observations.items()}
+                ip = futures[future]
+                hostname = future.result()
+                if hostname:
+                    obs = ObservationFactory.create_hostname(
+                        collector_id=self.id, protocol=self.protocol, device_id=ip, hostname=hostname
+                    )
+                    observations.append(obs)
+        return observations
