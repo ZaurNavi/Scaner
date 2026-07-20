@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HTTP Collector.
+HTTP Collector — получение HTTP-заголовков и контента.
 v1.7.1: Интеграция с Configuration Layer.
 """
 
@@ -19,6 +19,11 @@ from storage.active_cache import get as cache_get, set as cache_set
 from configuration import ConfigurationManager
 
 
+# v1.7.1: Экспортируемые константы для обратной совместимости (Category B — Domain Constants)
+HTTP_PORTS = (80, 81, 443, 8080, 8081, 8443)
+HTTPS_PORTS = (443, 8443)
+
+
 class HTTPCollector(ActiveCollector):
     PRIORITY = 70
     RELIABILITY = 90
@@ -27,8 +32,8 @@ class HTTPCollector(ActiveCollector):
         super().__init__(configuration)
         self.timeout = self.config.get("collector.http.timeout", 2.0)
         self.max_body = self.config.get("collector.http.max_body_size", 8192)
-        self.http_ports = [80, 81, 8080, 8081]
-        self.https_ports = [443, 8443]
+        self.http_ports = HTTP_PORTS
+        self.https_ports = HTTPS_PORTS
 
     def collect(self, device: Device) -> FingerprintResult:
         start = time.time()
@@ -40,7 +45,7 @@ class HTTPCollector(ActiveCollector):
         context = getattr(self, "_context", {})
         tcp_res = context.get("tcp", {}).get(device.ip)
         open_ports = set(tcp_res.ports) if tcp_res else set()
-        target_ports = [(p, p in self.https_ports) for p in (self.http_ports + self.https_ports) if p in open_ports]
+        target_ports = [(p, p in self.https_ports) for p in self.http_ports if p in open_ports]
 
         if not target_ports:
             elapsed = (time.time() - start) * 1000
@@ -58,7 +63,10 @@ class HTTPCollector(ActiveCollector):
             }
 
         elapsed = (time.time() - start) * 1000
-        result = FingerprintResult(source="http", services=services, elapsed_ms=elapsed, raw_data={"ports_checked": [p for p, _ in target_ports]})
+        result = FingerprintResult(
+            source="http", services=services, elapsed_ms=elapsed,
+            raw_data={"ports_checked": [p for p, _ in target_ports]}
+        )
         cache_set(device.ip, "http", asdict(result))
         return result
 
@@ -86,15 +94,19 @@ class HTTPCollector(ActiveCollector):
                 body = resp.read(self.max_body).decode("utf-8", errors="ignore")
                 res["body"] = body
                 m = re.search(r"<title[^>]*>([^<]+)</title>", body, re.I | re.S)
-                if m: res["title"] = m.group(1).strip()
-                if resp.headers.get("Location"): res["redirect"] = resp.headers["Location"]
+                if m:
+                    res["title"] = m.group(1).strip()
+                if resp.headers.get("Location"):
+                    res["redirect"] = resp.headers["Location"]
                 break
             except urllib.error.HTTPError as e:
                 res["status_code"] = e.code
                 res["server"] = e.headers.get("Server", "")
                 res["content_type"] = e.headers.get("Content-Type", "")
-                try: res["body"] = e.read(self.max_body).decode("utf-8", errors="ignore")
-                except: pass
+                try:
+                    res["body"] = e.read(self.max_body).decode("utf-8", errors="ignore")
+                except Exception:
+                    pass
                 break
             except Exception as e:
                 res["error"] = str(e)
