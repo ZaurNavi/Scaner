@@ -1,11 +1,18 @@
+#!/usr/bin/env python3
+"""
+Snapshot Builder — строит SnapshotBundle из UnifiedObservationBatch.
+ES-1.8.3: Полная миграция на UnifiedObservationBatch.
+Удалены зависимости от CollectedData и FingerprintResult.
+"""
 from __future__ import annotations
+
 import json
 from datetime import datetime
 from typing import Dict
 
 from models import Device
-from fingerprint.collectors.base import CollectedData
-from fingerprint.correlation import engine as correlation_engine
+from fingerprint import UnifiedObservationBatch
+from fingerprint.normalization.models import ObservationCategory
 
 from storage.schema import (
     SnapshotBundle, Scan, Device as DomainDevice, Snapshot,
@@ -17,10 +24,10 @@ from storage.schema import (
 def build_snapshot_bundle(
     device: Device,
     scan: Scan,
-    collected: CollectedData,
+    batch: UnifiedObservationBatch,
 ) -> SnapshotBundle:
     """
-    Строит SnapshotBundle из данных устройства и собранных фактов.
+    ES-1.8.3: Строит SnapshotBundle из UnifiedObservationBatch.
     Один Bundle = одно устройство = одна транзакция.
     """
 
@@ -45,21 +52,21 @@ def build_snapshot_bundle(
         confidence=device.confidence,
     )
 
-    # 3. Observations из collected_data
-    observations = _build_observations(snapshot.id, collected)
+    # 3. Observations из batch
+    observations = _build_observations(snapshot.id, device.ip, batch)
 
-    # 4. Evidence из correlation engine
-    evidence = _build_evidence(snapshot.id, device, collected)
+    # 4. Evidence (пока пустой, так как correlation engine требует миграции)
+    evidence = []
 
     # 5. CollectorLog
-    total_elapsed = sum(src.elapsed_ms for src in collected.sources.values())
+    total_elapsed = batch.metadata.get("elapsed_ms", 0.0) if batch.metadata else 0.0
     collector_log = CollectorLog(
         scan_id=scan.id,
         collector_name="fingerprint_engine",
         started_at=scan.started_at,
         finished_at=datetime.now(),
         duration_ms=total_elapsed,
-        objects_processed=len(collected.sources),
+        objects_processed=batch.count(),
         status=CollectorStatus.SUCCESS,
         warnings=0,
         error_message="",
@@ -100,151 +107,86 @@ def _map_device_type(device_type: str) -> DeviceType:
     return mapping.get(device_type.lower(), DeviceType.UNKNOWN)
 
 
-def _build_observations(snapshot_id: str, collected: CollectedData) -> list[Observation]:
+def _build_observations(snapshot_id: str, ip: str, batch: UnifiedObservationBatch) -> list[Observation]:
     """
-    Собирает Observations из ВСЕХ источников.
-    Универсальный обработчик для всех коллекторов.
+    ES-1.8.3: Собирает Observations из UnifiedObservationBatch.
+    Использует Query API для извлечения данных.
     """
     observations = []
-
-    # === СПЕЦИАЛЬНАЯ ОБРАБОТКА (для источников с особой структурой) ===
-
-    # TTL
-    if "ttl" in collected.sources:
-        ttl_result = collected.sources["ttl"]
-        if ttl_result.ttl:
-            observations.append(Observation(
-                snapshot_id=snapshot_id,
-                source=Source.TTL,
-                key="ttl",
-                value=str(ttl_result.ttl),
-                obs_type=ObservationType.INTEGER,
-                confidence=ttl_result.confidence,
-            ))
-
-    # TCP ports
-    if "tcp" in collected.sources:
-        tcp_result = collected.sources["tcp"]
-        if tcp_result.services:
-            observations.append(Observation(
-                snapshot_id=snapshot_id,
-                source=Source.TCP,
-                key="open_ports",
-                value=str(list(tcp_result.services.keys())),
-                obs_type=ObservationType.JSON,
-                confidence=tcp_result.confidence,
-            ))
-
-    # HTTP
-    if "http" in collected.sources:
-        http_result = collected.sources["http"]
-        for port, data in http_result.services.items():
-            if isinstance(data, dict):
-                if data.get("server"):
-                    observations.append(Observation(
-                        snapshot_id=snapshot_id,
-                        source=Source.HTTP,
-                        key=f"http.server.port_{port}",
-                        value=data["server"],
-                        obs_type=ObservationType.STRING,
-                        confidence=http_result.confidence,
-                    ))
-
-    # mDNS
-    if collected.mdns.hostname:
-        observations.append(Observation(
-            snapshot_id=snapshot_id,
-            source=Source.MDNS,
-            key="hostname",
-            value=collected.mdns.hostname,
-            obs_type=ObservationType.STRING,
-            confidence=35,
-        ))
-
-    # DNS hostname
-    if collected.hostname:
-        observations.append(Observation(
-            snapshot_id=snapshot_id,
-            source=Source.DNS,
-            key="hostname",
-            value=collected.hostname,
-            obs_type=ObservationType.STRING,
-            confidence=10,
-        ))
-
-    # === АВТОМАТИЧЕСКАЯ ОБРАБОТКА ВСЕХ ОСТАЛЬНЫХ ИСТОЧНИКОВ ===
-    # Теперь нам НЕ НУЖНО вручную перечислять каждый коллектор!
-    # Любой источник, который вернул responded=True, автоматически сохраняется.
-    # Это делает систему устойчивой к добавлению новых коллекторов.
     
-    # Источники, которые мы уже обработали выше (специальная обработка)
-    already_processed = {"ttl", "tcp", "http"}
+    # Фильтруем observations для этого IP
+    device_batch = batch.filter(lambda obs: obs.metadata.ip == ip)
     
-    for source_name, result in collected.sources.items():
-        if source_name in already_processed:
-            continue
+    for obs in device_batch:
+        # Маппим collector_id в Source enum
+        source_enum = _map_collector_to_source(obs.collector_id)
         
-        # Сохраняем любой источник, который ответил
-        if result.raw_data.get("responded"):
-            source_enum = _map_source_string_to_enum(source_name)
-            observations.append(Observation(
-                snapshot_id=snapshot_id,
-                source=source_enum,
-                key=source_name,
-                # ИСПРАВЛЕНО: используем json.dumps вместо str() для правильного JSON
-                value=json.dumps(result.raw_data, ensure_ascii=False),
-                obs_type=ObservationType.JSON,
-                confidence=result.confidence,
-            ))
-
+        # Маппим attribute в ObservationType
+        obs_type = _map_attribute_to_type(obs.attribute, obs.normalized_value)
+        
+        # Преобразуем значение в строку
+        value = _format_value(obs.normalized_value)
+        
+        observations.append(Observation(
+            snapshot_id=snapshot_id,
+            source=source_enum,
+            key=obs.attribute,
+            value=value,
+            obs_type=obs_type,
+            confidence=int(obs.confidence * 100),  # Преобразуем float в int
+        ))
+    
     return observations
 
 
-def _map_source_string_to_enum(source_name: str) -> Source:
-    """Маппит строку source_name в Enum Source."""
+def _map_collector_to_source(collector_id: str) -> Source:
+    """Маппит collector_id в Enum Source."""
     mapping = {
-        "snmp": Source.SNMP,
-        "ssdp": Source.SSDP,
-        "ttl": Source.TTL,
-        "tcp": Source.TCP,
-        "http": Source.HTTP,
-        "mdns": Source.MDNS,
         "dns": Source.DNS,
-    }
-    return mapping.get(source_name.lower(), Source.UNKNOWN)
-
-
-def _build_evidence(snapshot_id: str, device: Device, collected: CollectedData) -> list[Evidence]:
-    """Собирает Evidence из correlation engine."""
-    corr_result = correlation_engine.correlate(device, collected)
-
-    evidence_list = []
-    for item in corr_result.evidence_items:
-        evidence_list.append(Evidence(
-            snapshot_id=snapshot_id,
-            description=item.description,
-            contribution=item.contribution,
-            source=_map_source(item.source),
-            details=item.details or "",
-        ))
-
-    return evidence_list
-
-
-def _map_source(source_str: str) -> Source:
-    """Маппит строку source в Enum Source."""
-    mapping = {
-        "vendor": Source.OUI,
-        "hostname": Source.DNS,
-        "ttl": Source.TTL,
+        "mdns": Source.MDNS,
         "tcp": Source.TCP,
         "http": Source.HTTP,
-        "mdns": Source.MDNS,
-        "ssdp": Source.SSDP,
+        "ssh": Source.SSH,
+        "smb": Source.SMB,
         "snmp": Source.SNMP,
-        "arp": Source.ARP,
-        "netflow": Source.NETFLOW,
+        "ssdp": Source.SSDP,
+        "wsd": Source.WSD,
+        "netbios": Source.NETBIOS,
+        "dns_sd": Source.DNS_SD,
+        "ttl": Source.TTL,
+        "scapy_fp": Source.SCAY_FP,
+        "banners": Source.BANNERS,
+        "https_cert": Source.HTTPS_CERT,
+        "favicon": Source.FAVICON,
+        "ntp": Source.NTP,
+        "lldp_cdp": Source.LLDP_CDP,
+        "dhcp_cisco": Source.DHCP_CISCO,
+        "switch_port": Source.SWITCH_PORT,
+        "traffic": Source.NETFLOW,
+        "omada": Source.OMADA,
     }
-    if source_str.startswith("rule:"):
-        return Source.UNKNOWN
-    return mapping.get(source_str.lower(), Source.UNKNOWN)
+    return mapping.get(collector_id.lower(), Source.UNKNOWN)
+
+
+def _map_attribute_to_type(attribute: str, value: any) -> ObservationType:
+    """Маппит attribute и value в ObservationType."""
+    if isinstance(value, str):
+        return ObservationType.STRING
+    elif isinstance(value, int):
+        return ObservationType.INTEGER
+    elif isinstance(value, float):
+        return ObservationType.FLOAT
+    elif isinstance(value, bool):
+        return ObservationType.BOOLEAN
+    elif isinstance(value, (list, dict)):
+        return ObservationType.JSON
+    else:
+        return ObservationType.STRING
+
+
+def _format_value(value: any) -> str:
+    """Форматирует значение в строку для хранения."""
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, ensure_ascii=False)
+    else:
+        return str(value)
