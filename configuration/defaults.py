@@ -252,3 +252,10 @@ def register_defaults(registry: ConfigRegistry):
     # mDNS Collector
     registry.register("fingerprint.collectors.mdns.enabled", bool, True, "Fingerprint", "Enable mDNS collector")
     registry.register("fingerprint.collectors.mdns.timeout", float, 2.0, "Fingerprint", "mDNS scan timeout in seconds", min_value=0.5, max_value=10.0)
+    
+    # ==============================================================================
+    # Normalization Layer (ES-1.8.1)
+    # ==============================================================================
+    registry.register("fingerprint.normalization.enabled", bool, True, "Fingerprint", "Enable normalization layer")
+    registry.register("fingerprint.normalization.unknown_policy", str, "log", "Fingerprint", "Policy for unknown observations: keep, drop, log")
+    registry.register("fingerprint.normalization.batch_size", int, 1000, "Fingerprint", "Batch size for normalize_many()", min_value=1)
