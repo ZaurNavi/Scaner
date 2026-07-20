@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Активные коллекторы fingerprint.
-v1.7.1: Экспорт всех коллекторов и get_collectors.
+v1.7.1: Экспорт всех коллекторов и get_collectors (без устаревшего COLLECTORS).
 """
 
 from .base import ActiveCollector, FingerprintResult
@@ -23,7 +23,7 @@ from .lldp_cdp import LLDP_CDPCollector
 from .dhcp_cisco import DHCPCiscoCollector
 from .favicon import FaviconCollector
 from .ping import ping, PingResult
-from .registry import COLLECTORS, get_collectors
+from .registry import get_collectors
 from .dns_sd import DnsSdCollector
 
 __all__ = [
@@ -54,6 +54,5 @@ __all__ = [
     "HTTPS_PORTS",
     "ping",
     "PingResult",
-    "COLLECTORS",
     "get_collectors",
 ]
