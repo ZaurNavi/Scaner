@@ -90,6 +90,9 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="switch_port_info", category=ObservationCategory.TOPOLOGY, value_type=dict, description="Switch port mapping by MAC"
 ))
+AttributeRegistry.register(AttributeDescriptor(
+    id="scapy_fingerprint", category=ObservationCategory.FINGERPRINT, value_type=dict, description="Scapy TCP/ICMP fingerprint data"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
