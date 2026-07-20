@@ -240,3 +240,15 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("restapi.enabled", bool, False, "REST API", "Enable REST API")
     registry.register("risk.enabled", bool, False, "Risk", "Enable Risk Engine")
     registry.register("correlation.enabled", bool, False, "Correlation", "Enable Correlation Engine")
+    
+    # ==============================================================================
+    # Passive Framework (ES-1.8.0)
+    # ==============================================================================
+    
+    # DNS Collector
+    registry.register("fingerprint.collectors.dns.enabled", bool, True, "Fingerprint", "Enable DNS collector")
+    registry.register("fingerprint.collectors.dns.workers", int, 32, "Fingerprint", "DNS concurrent workers", min_value=1, max_value=128)
+    
+    # mDNS Collector
+    registry.register("fingerprint.collectors.mdns.enabled", bool, True, "Fingerprint", "Enable mDNS collector")
+    registry.register("fingerprint.collectors.mdns.timeout", float, 2.0, "Fingerprint", "mDNS scan timeout in seconds", min_value=0.5, max_value=10.0)
