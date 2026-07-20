@@ -32,7 +32,9 @@ from report import (
 )
 from fingerprint.analysis import fingerprint_all
 from fingerprint import FingerprintService, UnifiedObservationBatch
-from fingerprint.normalization.models import ObservationCategory
+from fingerprint.pipeline.batch import UnifiedObservationBatchBuilder
+from fingerprint.normalization import ObservationFactory
+from fingerprint.normalization.models import ObservationMetadata, ObservationCategory
 from fingerprint.controllers.registry import get_controller_collectors
 from storage.history import enrich
 from storage.device_db import save_state
@@ -44,7 +46,7 @@ from storage.archivist import (
     Archivist,
     build_snapshot_bundle,
 )
-from storage.schema import Scan, ScanStatus
+from storage.schema import Scan, ScanStatus, Snapshot, SnapshotType, SnapshotBundle
 from events import EventEngine
 from history import HistoryService
 from traffic import traffic_collector
@@ -131,7 +133,6 @@ def init_archivist():
             status=ScanStatus.SUCCESS,
         )
 
-        from storage.schema import SnapshotBundle
         empty_bundle = SnapshotBundle(scan_id=scan.id, snapshot=None, scan=scan)
         try:
             repo.save_bundle(empty_bundle)
@@ -380,11 +381,9 @@ def main() -> int:
     try:
         from storage import active_cache, device_db
         
-        # Инициализируем Active Cache с конфигурацией
         active_cache.initialize(configuration=config)
         print("  [CACHE] ✅ Active Cache initialized")
         
-        # Инициализируем Device DB с конфигурацией
         device_db.initialize(configuration=config)
         print("  [DEVICE_DB] ✅ Device DB initialized")
         
@@ -443,7 +442,6 @@ def main() -> int:
         fingerprint_batch = fingerprint_service.execute(ips, devices)
         print(f"         • ✅ Pipeline completed: {fingerprint_batch.count()} unified observations")
         
-        # Демонстрация Query API
         if fingerprint_batch.count() > 0:
             identity_observations = fingerprint_batch.by_category(ObservationCategory.IDENTITY)
             print(f"         • IDENTITY category: {identity_observations.count()} observations")
@@ -454,7 +452,6 @@ def main() -> int:
             service_observations = fingerprint_batch.by_category(ObservationCategory.SERVICE)
             print(f"         • SERVICE category: {service_observations.count()} observations")
             
-            # Показываем первые 3 наблюдения для демонстрации
             print("         • Sample observations:")
             for i, obs in enumerate(fingerprint_batch.query().all()[:3], 1):
                 print(f"              {i}. {obs.collector_id}.{obs.attribute} = {obs.normalized_value} (confidence: {obs.confidence:.2f})")
@@ -463,7 +460,6 @@ def main() -> int:
         import traceback
         traceback.print_exc()
         # Создаём пустой batch для продолжения работы
-        from fingerprint.pipeline.batch import UnifiedObservationBatchBuilder
         builder = UnifiedObservationBatchBuilder()
         fingerprint_batch = builder.build(metadata={"error": str(exc)})
 
@@ -473,17 +469,11 @@ def main() -> int:
     print("\n  [TRAFFIC] Initializing Traffic Collector...")
     traffic_data = traffic_collector.collect_all(ips)
     
-    # ES-1.8.3: Traffic данные добавляются в batch через ObservationFactory
-    if traffic_data:
-        from fingerprint.normalization import ObservationFactory
-        from fingerprint.normalization.models import ObservationMetadata
-        
+    if traffic_data and fingerprint_batch:
         traffic_builder = UnifiedObservationBatchBuilder()
-        # Копируем существующие observations
         for obs in fingerprint_batch:
             traffic_builder.add(obs)
         
-        # Добавляем traffic observations
         for ip in ips:
             if ip in traffic_data:
                 traffic_info = traffic_data[ip]
@@ -504,7 +494,7 @@ def main() -> int:
     # ES-1.8.3: Infrastructure Controller Integration (Omada через Batch)
     # ==============================================================================
     controller_collectors = get_controller_collectors()
-    if controller_collectors:
+    if controller_collectors and fingerprint_batch:
         print("\n  [CONTROLLERS] Fetching infrastructure data...")
         for collector in controller_collectors:
             print(f"  [CONTROLLERS] Running {collector.name.capitalize()} Collector...")
@@ -514,10 +504,6 @@ def main() -> int:
                 print(f"  [CONTROLLERS] ❌ {collector.name} failed: {controller_data['error']}")
                 continue
 
-            # ES-1.8.3: Добавляем Omada данные в batch
-            from fingerprint.normalization import ObservationFactory
-            from fingerprint.normalization.models import ObservationMetadata
-            
             omada_builder = UnifiedObservationBatchBuilder()
             for obs in fingerprint_batch:
                 omada_builder.add(obs)
@@ -564,14 +550,8 @@ def main() -> int:
         first_device_id = None
         ip_to_device_id = {}
 
-        # ES-1.8.3: Archivist пока работает с legacy SnapshotBundle
-        # Создаём минимальный bundle для каждого устройства
         for device in devices:
-            # Извлекаем данные из batch для этого устройства
-            device_observations = fingerprint_batch.filter(lambda obs: obs.metadata.ip == device.ip)
-            
             # Создаём минимальный snapshot (legacy совместимость)
-            from storage.schema import Snapshot, SnapshotType
             snapshot = Snapshot(
                 id=str(uuid.uuid4()),
                 scan_id=scan.id,
@@ -583,9 +563,7 @@ def main() -> int:
                 timestamp=datetime.now(),
             )
             
-            from storage.schema import SnapshotBundle
             bundle = SnapshotBundle(scan_id=scan.id, snapshot=snapshot, scan=scan)
-            
             result = archivist.save(bundle)
 
             if result.success:
@@ -618,11 +596,10 @@ def main() -> int:
         session_engine = None
         if history_service and db:
             try:
-                # v1.6.9.7: Передаём configuration через Dependency Injection (обязательный параметр)
                 session_engine = SessionEngine(
                     history_service=history_service,
                     repository=Repository(db),
-                    configuration=config  # v1.6.9.7: обязательный параметр
+                    configuration=config
                 )
                 
                 print("\n  [SESSION] Configuration from Configuration Layer:")
@@ -670,15 +647,13 @@ def main() -> int:
         # === v1.5.5 + v1.6.9.5: Confidence Service (with DI) ===
         if identity_service and profiles:
             try:
-                # v1.6.9.5: Выводим информацию из Configuration Layer
                 print("\n  [CONFIDENCE] Configuration from Configuration Layer:")
                 print(f"         • Confidence enabled: {config.get('confidence.enabled', True)}")
                 print(f"         • Max score: {config.get('confidence.max_score', 100)}")
                 
-                # v1.6.9.5: Передаём configuration через Dependency Injection
                 confidence_service = ConfidenceService(
                     identity_service=identity_service,
-                    configuration=config  # v1.6.9.5: DI
+                    configuration=config
                 )
                 
                 sample_device_id = profiles[0].device_id
@@ -701,7 +676,6 @@ def main() -> int:
 
                 sample_device_id = profiles[0].device_id
                 
-                # v1.6.9.2: Выводим информацию из Configuration Layer
                 print("\n  [PLATFORM] Configuration from Configuration Layer:")
                 print(f"         • Platform enabled: {config.get('platform.enabled', True)}")
                 print(f"         • Behaviour enabled: {config.get('behaviour.enabled', True)}")
@@ -709,21 +683,17 @@ def main() -> int:
                 print(f"         • Fingerprint min confidence: {config.get('fingerprint.minimum_confidence')}")
                 print(f"         • Knowledge cache size: {config.get('knowledge.cache_size')}")
                 
-                # v1.6.9.2: Создаём Platform instance с Dependency Injection
                 platform = Platform(configuration=config)
                 platform.start()
                 
-                # v1.6.9.2: Создаём BehaviourEngine с правильными аргументами
                 behaviour_engine = BehaviourEngine(
                     history_service=history_service,
                     identity_service=identity_service,
                     session_engine=session_engine
                 )
                 
-                # v1.6.9.2: Запускаем анализ через правильный метод analyze()
                 behaviour_profile, debug_info = behaviour_engine.analyze(sample_device_id)
                 
-                # Адаптируем результат для _format_engine_output
                 class BehaviourResultAdapter:
                     def __init__(self, profile, debug):
                         self.identity_id = profile.identity_id
@@ -796,7 +766,6 @@ def main() -> int:
                 
                 sample_device_id = profiles[0].device_id
                 
-                # === АДАПТЕР: Превращаем legacy-факты в Platform Facts ===
                 def adapt_to_platform_fact(legacy_fact, engine_name: str) -> Fact:
                     if hasattr(legacy_fact, 'id') and hasattr(legacy_fact, 'engine'):
                         return legacy_fact
@@ -832,7 +801,6 @@ def main() -> int:
                         }
                     )
                 
-                # Собираем все Platform Facts из движков
                 all_facts = []
                 engine_results = {}
                 
@@ -867,7 +835,6 @@ def main() -> int:
                     })()})()
                     engine_results["usage"] = mock_usage
                 
-                # 1. Создаём Knowledge Snapshot
                 knowledge_service = KnowledgeService(configuration=config)
                 
                 print("\n  [KNOWLEDGE] Configuration from Configuration Layer:")
@@ -885,12 +852,10 @@ def main() -> int:
                 cache_info = knowledge_service.cache_info()
                 print(f"         • Cache size: {cache_info['size']}/{cache_info['max_size']}")
                 
-                # 2. Строим Unified Device Profile через ProfileService
                 profile_service = ProfileService(knowledge_service)
                 profile_result = profile_service.build(sample_device_id, VersionSnapshot())
                 profile = profile_result.profile
                 
-                # 3. Выводим Unified Device Profile
                 print(f"\n  [PROFILE] Building Unified Device Profile...")
                 print(f"      ✅ Profile built for {profile.device_id[:8]}... (Duration: {profile_result.execution.duration_ms:.2f}ms, Cache: {profile_result.execution.cache_hit})")
                 
@@ -921,7 +886,6 @@ def main() -> int:
                 available_caps = [cap for cap, is_avail in profile.capabilities.items() if is_avail]
                 print(f"            • {', '.join(available_caps) if available_caps else 'None'}")
                 
-                # 4. Демонстрация Fluent Query API
                 print("         Query API Demo:")
                 q1_count = profile.query().count()
                 print(f"            • profile.query().count() = {q1_count} facts")
@@ -932,7 +896,6 @@ def main() -> int:
                 presence_facts = profile.query().category("presence").all()
                 print(f"            • profile.query().category('presence').all() = {len(presence_facts)} facts")
                 
-                # 5. Демонстрация ExplainService
                 explain_service = ExplainService(knowledge_service)
                 explain_graph = explain_service.build(profile)
                 print("         Explain Graph:")
@@ -940,7 +903,6 @@ def main() -> int:
                 print(f"            • Engines Involved: {', '.join(explain_graph.engines)}")
                 print(f"            • Overall Confidence Trace: {explain_graph.confidence_trace.get('overall', 0):.1%}")
                 
-                # 6. v1.6.7: Change Detection Layer
                 print("\n  [DIFF] Detecting Profile Changes...")
                 
                 previous_profile = profile_service.get(sample_device_id)
@@ -993,7 +955,6 @@ def main() -> int:
                     
                     print(f"      ✅ New profile cached for next comparison")
 
-                # 7. v1.6.8: Domain Event Layer
                 print("\n  [EVENTS] Generating Domain Events...")
                 event_generator = EventGenerator()
                 event_set = event_generator.generate(diff)
