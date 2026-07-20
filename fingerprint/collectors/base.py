@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 """
 Base Passive Collector + Aggregator.
-ES-1.8.0: Единый контракт для всех Passive Collectors.
-ES-1.8.1: Интеграция с Normalization Layer.
-
-Архитектура:
-- BasePassiveCollector: абстрактный базовый класс
-- Observation: единица наблюдения
-- CollectedData: агрегированные данные для устройства
-- collect_all(): агрегатор, запускающий все коллекторы через Factory
+ES-1.8.3: Полная миграция на List[Observation].
 """
 
 from __future__ import annotations
@@ -27,16 +20,14 @@ from .factory import PassiveCollectorFactory
 from ..active import FingerprintResult, get_collectors
 from storage.active_cache import get as cache_get, set as cache_set
 
-# ==============================================================================
 # ES-1.8.1: Normalization Layer Integration
-# ==============================================================================
 from ..normalization import Normalizer, RuleRegistry
 from ..normalization.models import (
     Observation as NormalizationObservation,
     ObservationMetadata,
     ObservationCategory,
 )
-from ..normalization.rules import dns, mdns  # Запускает регистрацию правил
+from ..normalization.rules import dns, mdns
 
 # Инициализация Normalization Layer при импорте
 print("\n  [NORMALIZATION] Initializing Normalization Layer...")
@@ -53,12 +44,7 @@ for rule in RuleRegistry.get_all_rules():
 class Observation:
     """
     Единая единица наблюдения от Passive Collector.
-    
-    Zero Knowledge Principle:
-    - Не знает о Platform Core
-    - Не знает о Knowledge Layer
-    - Не знает о Event Engine
-    - Только данные наблюдения
+    ES-1.8.3: Возвращается как List[Observation].
     """
     collector_id: str
     protocol: str
@@ -74,33 +60,19 @@ class Observation:
 class BasePassiveCollector(ABC):
     """
     Абстрактный базовый класс для всех Passive Collectors.
-    
-    Единый контракт:
-    - observe(ips, context) -> dict[str, Observation]
-    
-    Zero Knowledge Principle:
-    - Коллектор не знает, кто его вызывает
-    - Коллектор не знает, кто использует результат
-    - Коллектор выполняет только одну задачу:
-      получить входные данные → сформировать Observation → вернуть
+    ES-1.8.3: Единый контракт — observe() возвращает List[Observation].
     """
     
-    # Дескриптор устанавливается декоратором @passive_collector
     descriptor: Any = None
-    
-    # ES-1.8.1: Категория для нормализации
     category: ObservationCategory = ObservationCategory.IDENTITY
     
     def __init__(self, configuration: ConfigurationManager):
-        """
-        v1.8.0: Dependency Injection через ConfigurationManager.
-        """
         self.config = configuration
     
     @abstractmethod
-    def observe(self, ips: List[str], context: Dict[str, Any] = None) -> Dict[str, Observation]:
+    def observe(self, ips: List[str], context: Dict[str, Any] = None) -> List[Observation]:
         """
-        Наблюдает за сетью и возвращает наблюдения.
+        ES-1.8.3: Возвращает List[Observation].
         """
         pass
     
@@ -144,15 +116,12 @@ except ImportError:
 class CollectedData:
     """
     Агрегированные данные для устройства.
-    
-    v1.8.0: Добавлено поле passive_observations.
-    v1.8.1: Добавлено поле unified_observations.
     """
     hostname: str = ""
     mdns: MDNSInfo = field(default_factory=MDNSInfo)
     sources: Dict[str, FingerprintResult] = field(default_factory=dict)
-    passive_observations: Dict[str, Observation] = field(default_factory=dict)
-    unified_observations: List[Any] = field(default_factory=list)  # ES-1.8.1
+    passive_observations: List[Observation] = field(default_factory=list)
+    unified_observations: List[Any] = field(default_factory=list)
 
 
 # ==============================================================================
@@ -165,10 +134,7 @@ def collect_all(
     configuration: Optional[ConfigurationManager] = None
 ) -> Dict[str, CollectedData]:
     """
-    Агрегирует данные от всех Passive и Active коллекторов.
-    
-    v1.8.0: Использует PassiveCollectorFactory.
-    v1.8.1: Добавлена нормализация через Normalizer.
+    ES-1.8.3: Работает с List[Observation] от всех коллекторов.
     """
     print(f"\n  [DEBUG] collect_all() запущен для {len(devices)} устройств")
     
@@ -178,10 +144,10 @@ def collect_all(
     start_total = time.time()
     
     # ======================================================================
-    # v1.8.0: Passive Collectors через Factory
+    # Passive Collectors через Factory
     # ======================================================================
-    passive_results: Dict[str, Dict[str, Observation]] = {}
-    passive_collectors: Dict[str, BasePassiveCollector] = {}  # ES-1.8.1
+    passive_results: Dict[str, List[Observation]] = {}
+    passive_collectors: Dict[str, BasePassiveCollector] = {}
     passive_stats = []
     
     enabled_descriptors = list(PassiveRegistry.iter_enabled_descriptors(configuration))
@@ -199,10 +165,11 @@ def collect_all(
         print(f"         • Capabilities: {', '.join(descriptor.capabilities) if descriptor.capabilities else 'none'}")
         
         collector = PassiveCollectorFactory.create(descriptor, configuration)
-        passive_collectors[collector_id] = collector  # ES-1.8.1
+        passive_collectors[collector_id] = collector
         
         start = time.time()
         try:
+            # ES-1.8.3: observe() возвращает List[Observation]
             observations = collector.observe(ips, context={})
             passive_results[collector_id] = observations
             
@@ -233,134 +200,77 @@ def collect_all(
             })
     
     # ======================================================================
-    # ES-1.8.1: Normalization Layer
+    # Normalization Layer
     # ======================================================================
     print("\n  [NORMALIZATION] Normalizing observations...")
     
     normalizer = Normalizer(configuration)
     
-    # ES-1.8.1: Строим category_map из коллекторов
-    category_map = {}
-    for collector_id, collector in passive_collectors.items():
-        category_map[collector_id] = collector.category
-    
-    # ES-1.8.1: Конвертируем Collector Observation → Normalization Observation
-    # Для DNS: создаём Observation с attribute="hostname"
-    # Для mDNS: создаём несколько Observations для каждого поля
+    # ES-1.8.3: Собираем все Observation из всех коллекторов
     all_normalization_observations = []
     
-    # ES-1.8.1: Счётчики для отладки DNS
-    dns_total = 0
-    dns_with_hostname = 0
-    dns_empty_hostname = 0
-    
     for collector_id, observations in passive_results.items():
-        for ip, obs in observations.items():
-            timestamp = obs.timestamp
+        # ES-1.8.3: observations — это List[Observation]
+        for obs in observations:
+            # Конвертируем в NormalizationObservation
+            # ES-1.8.3: Используем ObservationFactory для валидации
+            from ..normalization import ObservationFactory
             
-            # DNS: hostname
-            if collector_id == "dns":
-                dns_total += 1
-                hostname = obs.data or ""
-                if hostname:
-                    dns_with_hostname += 1
-                    norm_obs = NormalizationObservation(
-                        observation_id=NormalizationObservation.generate_id(
-                            collector_id=collector_id,
-                            device_id=ip,
-                            attribute="hostname",
-                            value=hostname
-                        ),
-                        collector_id=collector_id,
-                        protocol=obs.protocol,
-                        device_id=ip,
-                        attribute="hostname",
-                        value=hostname,
-                        timestamp=timestamp,
-                        metadata=ObservationMetadata(ip=ip)
-                    )
-                    all_normalization_observations.append(norm_obs)
-                else:
-                    dns_empty_hostname += 1
+            # Определяем атрибут на основе данных
+            if collector_id == "dns" and isinstance(obs.data, str):
+                norm_obs = ObservationFactory.create_hostname(
+                    collector_id=collector_id,
+                    protocol=obs.protocol,
+                    device_id=obs.metadata.get("ip", ""),
+                    hostname=obs.data
+                )
+                all_normalization_observations.append(norm_obs)
             
-            # mDNS: hostname, model, device_type, services
             elif collector_id == "mdns":
                 mdns_info = obs.data
                 if hasattr(mdns_info, "hostname") and mdns_info.hostname:
-                    norm_obs = NormalizationObservation(
-                        observation_id=NormalizationObservation.generate_id(
-                            collector_id=collector_id,
-                            device_id=ip,
-                            attribute="hostname",
-                            value=mdns_info.hostname
-                        ),
+                    norm_obs = ObservationFactory.create_hostname(
                         collector_id=collector_id,
                         protocol=obs.protocol,
-                        device_id=ip,
-                        attribute="hostname",
-                        value=mdns_info.hostname,
-                        timestamp=timestamp,
-                        metadata=ObservationMetadata(ip=ip)
+                        device_id=obs.metadata.get("ip", ""),
+                        hostname=mdns_info.hostname
                     )
                     all_normalization_observations.append(norm_obs)
                 
                 if hasattr(mdns_info, "model") and mdns_info.model:
-                    norm_obs = NormalizationObservation(
-                        observation_id=NormalizationObservation.generate_id(
-                            collector_id=collector_id,
-                            device_id=ip,
-                            attribute="model",
-                            value=mdns_info.model
-                        ),
+                    norm_obs = ObservationFactory.create(
                         collector_id=collector_id,
                         protocol=obs.protocol,
-                        device_id=ip,
+                        device_id=obs.metadata.get("ip", ""),
                         attribute="model",
-                        value=mdns_info.model,
-                        timestamp=timestamp,
-                        metadata=ObservationMetadata(ip=ip)
+                        value=mdns_info.model
                     )
                     all_normalization_observations.append(norm_obs)
                 
                 if hasattr(mdns_info, "device_type") and mdns_info.device_type:
-                    norm_obs = NormalizationObservation(
-                        observation_id=NormalizationObservation.generate_id(
-                            collector_id=collector_id,
-                            device_id=ip,
-                            attribute="device_type",
-                            value=mdns_info.device_type
-                        ),
+                    norm_obs = ObservationFactory.create(
                         collector_id=collector_id,
                         protocol=obs.protocol,
-                        device_id=ip,
+                        device_id=obs.metadata.get("ip", ""),
                         attribute="device_type",
-                        value=mdns_info.device_type,
-                        timestamp=timestamp,
-                        metadata=ObservationMetadata(ip=ip)
+                        value=mdns_info.device_type
                     )
                     all_normalization_observations.append(norm_obs)
                 
                 if hasattr(mdns_info, "services") and mdns_info.services:
-                    norm_obs = NormalizationObservation(
-                        observation_id=NormalizationObservation.generate_id(
-                            collector_id=collector_id,
-                            device_id=ip,
-                            attribute="services",
-                            value=str(mdns_info.services)
-                        ),
+                    norm_obs = ObservationFactory.create(
                         collector_id=collector_id,
                         protocol=obs.protocol,
-                        device_id=ip,
+                        device_id=obs.metadata.get("ip", ""),
                         attribute="services",
-                        value=mdns_info.services,
-                        timestamp=timestamp,
-                        metadata=ObservationMetadata(ip=ip)
+                        value=mdns_info.services
                     )
                     all_normalization_observations.append(norm_obs)
     
-    # ES-1.8.1: Отладочный вывод DNS статистики
-    if dns_total > 0:
-        print(f"         • DNS stats: {dns_total} total, {dns_with_hostname} with hostname, {dns_empty_hostname} empty")
+    # Строим category_map
+    category_map = {}
+    for collector_id, collector in passive_collectors.items():
+        category_map[collector_id] = collector.category
     
     # Нормализуем через Batch API
     unified_observations = normalizer.normalize_many(
@@ -422,28 +332,31 @@ def collect_all(
     for d in devices:
         ip = d.ip
         
+        # Извлекаем hostname из DNS observations
         hostname = ""
-        if "dns" in passive_results and ip in passive_results["dns"]:
-            hostname = passive_results["dns"][ip].data or ""
+        if "dns" in passive_results:
+            for obs in passive_results["dns"]:
+                if obs.metadata.get("ip") == ip and isinstance(obs.data, str):
+                    hostname = obs.data
+                    break
         
+        # Извлекаем MDNSInfo из mDNS observations
         mdns_info = MDNSInfo()
-        if "mdns" in passive_results and ip in passive_results["mdns"]:
-            mdns_info = passive_results["mdns"][ip].data
+        if "mdns" in passive_results:
+            for obs in passive_results["mdns"]:
+                if obs.metadata.get("ip") == ip:
+                    mdns_info = obs.data
+                    break
         
-        ip_passive_observations = {}
-        for collector_id, observations in passive_results.items():
-            if ip in observations:
-                ip_passive_observations[collector_id] = observations[ip]
-        
-        # ES-1.8.1: Добавляем unified observations
+        # ES-1.8.3: Добавляем unified observations
         ip_unified_observations = unified_by_ip.get(ip, [])
         
         result[ip] = CollectedData(
             hostname=hostname,
             mdns=mdns_info,
             sources=all_sources.get(ip, {}),
-            passive_observations=ip_passive_observations,
-            unified_observations=ip_unified_observations  # ES-1.8.1
+            passive_observations=passive_results.get("dns", []) + passive_results.get("mdns", []),
+            unified_observations=ip_unified_observations
         )
     
     total_time = (time.time() - start_total) * 1000
