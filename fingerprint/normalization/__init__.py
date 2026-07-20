@@ -45,7 +45,15 @@ AttributeRegistry.register(AttributeDescriptor(
 AttributeRegistry.register(AttributeDescriptor(
     id="ttl", category=ObservationCategory.CONNECTIVITY, value_type=int, description="Time To Live value"
 ))
-
+AttributeRegistry.register(AttributeDescriptor(
+    id="banner", category=ObservationCategory.SERVICE, value_type=str, description="Service banner string"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="os_version", category=ObservationCategory.IDENTITY, value_type=dict, description="OS version and protocol info"
+))
+AttributeRegistry.register(AttributeDescriptor(
+    id="ntp_info", category=ObservationCategory.TIMING, value_type=dict, description="NTP stratum and reference info"
+))
 __all__ = [
     "Observation", "UnifiedObservation", "ObservationMetadata", "ObservationCategory",
     "Normalizer", "RuleRegistry", "normalization_rule", "ObservationFactory", "AttributeRegistry"
