@@ -493,7 +493,7 @@ def main() -> int:
     enrich(devices)
 
     ips = [d.ip for d in devices]
-    collected_data = collect_all(ips, devices)
+    collected_data = collect_all(ips, devices, configuration=config)
 
     # ==============================================================================
     # v1.5.2: Traffic Collector Integration
