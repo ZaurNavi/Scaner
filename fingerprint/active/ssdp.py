@@ -8,6 +8,8 @@ SSDP/UPnP Collector — обнаружение устройств через mul
 - Парсит HTTP-подобные заголовки (SERVER, LOCATION, ST, USN)
 - Опционально делает GET к LOCATION для XML-описания
 - Возвращает только сырые данные — интерпретация в Correlation Engine
+
+v1.7.1: Интеграция с Configuration Layer.
 """
 
 from __future__ import annotations
@@ -18,11 +20,11 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import asdict
 
-from config import Fingerprint
 from models import Device
 
 from .base import ActiveCollector, FingerprintResult
 from storage.active_cache import get as cache_get, set as cache_set
+from configuration import ConfigurationManager
 
 
 # M-SEARCH запрос для обнаружения всех UPnP-устройств
@@ -45,13 +47,14 @@ class SSDPCollector(ActiveCollector):
     PRIORITY = 60
     RELIABILITY = 70
 
-    def __init__(self):
-        super().__init__(timeout=Fingerprint.SSDP_TIMEOUT)
-        self.multicast = Fingerprint.SSDP_MULTICAST
-        self.port = Fingerprint.SSDP_PORT
-        self.mx = Fingerprint.SSDP_MX
-        self.fetch_description = Fingerprint.SSDP_FETCH_DESCRIPTION
-        self.description_timeout = Fingerprint.SSDP_DESCRIPTION_TIMEOUT
+    def __init__(self, configuration: ConfigurationManager):
+        super().__init__(configuration)
+        self.timeout = self.config.get("collector.ssdp.timeout", 2.0)
+        self.multicast = self.config.get("collector.ssdp.multicast", "239.255.255.250")
+        self.port = self.config.get("collector.ssdp.port", 1900)
+        self.mx = self.config.get("collector.ssdp.mx", 2)
+        self.fetch_description = self.config.get("collector.ssdp.fetch_description", True)
+        self.description_timeout = self.config.get("collector.ssdp.description_timeout", 2.0)
 
     def collect(self, device: Device) -> FingerprintResult:
         """
@@ -65,7 +68,7 @@ class SSDPCollector(ActiveCollector):
         Отправляет M-SEARCH и собирает ответы от всех устройств.
         Возвращает результат для КАЖДОГО устройства (даже если не ответило).
         """
-        if not Fingerprint.SSDP_ENABLED:
+        if not self.config.get("collector.ssdp.enabled", True):
             # Если SSDP отключён, возвращаем пустые результаты для всех
             return {d.ip: FingerprintResult(source="ssdp", elapsed_ms=0.0) for d in devices}
 
