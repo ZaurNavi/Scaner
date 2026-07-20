@@ -95,6 +95,9 @@ from scanner_platform.events import (
 # v1.6.9: Configuration Layer импорты
 from configuration import get_config_manager
 
+# ES-1.8.2: Fingerprint Pipeline импорты
+from fingerprint import FingerprintService
+
 
 def print_header() -> None:
     print()
@@ -437,7 +440,7 @@ def main() -> int:
 
     archivist, db, scan = init_archivist()
 
-        # === v1.6.9.9: Repository Layer Initialization ===
+    # === v1.6.9.9: Repository Layer Initialization ===
     try:
         from storage import active_cache, device_db
         
@@ -494,6 +497,37 @@ def main() -> int:
 
     ips = [d.ip for d in devices]
     collected_data = collect_all(ips, devices, configuration=config)
+
+    # ==============================================================================
+    # ES-1.8.2: Fingerprint Pipeline Integration
+    # ==============================================================================
+    print("\n  [FINGERPRINT] Executing Fingerprint Pipeline...")
+    try:
+        fingerprint_service = FingerprintService(configuration=config)
+        batch = fingerprint_service.execute(ips, devices)
+        print(f"         • ✅ Pipeline completed: {batch.count()} unified observations")
+        
+        # Демонстрация Query API
+        if batch.count() > 0:
+            identity_observations = batch.by_category(
+                __import__('fingerprint.normalization.models', fromlist=['ObservationCategory']).ObservationCategory.IDENTITY
+            )
+            print(f"         • IDENTITY category: {identity_observations.count()} observations")
+            
+            discovery_observations = batch.by_category(
+                __import__('fingerprint.normalization.models', fromlist=['ObservationCategory']).ObservationCategory.DISCOVERY
+            )
+            print(f"         • DISCOVERY category: {discovery_observations.count()} observations")
+            
+            # Показываем первые 3 наблюдения для демонстрации
+            if batch.count() > 0:
+                print("         • Sample observations:")
+                for i, obs in enumerate(batch.query().all()[:3], 1):
+                    print(f"              {i}. {obs.collector_id}.{obs.attribute} = {obs.normalized_value} (confidence: {obs.confidence:.2f})")
+    except Exception as exc:
+        print(f"  [FINGERPRINT] ❌ Pipeline failed: {exc}")
+        import traceback
+        traceback.print_exc()
 
     # ==============================================================================
     # v1.5.2: Traffic Collector Integration
