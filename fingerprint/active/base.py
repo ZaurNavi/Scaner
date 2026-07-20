@@ -2,40 +2,16 @@
 """
 Базовый интерфейс для активных коллекторов.
 ES-1.8.3: Возвращает строго List[Observation].
+Legacy-класс FingerprintResult удалён.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from typing import List
 
 from models import Device
 from configuration import ConfigurationManager
-from ..normalization.models import Observation
-
-
-# Сохраняем для обратной совместимости, если где-то ещё используется (например, в legacy анализе)
-@dataclass(frozen=True)
-class FingerprintResult:
-    hostname: str = ""
-    model: str = ""
-    os: str = ""
-    device_type: str = "UNKNOWN"
-    vendor: str = "Unknown"
-    reason: str = ""
-    services: dict = field(default_factory=dict)
-    ports: list[int] = field(default_factory=list)
-    ttl: int | None = None
-    latency_ms: float | None = None
-    mac_vendor: str = ""
-    banner: str = ""
-    server: str = ""
-    confidence: int = 0
-    elapsed_ms: float = 0.0
-    raw_data: dict = field(default_factory=dict)
-    source: str = ""
-    capabilities: list[str] = field(default_factory=list)
 
 
 class ActiveCollector(ABC):
