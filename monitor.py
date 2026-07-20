@@ -551,19 +551,9 @@ def main() -> int:
         ip_to_device_id = {}
 
         for device in devices:
-            # Создаём минимальный snapshot (legacy совместимость)
-            snapshot = Snapshot(
-                id=str(uuid.uuid4()),
-                scan_id=scan.id,
-                ip=device.ip,
-                mac=device.mac or "",
-                hostname=device.hostname or "",
-                device_type=DeviceType.UNKNOWN,
-                vendor=device.vendor or "",
-                timestamp=datetime.now(),
-            )
-            
-            bundle = SnapshotBundle(scan_id=scan.id, snapshot=snapshot, scan=scan)
+                                
+    # ES-1.8.3: Используем build_snapshot_bundle с UnifiedObservationBatch
+            bundle = build_snapshot_bundle(device, scan, fingerprint_batch)
             result = archivist.save(bundle)
 
             if result.success:
