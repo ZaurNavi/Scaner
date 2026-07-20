@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """
 SNMP Collector — сбор данных через SNMP v2c.
-v1.7.1: Интеграция с Configuration Layer.
+ES-1.8.3: Возвращает строго List[Observation] через ObservationFactory.
 """
-
 from __future__ import annotations
 
 import time
-from dataclasses import asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from models import Device
-from .base import ActiveCollector, FingerprintResult
-from storage.active_cache import get as cache_get, set as cache_set
+from .base import ActiveCollector
 from configuration import ConfigurationManager
+from ..normalization import ObservationFactory
 
 from pysnmp.hlapi import (
     SnmpEngine, CommunityData, UdpTransportTarget, ContextData,
@@ -34,7 +31,7 @@ class SNMPCollector(ActiveCollector):
         self.device_timeout = self.config.get("collector.snmp.device_timeout", 5.0)
         self.skip_if_no_ping = self.config.get("collector.snmp.skip_if_no_ping", True)
         self.timeout = self.config.get("collector.snmp.timeout", 2.0)
-        
+
         self.oids = {
             "sysDescr": self.config.get("collector.snmp.oid.sys_descr", "1.3.6.1.2.1.1.1.0"),
             "sysObjectID": self.config.get("collector.snmp.oid.sys_object_id", "1.3.6.1.2.1.1.2.0"),
@@ -46,39 +43,39 @@ class SNMPCollector(ActiveCollector):
         }
         self.snmp_engine = SnmpEngine()
 
-    def collect(self, device: Device) -> FingerprintResult:
-        start_time = time.time()
-        cached = cache_get(device.ip, "snmp")
-        if cached:
-            return FingerprintResult(**cached, source="snmp", elapsed_ms=0.0)
-
+    def collect(self, device: Device) -> list:
+        """ES-1.8.3: Возвращает только List[Observation]."""
         if not self.is_available(device):
-            result = FingerprintResult(source="snmp", raw_data={"responded": False, "reason": "device_unavailable"}, elapsed_ms=(time.time() - start_time) * 1000)
-            cache_set(device.ip, "snmp", asdict(result))
-            return result
+            return []
 
+        # Проверка ping из context
         if self.skip_if_no_ping:
             context = getattr(self, "_context", {})
             ttl_result = context.get("ttl", {}).get(device.ip)
             if ttl_result and not ttl_result.raw_data.get("alive", False):
-                result = FingerprintResult(source="snmp", raw_data={"responded": False, "reason": "skipped_no_ping"}, elapsed_ms=(time.time() - start_time) * 1000)
-                cache_set(device.ip, "snmp", asdict(result))
-                return result
+                return []
 
         result = self._query_device_parallel(device.ip)
-        elapsed_ms = (time.time() - start_time) * 1000
-
         if result is not None:
-            fingerprint_result = FingerprintResult(source="snmp", raw_data=result, elapsed_ms=elapsed_ms)
-        else:
-            fingerprint_result = FingerprintResult(
-                source="snmp",
-                raw_data={"responded": False, "reason": "no_snmp_response", "communities_tried": self.communities},
-                elapsed_ms=elapsed_ms,
-            )
+            return [ObservationFactory.create(
+                collector_id=self.source_name,
+                protocol="SNMP",
+                device_id=device.ip,
+                attribute="snmp_info",
+                value=result
+            )]
+        return []
 
-        cache_set(device.ip, "snmp", asdict(fingerprint_result))
-        return fingerprint_result
+    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> list:
+        """ES-1.8.3: scan теперь возвращает List[Observation] для всех устройств."""
+        if not self.config.get("collector.snmp.enabled", True):
+            return []
+        self._context = context or {}
+        all_observations = []
+        for device in devices:
+            if self.is_available(device):
+                all_observations.extend(self.collect(device))
+        return all_observations
 
     def _query_device_parallel(self, ip: str) -> dict | None:
         with ThreadPoolExecutor(max_workers=len(self.communities)) as executor:
@@ -122,9 +119,3 @@ class SNMPCollector(ActiveCollector):
             return result
         except Exception:
             return None
-
-    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        if not self.config.get("collector.snmp.enabled", True):
-            return {}
-        self._context = context or {}
-        return super().scan(devices, context=context, **kwargs)
