@@ -2,6 +2,7 @@
 """
 Base Passive Collector + Aggregator.
 ES-1.8.0: Единый контракт для всех Passive Collectors.
+ES-1.8.1: Интеграция с Normalization Layer.
 
 Архитектура:
 - BasePassiveCollector: абстрактный базовый класс
@@ -25,6 +26,16 @@ from .registry import PassiveRegistry
 from .factory import PassiveCollectorFactory
 from ..active import FingerprintResult, get_collectors
 from storage.active_cache import get as cache_get, set as cache_set
+
+# ==============================================================================
+# ES-1.8.1: Normalization Layer Integration
+# ==============================================================================
+from ..normalization import Normalizer, RuleRegistry
+from ..normalization.rules import dns, mdns  # Запускает регистрацию правил
+
+# Инициализация Normalization Layer при импорте
+print("\n  [NORMALIZATION] Initializing Normalization Layer...")
+print(f"  [NORMALIZATION] ✅ Rule Registry initialized ({RuleRegistry.count()} rules)")
 
 
 # ==============================================================================
@@ -143,11 +154,15 @@ class CollectedData:
     
     v1.8.0: Добавлено поле passive_observations для хранения
     результатов всех Passive Collectors.
+    
+    v1.8.1: Добавлено поле unified_observations для хранения
+    нормализованных наблюдений.
     """
     hostname: str = ""
     mdns: MDNSInfo = field(default_factory=MDNSInfo)
     sources: Dict[str, FingerprintResult] = field(default_factory=dict)
     passive_observations: Dict[str, Observation] = field(default_factory=dict)
+    unified_observations: List[Any] = field(default_factory=list)  # ES-1.8.1: НОВОЕ ПОЛЕ
 
 
 # ==============================================================================
@@ -163,6 +178,7 @@ def collect_all(
     Агрегирует данные от всех Passive и Active коллекторов.
     
     v1.8.0: Использует PassiveCollectorFactory для создания экземпляров.
+    v1.8.1: Добавлена нормализация наблюдений через Normalizer.
     
     Args:
         ips: Список IP-адресов
@@ -238,6 +254,32 @@ def collect_all(
             })
     
     # ======================================================================
+    # ES-1.8.1: Normalization Layer
+    # ======================================================================
+    print("\n  [NORMALIZATION] Normalizing observations...")
+    
+    normalizer = Normalizer(configuration)
+    
+    # Собираем все Observation из всех коллекторов
+    all_observations = []
+    for collector_id, observations in passive_results.items():
+        for ip, obs in observations.items():
+            all_observations.append(obs)
+    
+    # Нормализуем
+    unified_observations = normalizer.normalize_many(all_observations)
+    
+    print(f"         • Normalized {len(unified_observations)} observations")
+    
+    # Группируем по IP
+    unified_by_ip = {}
+    for unified in unified_observations:
+        device_id = unified.metadata.get("ip", "")
+        if device_id not in unified_by_ip:
+            unified_by_ip[device_id] = []
+        unified_by_ip[device_id].append(unified)
+    
+    # ======================================================================
     # Active Collectors (без изменений)
     # ======================================================================
     all_sources: Dict[str, Dict[str, FingerprintResult]] = {}
@@ -301,11 +343,15 @@ def collect_all(
             if ip in observations:
                 ip_passive_observations[collector_id] = observations[ip]
         
+        # ES-1.8.1: Добавляем unified observations
+        ip_unified_observations = unified_by_ip.get(ip, [])
+        
         result[ip] = CollectedData(
             hostname=hostname,
             mdns=mdns_info,
             sources=all_sources.get(ip, {}),
-            passive_observations=ip_passive_observations
+            passive_observations=ip_passive_observations,
+            unified_observations=ip_unified_observations  # ES-1.8.1: НОВОЕ ПОЛЕ
         )
     
     total_time = (time.time() - start_total) * 1000
