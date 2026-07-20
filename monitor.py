@@ -3,7 +3,8 @@
 Repeater Monitor
 monitor.py
 
-Главный модуль-оркестратор.
+ES-1.8.3: Полная миграция на UnifiedObservationBatch.
+Удалены зависимости от CollectedData и FingerprintResult.
 """
 
 from __future__ import annotations
@@ -30,7 +31,8 @@ from report import (
     enrich_device_metadata,
 )
 from fingerprint.analysis import fingerprint_all
-from fingerprint.collectors.base import collect_all, CollectedData, FingerprintResult
+from fingerprint import FingerprintService, UnifiedObservationBatch
+from fingerprint.normalization.models import ObservationCategory
 from fingerprint.controllers.registry import get_controller_collectors
 from storage.history import enrich
 from storage.device_db import save_state
@@ -94,10 +96,6 @@ from scanner_platform.events import (
 
 # v1.6.9: Configuration Layer импорты
 from configuration import get_config_manager
-
-# ES-1.8.2: Fingerprint Pipeline импорты
-from fingerprint import FingerprintService
-from fingerprint.normalization.models import ObservationCategory
 
 
 def print_header() -> None:
@@ -337,69 +335,6 @@ def _format_engine_output(engine_name: str, profile, debug_info, engine_type: st
             print(f"            [Missing] Features: {', '.join(missing)}")
 
 
-def _format_knowledge_output(snapshot: KnowledgeSnapshot, query_results: dict):
-    """Форматтер вывода для Knowledge Snapshot."""
-    print(f"\n  [KNOWLEDGE] Building Knowledge Snapshot...")
-    if not snapshot:
-        print(f"      ❌ Knowledge Snapshot not generated.")
-        return
-    
-    print(f"      ✅ Knowledge Snapshot for {snapshot.device_id[:8]}...")
-    
-    # Summary
-    print("         Summary:")
-    summary = snapshot.summary
-    known_since = summary.get('known_since')
-    known_since_str = known_since.strftime("%Y-%m-%d %H:%M") if known_since else "N/A"
-    print(f"            • Known Since: {known_since_str}")
-    print(f"            • History Depth: {summary.get('history_depth', 0)} days")
-    print(f"            • Facts Count: {summary.get('facts_count', 0)}")
-    print(f"            • Categories: {', '.join(summary.get('categories', [])) or 'none'}")
-    print(f"            • Avg Confidence: {summary.get('average_confidence', 0):.1f}%")
-    
-    # Statistics
-    print("         Statistics:")
-    stats = snapshot.statistics
-    print(f"            • Facts Total: {stats.get('facts_total', 0)}")
-    print(f"            • Highest Confidence: {stats.get('highest_confidence', 0):.1f}%")
-    by_cat = stats.get('facts_by_category', {})
-    if by_cat:
-        cat_str = ', '.join([f"{k}={v}" for k, v in by_cat.items()])
-        print(f"            • By Category: {cat_str}")
-    
-    # Coverage
-    print("         Coverage:")
-    cov = snapshot.coverage
-    print(f"            • Timeline: {cov.timeline_coverage:.1f}%")
-    print(f"            • Metric: {cov.metric_coverage:.1f}%")
-    print(f"            • Feature: {cov.feature_coverage:.1f}%")
-    print(f"            • Rule: {cov.rule_coverage:.1f}%")
-    print(f"            • Fact: {cov.fact_coverage:.1f}%")
-    
-    # Indexes
-    print("         Indexes:")
-    idx = snapshot.indexes
-    print(f"            • By Category: {list(idx._by_category.keys()) if idx._by_category else 'lazy'}")
-    print(f"            • By Engine: {list(idx._by_engine.keys()) if idx._by_engine else 'lazy'}")
-    print(f"            • By Tag: {list(idx._by_tag.keys()) if idx._by_tag else 'lazy'}")
-    
-    # Query Results
-    if query_results:
-        print("         Query Results:")
-        for query_name, results in query_results.items():
-            print(f"            • {query_name}: {len(results)} facts")
-    
-    # Version
-    print("         Version:")
-    vs = snapshot.version_snapshot
-    print(f"            • Timeline: {vs.timeline_version}")
-    print(f"            • Metric Registry: {vs.metric_registry_version}")
-    print(f"            • Feature Registry: {vs.feature_registry_version}")
-    print(f"            • Rule Registry: {vs.rule_registry_version}")
-    print(f"            • Engine: {vs.engine_version}")
-    print(f"            • Knowledge: {vs.knowledge_version}")
-
-
 def main() -> int:
     start = time.time()
     print_header()
@@ -499,7 +434,7 @@ def main() -> int:
     ips = [d.ip for d in devices]
 
     # ==============================================================================
-    # ES-1.8.2: Fingerprint Pipeline (единственный путь выполнения)
+    # ES-1.8.3: Fingerprint Pipeline (единственный путь выполнения)
     # ==============================================================================
     print("\n  [FINGERPRINT] Executing Fingerprint Pipeline...")
     fingerprint_batch = None
@@ -516,6 +451,9 @@ def main() -> int:
             discovery_observations = fingerprint_batch.by_category(ObservationCategory.DISCOVERY)
             print(f"         • DISCOVERY category: {discovery_observations.count()} observations")
             
+            service_observations = fingerprint_batch.by_category(ObservationCategory.SERVICE)
+            print(f"         • SERVICE category: {service_observations.count()} observations")
+            
             # Показываем первые 3 наблюдения для демонстрации
             print("         • Sample observations:")
             for i, obs in enumerate(fingerprint_batch.query().all()[:3], 1):
@@ -524,37 +462,46 @@ def main() -> int:
         print(f"  [FINGERPRINT] ❌ Pipeline failed: {exc}")
         import traceback
         traceback.print_exc()
+        # Создаём пустой batch для продолжения работы
+        from fingerprint.pipeline.batch import UnifiedObservationBatchBuilder
+        builder = UnifiedObservationBatchBuilder()
+        fingerprint_batch = builder.build(metadata={"error": str(exc)})
 
     # ==============================================================================
-    # Legacy: Traffic Collector + Omada Controller Integration
-    # ==============================================================================
-    # ES-1.8.2: collect_all() остаётся для обратной совместимости с Traffic Collector
-    # и Omada Controller. В ES-1.8.3 Active Framework Migration эти вызовы будут
-    # перенесены в Pipeline.
-    collected_data = collect_all(ips, devices, configuration=config)
-
-    # ==============================================================================
-    # v1.5.2: Traffic Collector Integration
+    # ES-1.8.3: Traffic Collector Integration (через Batch)
     # ==============================================================================
     print("\n  [TRAFFIC] Initializing Traffic Collector...")
     traffic_data = traffic_collector.collect_all(ips)
     
-    for ip in ips:
-        if ip not in collected_data:
-            collected_data[ip] = CollectedData()
-        if ip in traffic_data:
-            traffic_info = traffic_data[ip]
-            traffic_result = FingerprintResult(
-                source="traffic",
-                raw_data={"responded": True, **traffic_info.to_dict()},
-                elapsed_ms=0.0,
-                confidence=100,
-                capabilities=["traffic_monitored"]
-            )
-            collected_data[ip].sources["traffic"] = traffic_result
+    # ES-1.8.3: Traffic данные добавляются в batch через ObservationFactory
+    if traffic_data:
+        from fingerprint.normalization import ObservationFactory
+        from fingerprint.normalization.models import ObservationMetadata
+        
+        traffic_builder = UnifiedObservationBatchBuilder()
+        # Копируем существующие observations
+        for obs in fingerprint_batch:
+            traffic_builder.add(obs)
+        
+        # Добавляем traffic observations
+        for ip in ips:
+            if ip in traffic_data:
+                traffic_info = traffic_data[ip]
+                obs = ObservationFactory.create(
+                    collector_id="traffic",
+                    protocol="NetFlow",
+                    device_id=ip,
+                    attribute="traffic_info",
+                    value=traffic_info.to_dict(),
+                    metadata=ObservationMetadata(ip=ip)
+                )
+                traffic_builder.add(obs)
+        
+        fingerprint_batch = traffic_builder.build(metadata=fingerprint_batch.metadata)
+        print(f"         • ✅ Traffic data added: {len(traffic_data)} devices")
 
     # ==============================================================================
-    # v1.4.9.1: Infrastructure Controller Integration (Omada Metadata)
+    # ES-1.8.3: Infrastructure Controller Integration (Omada через Batch)
     # ==============================================================================
     controller_collectors = get_controller_collectors()
     if controller_collectors:
@@ -567,44 +514,39 @@ def main() -> int:
                 print(f"  [CONTROLLERS] ❌ {collector.name} failed: {controller_data['error']}")
                 continue
 
-            omada_entities = {}
+            # ES-1.8.3: Добавляем Omada данные в batch
+            from fingerprint.normalization import ObservationFactory
+            from fingerprint.normalization.models import ObservationMetadata
+            
+            omada_builder = UnifiedObservationBatchBuilder()
+            for obs in fingerprint_batch:
+                omada_builder.add(obs)
+            
+            merged_count = 0
             for entity in controller_data.get("clients", []) + controller_data.get("devices", []):
                 entity_ip = entity.get("ip")
-                mac = entity.get("mac", "").replace("-", ":").upper()
-                
                 if entity_ip:
-                    key = entity_ip
-                else:
-                    target_device = next((d for d in devices if d.mac and d.mac.upper() == mac), None)
-                    key = target_device.ip if target_device else f"mac:{mac}"
-
-                if key not in omada_entities:
-                    omada_entities[key] = []
-                omada_entities[key].append(entity)
-
-            merged_count = 0
-            for key, entities in omada_entities.items():
-                if key.startswith("mac:"):
-                    continue
-                if key not in collected_data:
-                    collected_data[key] = CollectedData()
-                
-                omada_result = FingerprintResult(
-                    source="omada",
-                    raw_data={"responded": True, "entities": entities},
-                    elapsed_ms=0.0,
-                    confidence=100,
-                    capabilities=["managed_by_omada"]
-                )
-                collected_data[key].sources["omada"] = omada_result
-                merged_count += 1
-                
+                    obs = ObservationFactory.create(
+                        collector_id="omada",
+                        protocol="Omada",
+                        device_id=entity_ip,
+                        attribute="omada_info",
+                        value=entity,
+                        metadata=ObservationMetadata(ip=entity_ip)
+                    )
+                    omada_builder.add(obs)
+                    merged_count += 1
+            
+            fingerprint_batch = omada_builder.build(metadata=fingerprint_batch.metadata)
             print(f"  [CONTROLLERS] ✅ {collector.name.capitalize()} data merged into {merged_count} entities.")
 
-    devices = fingerprint_all(devices, collected_data)
-    enrich_device_metadata(devices, collected_data)
+    # ==============================================================================
+    # ES-1.8.3: Fingerprint Analysis (через Batch)
+    # ==============================================================================
+    devices = fingerprint_all(devices, fingerprint_batch)
+    enrich_device_metadata(devices, fingerprint_batch)
     analyze_all(devices)
-    save_debug_json(devices, collected_data)
+    save_debug_json(devices, fingerprint_batch)
 
     # === v1.4.0 + ... + v1.6.9.2 ===
     if archivist and scan:
@@ -622,9 +564,28 @@ def main() -> int:
         first_device_id = None
         ip_to_device_id = {}
 
+        # ES-1.8.3: Archivist пока работает с legacy SnapshotBundle
+        # Создаём минимальный bundle для каждого устройства
         for device in devices:
-            collected = collected_data.get(device.ip, CollectedData())
-            bundle = build_snapshot_bundle(device, scan, collected)
+            # Извлекаем данные из batch для этого устройства
+            device_observations = fingerprint_batch.filter(lambda obs: obs.metadata.ip == device.ip)
+            
+            # Создаём минимальный snapshot (legacy совместимость)
+            from storage.schema import Snapshot, SnapshotType
+            snapshot = Snapshot(
+                id=str(uuid.uuid4()),
+                scan_id=scan.id,
+                ip=device.ip,
+                mac=device.mac or "",
+                hostname=device.hostname or "",
+                device_type=SnapshotType.UNKNOWN,
+                vendor=device.vendor or "",
+                timestamp=datetime.now(),
+            )
+            
+            from storage.schema import SnapshotBundle
+            bundle = SnapshotBundle(scan_id=scan.id, snapshot=snapshot, scan=scan)
+            
             result = archivist.save(bundle)
 
             if result.success:
@@ -753,7 +714,6 @@ def main() -> int:
                 platform.start()
                 
                 # v1.6.9.2: Создаём BehaviourEngine с правильными аргументами
-                # (соответствует оригинальной сигнатуре из behaviour/engine.py)
                 behaviour_engine = BehaviourEngine(
                     history_service=history_service,
                     identity_service=identity_service,
@@ -770,14 +730,12 @@ def main() -> int:
                         self.metric_coverage = profile.metric_coverage
                         self.feature_coverage = profile.feature_coverage
                         self.rule_match_ratio = profile.rule_match_ratio
-                        self.timeline = None  # Behaviour не имеет timeline
+                        self.timeline = None
                         self.metrics = None
                         self.features = profile.features
                         self.facts = profile.facts
 
                 adapter = BehaviourResultAdapter(behaviour_profile, debug_info)
-                
-                # Сохраняем для последующего использования в Profile Layer
                 behaviour_engine_result = behaviour_profile
                 
                 _format_engine_output("BEHAVIOUR", adapter, debug_info, engine_type="behavioural patterns (Platform Core)")
@@ -879,7 +837,6 @@ def main() -> int:
                 engine_results = {}
                 
                 if behaviour_engine_result:
-                    # v1.6.9.2: ИСПРАВЛЕНО — адаптируем BehaviourFact в Fact
                     all_facts.extend([adapt_to_platform_fact(f, "behaviour") for f in behaviour_engine_result.facts])
                     engine_results["behaviour"] = behaviour_engine_result
                 
@@ -911,7 +868,6 @@ def main() -> int:
                     engine_results["usage"] = mock_usage
                 
                 # 1. Создаём Knowledge Snapshot
-                # v1.6.9.8: Передаём configuration через Dependency Injection
                 knowledge_service = KnowledgeService(configuration=config)
                 
                 print("\n  [KNOWLEDGE] Configuration from Configuration Layer:")
@@ -926,7 +882,6 @@ def main() -> int:
                     history_service=history_service
                 )
                 
-                # Выводим информацию о кэше
                 cache_info = knowledge_service.cache_info()
                 print(f"         • Cache size: {cache_info['size']}/{cache_info['max_size']}")
                 
@@ -988,7 +943,6 @@ def main() -> int:
                 # 6. v1.6.7: Change Detection Layer
                 print("\n  [DIFF] Detecting Profile Changes...")
                 
-                # Получаем предыдущий профиль из кэша (если есть)
                 previous_profile = profile_service.get(sample_device_id)
                 
                 if previous_profile is None:
@@ -996,7 +950,6 @@ def main() -> int:
                     print(f"      ✅ Current profile cached for next comparison")
                     diff = EMPTY_DIFF
                 else:
-                    # Сравниваем профили
                     differ = ProfileDiffer()
                     diff = differ.compare(previous_profile, profile)
                     
@@ -1006,14 +959,12 @@ def main() -> int:
                         print(f"      ✅ Changes detected: {diff.count()}")
                         print(f"         Diff ID: {diff.diff_id}")
                         
-                        # Summary изменений
                         print("         Summary Changes:")
                         if diff.summary.facts_count.delta != 0:
                             print(f"            • Facts: {diff.summary.facts_count.old} → {diff.summary.facts_count.new} (delta={diff.summary.facts_count.delta})")
                         if diff.summary.confidence.delta != 0:
                             print(f"            • Confidence: {diff.summary.confidence.old:.1f}% → {diff.summary.confidence.new:.1f}% (delta={diff.summary.confidence.delta:.1f})")
                         
-                        # Engines
                         if diff.engine_diff.added or diff.engine_diff.removed:
                             print("         Engine Changes:")
                             for eng in diff.engine_diff.added:
@@ -1021,7 +972,6 @@ def main() -> int:
                             for eng in diff.engine_diff.removed:
                                 print(f"            • -{eng} (REMOVED)")
                         
-                        # Capabilities
                         if diff.capability_diff.became_available or diff.capability_diff.became_unavailable:
                             print("         Capability Changes:")
                             for cap in diff.capability_diff.became_available:
@@ -1029,7 +979,6 @@ def main() -> int:
                             for cap in diff.capability_diff.became_unavailable:
                                 print(f"            • -{cap} (UNAVAILABLE)")
                         
-                        # Примеры изменений фактов (только первые 3)
                         fact_changes = [c for c in diff.changes if c.subject == "fact"]
                         if fact_changes:
                             print(f"         Fact Changes (showing {min(3, len(fact_changes))} of {len(fact_changes)}):")
@@ -1054,7 +1003,6 @@ def main() -> int:
                 else:
                     print(f"      ✅ Generated {event_set.count()} domain event(s)")
                     
-                    # Выводим первые 3 события для демонстрации
                     events_to_show = list(event_set.events[:3])
                     for i, event in enumerate(events_to_show, 1):
                         print(f"         {i}. {event.event_type}")
@@ -1100,8 +1048,8 @@ def main() -> int:
     save_state(devices)
 
     print()
-    print_table(devices, collected_data)
-    save_report(devices, collected_data)
+    print_table(devices, fingerprint_batch)
+    save_report(devices, fingerprint_batch)
 
     if db:
         if session_engine:
