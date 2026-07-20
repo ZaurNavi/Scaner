@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 """
 SMB Collector — определение версии ОС через SMB Negotiation (порт 445).
-v1.7.1: Интеграция с Configuration Layer.
+ES-1.8.3: Возвращает строго List[Observation] через ObservationFactory.
 """
-
 from __future__ import annotations
 
 import socket
-import time
-from dataclasses import asdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from models import Device
-from .base import ActiveCollector, FingerprintResult
-from storage.active_cache import get as cache_get, set as cache_set
+from .base import ActiveCollector
 from configuration import ConfigurationManager
+from ..normalization import ObservationFactory
 
 
 class SMBCollector(ActiveCollector):
@@ -24,7 +19,6 @@ class SMBCollector(ActiveCollector):
     def __init__(self, configuration: ConfigurationManager):
         super().__init__(configuration)
         self.timeout = self.config.get("collector.smb.timeout", 1.0)
-        self.workers = self.config.get("collector.smb.workers", 64)
         self.port = self.config.get("collector.smb.port", 445)
         
         # Полный оригинальный SMB2 Negotiate Protocol Request
@@ -56,34 +50,21 @@ class SMBCollector(ActiveCollector):
             "1002"      # Dialects: SMB 2.1
         )
 
-    def collect(self, device: Device) -> FingerprintResult:
-        start_time = time.time()
-
-        cached = cache_get(device.ip, "smb")
-        if cached:
-            return FingerprintResult(**cached, source="smb", elapsed_ms=0.0)
-
+    def collect(self, device: Device) -> list:
+        """ES-1.8.3: Возвращает только List[Observation]."""
         if not self.is_available(device):
-            return FingerprintResult(
-                source="smb",
-                raw_data={"responded": False, "reason": "device_unavailable"},
-                elapsed_ms=(time.time() - start_time) * 1000,
-            )
+            return []
 
         smb_data = self._get_smb_info(device.ip)
-        elapsed_ms = (time.time() - start_time) * 1000
-
         if smb_data:
-            result = FingerprintResult(source="smb", raw_data=smb_data, elapsed_ms=elapsed_ms)
-        else:
-            result = FingerprintResult(
-                source="smb",
-                raw_data={"responded": False, "reason": "no_smb_response"},
-                elapsed_ms=elapsed_ms,
-            )
-
-        cache_set(device.ip, "smb", asdict(result))
-        return result
+            return [ObservationFactory.create(
+                collector_id=self.source_name,
+                protocol="SMB",
+                device_id=device.ip,
+                attribute="os_version",
+                value=smb_data  # Dict разрешён в NormalizedValue
+            )]
+        return []
 
     def _get_smb_info(self, ip: str) -> dict | None:
         try:
@@ -95,24 +76,11 @@ class SMBCollector(ActiveCollector):
             sock.close()
 
             if len(response) >= 64 and response[4:8] == b'\xfe\x53\x4d\x42':
-                return {"responded": True, "protocol": "SMB2/3", "os_version": "Windows/Samba (SMB2+)"}
+                return {"protocol": "SMB2/3", "os_version": "Windows/Samba (SMB2+)"}
             elif len(response) > 0:
-                return {"responded": True, "protocol": "SMB1/Unknown", "raw_hex": response[:32].hex()}
+                return {"protocol": "SMB1/Unknown", "raw_hex": response[:32].hex()}
             return None
-
         except (socket.timeout, socket.error, ConnectionResetError):
             return None
         except Exception:
             return None
-
-    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        results: dict[str, FingerprintResult] = {}
-        with ThreadPoolExecutor(max_workers=self.workers) as executor:
-            futures = {executor.submit(self.collect, device): device.ip for device in devices}
-            for future in as_completed(futures):
-                ip = futures[future]
-                try:
-                    results[ip] = future.result()
-                except Exception:
-                    results[ip] = FingerprintResult(source="smb", elapsed_ms=0.0)
-        return results
