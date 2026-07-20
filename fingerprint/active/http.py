@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 """
 HTTP Collector — получение HTTP-заголовков и контента.
-v1.7.1: Интеграция с Configuration Layer.
+ES-1.8.3: Возвращает строго List[Observation] через ObservationFactory.
 """
-
 from __future__ import annotations
 
 import re
 import ssl
-import time
 import urllib.error
 import urllib.request
-from dataclasses import asdict
-
 from models import Device
-from .base import ActiveCollector, FingerprintResult
-from storage.active_cache import get as cache_get, set as cache_set
+from .base import ActiveCollector
 from configuration import ConfigurationManager
+from ..normalization import ObservationFactory
 
 
-# v1.7.1: Экспортируемые константы для обратной совместимости (Category B — Domain Constants)
+# v1.7.1: Экспортируемые константы для обратной совместимости
 HTTP_PORTS = (80, 81, 443, 8080, 8081, 8443)
 HTTPS_PORTS = (443, 8443)
 
@@ -35,22 +31,21 @@ class HTTPCollector(ActiveCollector):
         self.http_ports = HTTP_PORTS
         self.https_ports = HTTPS_PORTS
 
-    def collect(self, device: Device) -> FingerprintResult:
-        start = time.time()
-        cached = cache_get(device.ip, "http")
-        if cached:
-            return FingerprintResult(**cached, source="http", elapsed_ms=0.0)
+    def collect(self, device: Device) -> list:
+        """ES-1.8.3: Возвращает только List[Observation]."""
+        if not self.is_available(device):
+            return []
 
-        services = {}
+        # Определяем открытые порты из контекста (TCP)
         context = getattr(self, "_context", {})
         tcp_res = context.get("tcp", {}).get(device.ip)
         open_ports = set(tcp_res.ports) if tcp_res else set()
         target_ports = [(p, p in self.https_ports) for p in self.http_ports if p in open_ports]
 
         if not target_ports:
-            elapsed = (time.time() - start) * 1000
-            return FingerprintResult(source="http", elapsed_ms=elapsed)
+            return []
 
+        services = {}
         for port, is_https in target_ports:
             data = self._fetch_port(device.ip, port, is_https)
             services[port] = {
@@ -62,17 +57,23 @@ class HTTPCollector(ActiveCollector):
                 "redirect": data["redirect"],
             }
 
-        elapsed = (time.time() - start) * 1000
-        result = FingerprintResult(
-            source="http", services=services, elapsed_ms=elapsed,
-            raw_data={"ports_checked": [p for p, _ in target_ports]}
-        )
-        cache_set(device.ip, "http", asdict(result))
-        return result
+        # Возвращаем Observation с dict (разрешён в NormalizedValue)
+        return [ObservationFactory.create(
+            collector_id=self.source_name,
+            protocol="HTTP",
+            device_id=device.ip,
+            attribute="http_services",
+            value=services
+        )]
 
-    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
+    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> list:
+        """ES-1.8.3: scan теперь возвращает List[Observation] для всех устройств."""
         self._context = context or {}
-        return super().scan(devices, context=context, **kwargs)
+        all_observations = []
+        for device in devices:
+            if self.is_available(device):
+                all_observations.extend(self.collect(device))
+        return all_observations
 
     def _fetch_port(self, ip: str, port: int, is_https: bool) -> dict:
         scheme = "https" if is_https else "http"
