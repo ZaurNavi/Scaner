@@ -550,9 +550,8 @@ def main() -> int:
         first_device_id = None
         ip_to_device_id = {}
 
-        for device in devices:
-                                
-    # ES-1.8.3: Используем build_snapshot_bundle с UnifiedObservationBatch
+                for device in devices:
+     # ES-1.8.3: Используем build_snapshot_bundle с UnifiedObservationBatch
             bundle = build_snapshot_bundle(device, scan, fingerprint_batch)
             result = archivist.save(bundle)
 
