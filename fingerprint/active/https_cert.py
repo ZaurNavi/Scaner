@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
+"""
+HTTPS Certificate & TLS Fingerprint Collector.
+ES-1.8.3: Возвращает строго List[Observation] через ObservationFactory.
+"""
 from __future__ import annotations
-import socket, ssl, time
-from dataclasses import asdict
+
+import socket
+import ssl
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from models import Device
-from .base import ActiveCollector, FingerprintResult
-from storage.active_cache import get as cache_get, set as cache_set
+from .base import ActiveCollector
 from configuration import ConfigurationManager
+from ..normalization import ObservationFactory
+
 
 class HTTPSCertCollector(ActiveCollector):
     PRIORITY = 75
     RELIABILITY = 90
+
     def __init__(self, configuration: ConfigurationManager):
         super().__init__(configuration)
         self.timeout = self.config.get("collector.https_cert.timeout", 2.0)
@@ -18,18 +25,38 @@ class HTTPSCertCollector(ActiveCollector):
         ports_str = self.config.get("collector.https_cert.ports", "443,8443,4443")
         self.ports = [int(p) for p in ports_str.split(",")]
 
-    def collect(self, device: Device) -> FingerprintResult:
-        start_time = time.time()
-        cached = cache_get(device.ip, "https_cert")
-        if cached: return FingerprintResult(**cached, source="https_cert", elapsed_ms=0.0)
+    def collect(self, device: Device) -> list:
+        """ES-1.8.3: Возвращает только List[Observation]."""
         if not self.is_available(device):
-            return FingerprintResult(source="https_cert", raw_data={"responded": False, "reason": "device_unavailable"}, elapsed_ms=(time.time() - start_time) * 1000)
-        
+            return []
+
         tls_data = self._get_tls_fingerprint(device.ip)
-        elapsed_ms = (time.time() - start_time) * 1000
-        result = FingerprintResult(source="https_cert", raw_data=tls_data or {"responded": False, "reason": "no_https_or_timeout"}, elapsed_ms=elapsed_ms, capabilities=["supports_https", "supports_tls_fp"] if tls_data else [])
-        cache_set(device.ip, "https_cert", asdict(result))
-        return result
+        if tls_data:
+            return [ObservationFactory.create(
+                collector_id=self.source_name,
+                protocol="TLS",
+                device_id=device.ip,
+                attribute="tls_cert_info",
+                value=tls_data
+            )]
+        return []
+
+    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> list:
+        """ES-1.8.3: scan теперь возвращает List[Observation] для всех устройств."""
+        all_observations = []
+        targets = devices
+        if context and "tcp" in context:
+            tcp_ctx = context["tcp"]
+            targets = [d for d in devices if tcp_ctx.get(d.ip) and any(str(p) in tcp_ctx[d.ip].raw_data.get("open_ports", []) for p in self.ports)]
+
+        with ThreadPoolExecutor(max_workers=self.workers) as executor:
+            futures = {executor.submit(self.collect, d): d.ip for d in targets}
+            for future in as_completed(futures):
+                try:
+                    all_observations.extend(future.result())
+                except Exception:
+                    pass
+        return all_observations
 
     def _get_tls_fingerprint(self, ip: str) -> dict | None:
         for port in self.ports:
@@ -49,20 +76,12 @@ class HTTPSCertCollector(ActiveCollector):
                     subject = dict(x[0] for x in cert.get('subject', []))
                     issuer = dict(x[0] for x in cert.get('issuer', []))
                     san_list = [ext[1] for ext in cert.get('subjectAltName', []) if ext[0] == 'DNS']
-                    return {"responded": True, "port": port, "tls_version": tls_version, "cipher_suite": cipher_suite, "alpn": alpn or "None", "cn": subject.get('commonName', ''), "organization": subject.get('organizationName', ''), "issuer_cn": issuer.get('commonName', ''), "san": san_list}
-            except Exception: continue
+                    return {
+                        "responded": True, "port": port, "tls_version": tls_version,
+                        "cipher_suite": cipher_suite, "alpn": alpn or "None",
+                        "cn": subject.get('commonName', ''), "organization": subject.get('organizationName', ''),
+                        "issuer_cn": issuer.get('commonName', ''), "san": san_list
+                    }
+            except Exception:
+                continue
         return None
-
-    def scan(self, devices: list[Device], context: dict | None = None, **kwargs) -> dict[str, FingerprintResult]:
-        targets = devices
-        if context and "tcp" in context:
-            tcp_ctx = context["tcp"]
-            targets = [d for d in devices if tcp_ctx.get(d.ip) and any(str(p) in tcp_ctx[d.ip].raw_data.get("open_ports", []) for p in self.ports)]
-        results = {}
-        with ThreadPoolExecutor(max_workers=self.workers) as executor:
-            futures = {executor.submit(self.collect, d): d.ip for d in targets}
-            for future in as_completed(futures):
-                ip = futures[future]
-                try: results[ip] = future.result()
-                except Exception: results[ip] = FingerprintResult(source="https_cert", elapsed_ms=0.0)
-        return results
