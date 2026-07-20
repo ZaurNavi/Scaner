@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Passive Registry — автоматическая регистрация Passive Collectors.
-ES-1.8.0: Lazy Registration + Factory Pattern.
+Passive Registry — реестр дескрипторов Passive Collectors.
+ES-1.8.0: Registry хранит ТОЛЬКО дескрипторы (SRP).
+Создание экземпляров — задача PassiveCollectorFactory.
 
-Registry хранит только дескрипторы и фабрики (классы).
-Экземпляры создаются только при вызове get_all(configuration).
+Архитектура:
+    Registry → Descriptor → Factory → Collector
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Iterator, List, Optional, Type
+from typing import Dict, Iterator, List, Optional, Type
 
 from configuration import ConfigurationManager
 
@@ -18,9 +19,9 @@ from configuration import ConfigurationManager
 @dataclass(frozen=True)
 class PassiveCollectorDescriptor:
     """
-    Метаданные Passive Collector'а.
+    Полные метаданные Passive Collector'а.
     
-    Минимальный набор:
+    Обязательные поля:
     - id: уникальный идентификатор
     - name: человекочитаемое имя
     - version: версия коллектора
@@ -28,7 +29,8 @@ class PassiveCollectorDescriptor:
     - category: категория (passive)
     - priority: приоритет (меньше = раньше)
     - enabled_by_default: включён ли по умолчанию
-    - capabilities: список возможностей
+    - capabilities: кортеж возможностей
+    - collector_cls: ссылка на класс коллектора
     """
     id: str
     name: str
@@ -38,102 +40,42 @@ class PassiveCollectorDescriptor:
     priority: int = 100
     enabled_by_default: bool = True
     capabilities: tuple = ()
+    collector_cls: Type = None
 
 
 class PassiveRegistry:
     """
     Реестр Passive Collectors.
     
-    v1.8.0: Lazy Registration Pattern.
-    - Хранит только дескрипторы и фабрики
-    - Экземпляры создаются при вызове get_all(configuration)
-    - Автоматическая регистрация через декоратор @passive_collector
+    v1.8.0: Registry хранит ТОЛЬКО дескрипторы.
+    Создание экземпляров — задача PassiveCollectorFactory.
+    
+    SRP: Registry отвечает только за регистрацию и поиск.
     """
     
     _descriptors: Dict[str, PassiveCollectorDescriptor] = {}
-    _factories: Dict[str, Type] = {}
     
     @classmethod
-    def register(cls, descriptor: PassiveCollectorDescriptor, factory: Type) -> None:
+    def register(cls, descriptor: PassiveCollectorDescriptor) -> None:
         """
-        Регистрирует Passive Collector в реестре.
+        Регистрирует дескриптор Passive Collector в реестре.
         
         Args:
             descriptor: Метаданные коллектора
-            factory: Класс коллектора (фабрика)
-        """
-        if descriptor.id in cls._descriptors:
-            raise ValueError(f"Passive Collector '{descriptor.id}' already registered")
-        
-        cls._descriptors[descriptor.id] = descriptor
-        cls._factories[descriptor.id] = factory
-    
-    @classmethod
-    def get(cls, collector_id: str, configuration: ConfigurationManager):
-        """
-        Получает экземпляр конкретного коллектора через Factory.
-        
-        Args:
-            collector_id: ID коллектора
-            configuration: ConfigurationManager для DI
-        
-        Returns:
-            Экземпляр BasePassiveCollector
         
         Raises:
-            KeyError: Если коллектор не зарегистрирован
+            ValueError: Если ID уже зарегистрирован (защита от затирания)
         """
-        if collector_id not in cls._factories:
-            raise KeyError(f"Passive Collector '{collector_id}' not registered")
+        # v1.8.0: Проверка дубликатов ID
+        if descriptor.id in cls._descriptors:
+            existing = cls._descriptors[descriptor.id]
+            raise ValueError(
+                f"Passive Collector ID '{descriptor.id}' already registered "
+                f"by '{existing.name}' v{existing.version}. "
+                f"Cannot overwrite with '{descriptor.name}'."
+            )
         
-        factory = cls._factories[collector_id]
-        return factory(configuration)
-    
-    @classmethod
-    def get_all(cls, configuration: ConfigurationManager) -> List:
-        """
-        Получает экземпляры всех коллекторов, отсортированные по приоритету.
-        
-        Args:
-            configuration: ConfigurationManager для DI
-        
-        Returns:
-            Список экземпляров BasePassiveCollector
-        """
-        # Сортируем по priority (меньше = раньше)
-        sorted_ids = sorted(
-            cls._descriptors.keys(),
-            key=lambda x: cls._descriptors[x].priority
-        )
-        
-        return [cls._factories[cid](configuration) for cid in sorted_ids]
-    
-    @classmethod
-    def iter_enabled(cls, configuration: ConfigurationManager) -> Iterator:
-        """
-        Итерирует только включённые коллекторы.
-        
-        Args:
-            configuration: ConfigurationManager для DI
-        
-        Yields:
-            Экземпляры BasePassiveCollector
-        """
-        sorted_ids = sorted(
-            cls._descriptors.keys(),
-            key=lambda x: cls._descriptors[x].priority
-        )
-        
-        for cid in sorted_ids:
-            descriptor = cls._descriptors[cid]
-            
-            # Проверяем enabled_by_default из дескриптора
-            # И опционально из Configuration Layer
-            config_key = f"fingerprint.collectors.{cid}.enabled"
-            enabled = configuration.get(config_key, descriptor.enabled_by_default)
-            
-            if enabled:
-                yield cls._factories[cid](configuration)
+        cls._descriptors[descriptor.id] = descriptor
     
     @classmethod
     def get_descriptor(cls, collector_id: str) -> Optional[PassiveCollectorDescriptor]:
@@ -146,6 +88,37 @@ class PassiveRegistry:
         return cls._descriptors.copy()
     
     @classmethod
+    def get_sorted_descriptors(cls) -> List[PassiveCollectorDescriptor]:
+        """Получает все дескрипторы, отсортированные по приоритету."""
+        return sorted(
+            cls._descriptors.values(),
+            key=lambda d: d.priority
+        )
+    
+    @classmethod
+    def iter_enabled_descriptors(
+        cls,
+        configuration: ConfigurationManager
+    ) -> Iterator[PassiveCollectorDescriptor]:
+        """
+        Итерирует только включённые дескрипторы.
+        
+        Args:
+            configuration: ConfigurationManager для проверки enabled
+        
+        Yields:
+            PassiveCollectorDescriptor
+        """
+        for descriptor in cls.get_sorted_descriptors():
+            # Проверяем enabled_by_default из дескриптора
+            # И опционально из Configuration Layer
+            config_key = f"fingerprint.collectors.{descriptor.id}.enabled"
+            enabled = configuration.get(config_key, descriptor.enabled_by_default)
+            
+            if enabled:
+                yield descriptor
+    
+    @classmethod
     def count(cls) -> int:
         """Возвращает количество зарегистрированных коллекторов."""
         return len(cls._descriptors)
@@ -154,7 +127,11 @@ class PassiveRegistry:
     def clear(cls) -> None:
         """Очищает реестр (для тестирования)."""
         cls._descriptors.clear()
-        cls._factories.clear()
+    
+    @classmethod
+    def is_registered(cls, collector_id: str) -> bool:
+        """Проверяет, зарегистрирован ли коллектор."""
+        return collector_id in cls._descriptors
 
 
 def passive_collector(
@@ -178,7 +155,7 @@ def passive_collector(
             protocol="DNS",
             priority=10,
             enabled_by_default=True,
-            capabilities=("dns_resolution",)
+            capabilities=("dns_resolution", "hostname_discovery")
         )
         class DNSCollector(BasePassiveCollector):
             def observe(self, ips, context):
@@ -195,7 +172,7 @@ def passive_collector(
         capabilities: Кортеж возможностей
     """
     def decorator(cls):
-        # Создаём дескриптор
+        # Создаём дескриптор с collector_cls
         descriptor = PassiveCollectorDescriptor(
             id=id,
             name=name,
@@ -204,13 +181,14 @@ def passive_collector(
             category=category,
             priority=priority,
             enabled_by_default=enabled_by_default,
-            capabilities=tuple(capabilities)
+            capabilities=tuple(capabilities),
+            collector_cls=cls
         )
         
         # Регистрируем в реестре
-        PassiveRegistry.register(descriptor, cls)
+        PassiveRegistry.register(descriptor)
         
-        # Добавляем дескриптор к классу
+        # Добавляем дескриптор к классу (для самоодокументирования)
         cls.descriptor = descriptor
         
         return cls
