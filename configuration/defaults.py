@@ -242,3 +242,22 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("collector.dhcp_cisco.ssh_key_path", str, "", "Collector", "Cisco SSH private key path")
     registry.register("collector.dhcp_cisco.enable_password", str, "", "Collector", "Cisco enable password")
     registry.register("collector.dhcp_cisco.network_prefix", str, "192.168.1", "Collector", "Network prefix to filter DHCP leases")
+    
+    # ==============================================================================
+    # v1.7.1a: Final Infrastructure Configuration
+    # ==============================================================================
+    
+    # Network & Detection
+    registry.register("network.prefix", str, "192.168.1", "Network", "Network prefix for filtering (e.g., 192.168.1)")
+    registry.register("collector.detection.excluded_ips", str, "127.0.0.1,255.255.255.255", "Network", "Comma-separated excluded IPs")
+    
+    # NetFlow
+    registry.register("netflow.subprocess_timeout", int, 60, "NetFlow", "nfdump subprocess timeout in seconds", min_value=10)
+    registry.register("netflow.min_traffic_bytes", int, 200, "NetFlow", "Minimum traffic bytes to consider device active", min_value=0)
+    
+    # Fingerprint Collectors
+    registry.register("collector.dns.workers", int, 32, "Collector", "Concurrent workers for DNS resolution", min_value=1)
+    registry.register("collector.mdns.timeout", float, 2.0, "Collector", "mDNS scan timeout in seconds", min_value=0.5)
+    
+    # Vendors Database
+    registry.register("fingerprint.vendors.database_path", str, "vendors/oui.txt", "Fingerprint", "Path to IEEE OUI database file")
