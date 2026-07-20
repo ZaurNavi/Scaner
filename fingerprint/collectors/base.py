@@ -2,11 +2,11 @@
 """
 Base Passive Collector + Aggregator.
 ES-1.8.0: Единый контракт для всех Passive Collectors.
-ES-1.8.1: Интеграция с Normalization Layer (без transport).
+ES-1.8.1: Интеграция с Normalization Layer.
 
 Архитектура:
 - BasePassiveCollector: абстрактный базовый класс
-- Observation: единица наблюдения (БЕЗ transport)
+- Observation: единица наблюдения
 - CollectedData: агрегированные данные для устройства
 - collect_all(): агрегатор, запускающий все коллекторы через Factory
 """
@@ -31,7 +31,11 @@ from storage.active_cache import get as cache_get, set as cache_set
 # ES-1.8.1: Normalization Layer Integration
 # ==============================================================================
 from ..normalization import Normalizer, RuleRegistry
-from ..normalization.models import Observation as NormalizationObservation, ObservationMetadata, ObservationCategory
+from ..normalization.models import (
+    Observation as NormalizationObservation,
+    ObservationMetadata,
+    ObservationCategory,
+)
 from ..normalization.rules import dns, mdns  # Запускает регистрацию правил
 
 # Инициализация Normalization Layer при импорте
@@ -42,7 +46,7 @@ for rule in RuleRegistry.get_all_rules():
 
 
 # ==============================================================================
-# Observation — единица наблюдения от Passive Collector (БЕЗ transport)
+# Observation — единица наблюдения от Passive Collector
 # ==============================================================================
 
 @dataclass
@@ -50,7 +54,6 @@ class Observation:
     """
     Единая единица наблюдения от Passive Collector.
     
-    ES-1.8.1 (пункт 1): БЕЗ transport.
     Zero Knowledge Principle:
     - Не знает о Platform Core
     - Не знает о Knowledge Layer
@@ -85,8 +88,7 @@ class BasePassiveCollector(ABC):
     # Дескриптор устанавливается декоратором @passive_collector
     descriptor: Any = None
     
-    # ES-1.8.1: Категория для нормализации (пункт 2)
-    # Коллектор знает свою категорию, но не передаёт её в Observation
+    # ES-1.8.1: Категория для нормализации
     category: ObservationCategory = ObservationCategory.IDENTITY
     
     def __init__(self, configuration: ConfigurationManager):
@@ -99,39 +101,27 @@ class BasePassiveCollector(ABC):
     def observe(self, ips: List[str], context: Dict[str, Any] = None) -> Dict[str, Observation]:
         """
         Наблюдает за сетью и возвращает наблюдения.
-        
-        Args:
-            ips: Список IP-адресов для наблюдения
-            context: Контекст от предыдущих стадий (опционально)
-        
-        Returns:
-            Dict[ip, Observation] — наблюдения для каждого IP
         """
         pass
     
     @property
     def id(self) -> str:
-        """ID коллектора."""
         return self.descriptor.id if self.descriptor else self.__class__.__name__.lower()
     
     @property
     def name(self) -> str:
-        """Имя коллектора."""
         return self.descriptor.name if self.descriptor else self.__class__.__name__
     
     @property
     def version(self) -> str:
-        """Версия коллектора."""
         return self.descriptor.version if self.descriptor else "0.0.0"
     
     @property
     def protocol(self) -> str:
-        """Протокол коллектора."""
         return self.descriptor.protocol if self.descriptor else "unknown"
     
     @property
     def capabilities(self) -> tuple:
-        """Возможности коллектора."""
         return self.descriptor.capabilities if self.descriptor else ()
 
 
@@ -157,9 +147,6 @@ class CollectedData:
     
     v1.8.0: Добавлено поле passive_observations.
     v1.8.1: Добавлено поле unified_observations.
-    
-    ES-1.8.1 (пункт 10): Начинаем отказ от CollectedData.
-    В будущем UnifiedObservation пойдёт напрямую в Knowledge.
     """
     hostname: str = ""
     mdns: MDNSInfo = field(default_factory=MDNSInfo)
@@ -257,7 +244,7 @@ def collect_all(
     for collector_id, collector in passive_collectors.items():
         category_map[collector_id] = collector.category
     
-    # ES-1.8.1: Конвертируем Collector Observation в Normalization Observation
+    # ES-1.8.1: Конвертируем Collector Observation → Normalization Observation
     # Для DNS: создаём Observation с attribute="hostname"
     # Для mDNS: создаём несколько Observations для каждого поля
     all_normalization_observations = []
@@ -435,6 +422,7 @@ def collect_all(
             if ip in observations:
                 ip_passive_observations[collector_id] = observations[ip]
         
+        # ES-1.8.1: Добавляем unified observations
         ip_unified_observations = unified_by_ip.get(ip, [])
         
         result[ip] = CollectedData(
@@ -442,7 +430,7 @@ def collect_all(
             mdns=mdns_info,
             sources=all_sources.get(ip, {}),
             passive_observations=ip_passive_observations,
-            unified_observations=ip_unified_observations
+            unified_observations=ip_unified_observations  # ES-1.8.1
         )
     
     total_time = (time.time() - start_total) * 1000
