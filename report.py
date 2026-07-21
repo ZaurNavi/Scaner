@@ -744,15 +744,37 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
 # ---------------------------------------------------------
 
 
-def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
+def generate_report(
+    arp: dict[str, str],
+    netflow: dict[str, dict],
+) -> tuple[list[Device], UnifiedObservationBatch | None]:
+    """
+    ES-1.8.4: Восстановленный пайплайн.
+    
+    Изменения относительно ES-1.8.3:
+      1. fingerprint_all теперь возвращает (devices, batch).
+      2. Вызывается enrich_device_metadata — иначе hostname/model/vendor
+         из batch никогда не попадают в Device.
+      3. batch передаётся в print_table и save_report,
+         чтобы работал Evidence Explorer и сохранялись sources в JSON.
+    """
     devices = build_devices(arp, netflow)
-    devices = fingerprint_all(devices)
+
+    # fingerprint_all возвращает пару: обогащённые устройства и сырой batch
+    devices, batch = fingerprint_all(devices)
+
+    # Подтягиваем hostname/model/vendor из batch в объекты Device
+    if batch is not None:
+        enrich_device_metadata(devices, batch)
+
     analyze_all(devices)
     devices = filter_devices(devices)
     devices = sort_devices(devices)
-    print_table(devices)
-    save_report(devices)
-    return devices
+
+    print_table(devices, batch=batch)
+    save_report(devices, batch=batch)
+
+    return devices, batch
 
 
 __all__ = [
