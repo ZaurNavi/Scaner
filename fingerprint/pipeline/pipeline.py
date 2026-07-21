@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 FingerprintPipeline.
-ES-1.8.3: Полностью protocol-agnostic. Просто передает List[Observation] в Normalizer.
+ES-1.8.3: Полностью protocol-agnostic. Использует CompositeCollectorExecutor.
 """
 
 from __future__ import annotations
@@ -10,30 +10,35 @@ import time
 from typing import List
 
 from configuration import ConfigurationManager
+from models import Device
 from ..normalization import Normalizer
 from ..normalization.models import Observation
 from .batch import UnifiedObservationBatch, UnifiedObservationBatchBuilder
 from .context import FingerprintContext
 from .exceptions import PipelineExecutionError
-from .executor import CollectorExecutor, PassiveCollectorExecutor
+from .executor import CollectorExecutor, CompositeCollectorExecutor
 
 
 class FingerprintPipeline:
     def __init__(self, configuration: ConfigurationManager, executor: CollectorExecutor = None):
         self.config = configuration
         self.normalizer = Normalizer(configuration)
-        self.executor = executor or PassiveCollectorExecutor()
+        # ES-1.8.3: По умолчанию используем Composite Executor (Passive + Active)
+        self.executor = executor or CompositeCollectorExecutor()
 
     def execute(self, context: FingerprintContext) -> UnifiedObservationBatch:
         start_time = time.time()
         try:
             print("\n  [PIPELINE] Stage 1: Collecting observations...")
-            # ES-1.8.3: Получаем чистый List[Observation]
-            observations = self.executor.run(ips=list(context.ips), configuration=context.configuration)
+            # ES-1.8.3: Передаём devices для Active Collectors
+            observations = self.executor.run(
+                ips=list(context.ips),
+                configuration=context.configuration,
+                devices=list(context.devices)
+            )
             print(f"         • Collected {len(observations)} observations")
 
             print("\n  [PIPELINE] Stage 2: Normalizing observations...")
-            # ES-1.8.3: Normalizer теперь принимает List[Observation] напрямую
             unified_observations = self.normalizer.normalize_many(observations)
             print(f"         • Normalized {len(unified_observations)} observations")
 
