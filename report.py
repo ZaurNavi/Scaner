@@ -3,7 +3,7 @@
 Repeater Monitor
 report.py
 
-ES-1.8.3: Полная миграция на UnifiedObservationBatch.
+ES-1.8.4: Полная миграция на UnifiedObservationBatch + интеграция Omada-данных.
 Удалены зависимости от CollectedData и FingerprintResult.
 """
 
@@ -63,6 +63,43 @@ def _get_obs_confidence(obs) -> float:
 
 
 # ---------------------------------------------------------
+# Helper: нормализация MAC и определение ОС
+# ---------------------------------------------------------
+
+def _normalize_mac(mac: str) -> str:
+    """Приводит MAC к верхнему регистру без разделителей."""
+    if not mac:
+        return ""
+    return mac.replace(":", "").replace("-", "").upper()
+
+
+def _is_mac_like(value: str, device_mac: str) -> bool:
+    """
+    Проверяет, является ли строка MAC-адресом устройства
+    (в любом формате: с двоеточиями, дефисами или без).
+    """
+    if not value:
+        return False
+    return _normalize_mac(value) == _normalize_mac(device_mac)
+
+
+def _guess_os_from_device_type(device_type: str) -> str:
+    """Преобразует Omada deviceType в читаемое название ОС."""
+    dt = (device_type or "").lower()
+    if "android" in dt:
+        return "Android"
+    if "ios" in dt or "iphone" in dt or "ipad" in dt:
+        return "iOS"
+    if "windows" in dt:
+        return "Windows"
+    if "linux" in dt:
+        return "Linux"
+    if "macos" in dt or "mac" in dt:
+        return "macOS"
+    return ""
+
+
+# ---------------------------------------------------------
 # Observation Extractor — извлечение данных из Batch
 # ---------------------------------------------------------
 
@@ -77,7 +114,7 @@ class ObservationExtractor:
         self.batch = batch
     
     def get_hostname(self, ip: str) -> str:
-        """Извлекает hostname из batch для IP."""
+        """Извлекает hostname из batch для IP (только DNS)."""
         hostname_obs = self.batch.by_attribute("hostname").by_collector("dns").filter(
             lambda obs: obs.metadata.ip == ip
         ).first()
@@ -210,26 +247,53 @@ def build_devices(
 
 def enrich_device_metadata(devices: list[Device], batch: UnifiedObservationBatch) -> None:
     """
-    ES-1.8.3: Заполняет пустые поля Device данными из UnifiedObservationBatch.
+    ES-1.8.4: Заполняет пустые поля Device данными из UnifiedObservationBatch.
+    Приоритет источников: DNS > mDNS > Omada.
     """
     extractor = ObservationExtractor(batch)
     
     for device in devices:
-        # 1. Hostname: DNS > mDNS
+        omada_info = extractor.get_omada_info(device.ip)
+        mdns_info = extractor.get_mdns_info(device.ip)
+        
+        # 1. Hostname: DNS > mDNS > Omada (hostName или name)
         if not device.hostname or device.hostname == "Unknown":
             hostname = extractor.get_hostname(device.ip)
             if hostname:
                 device.hostname = hostname
+            elif mdns_info.get("hostname"):
+                device.hostname = mdns_info["hostname"]
+            elif omada_info.get("hostName"):
+                device.hostname = omada_info["hostName"]
+            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
+                device.hostname = omada_info["name"]
         
-        # 2. Model: mDNS
+        # 2. Model: mDNS > Omada (name, если не MAC) > hostname heuristic
         if not device.model or device.model == "Unknown":
-            mdns_info = extractor.get_mdns_info(device.ip)
             if mdns_info.get("model"):
                 device.model = mdns_info["model"]
-            elif device.hostname and any(x in device.hostname.lower() for x in ["redmi", "galaxy", "iphone", "ipad", "macbook", "note", "honor"]):
+            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
+                device.model = omada_info["name"]
+            elif device.hostname and any(
+                x in device.hostname.lower()
+                for x in ["redmi", "galaxy", "iphone", "ipad", "macbook", "note", "honor"]
+            ):
                 device.model = device.hostname
 
-        # 3. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени
+        # 3. Device Type: mDNS > Omada
+        if not device.device_type or device.device_type == "Unknown":
+            if mdns_info.get("device_type"):
+                device.device_type = mdns_info["device_type"]
+            elif omada_info.get("deviceType"):
+                device.device_type = omada_info["deviceType"]
+
+        # 4. OS: из Omada deviceType (если ещё не заполнено)
+        if not device.os or device.os == "Unknown":
+            guessed_os = _guess_os_from_device_type(omada_info.get("deviceType", ""))
+            if guessed_os:
+                device.os = guessed_os
+
+        # 5. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени
         if device.vendor == "Unknown":
             name_to_check = (device.hostname or "").lower()
             if "samsung" in name_to_check or "galaxy" in name_to_check:
@@ -740,41 +804,23 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
 
 
 # ---------------------------------------------------------
-# Главный вход
+# Главный вход (legacy — не используется monitor.py, но оставлен для совместимости)
 # ---------------------------------------------------------
 
 
-def generate_report(
-    arp: dict[str, str],
-    netflow: dict[str, dict],
-) -> tuple[list[Device], UnifiedObservationBatch | None]:
+def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
     """
-    ES-1.8.4: Восстановленный пайплайн.
-    
-    Изменения относительно ES-1.8.3:
-      1. fingerprint_all теперь возвращает (devices, batch).
-      2. Вызывается enrich_device_metadata — иначе hostname/model/vendor
-         из batch никогда не попадают в Device.
-      3. batch передаётся в print_table и save_report,
-         чтобы работал Evidence Explorer и сохранялись sources в JSON.
+    ES-1.8.4: Legacy entry point.
+    В monitor.py этот путь не используется — там свой пайплайн через FingerprintService.
     """
     devices = build_devices(arp, netflow)
-
-    # fingerprint_all возвращает пару: обогащённые устройства и сырой batch
-    devices, batch = fingerprint_all(devices)
-
-    # Подтягиваем hostname/model/vendor из batch в объекты Device
-    if batch is not None:
-        enrich_device_metadata(devices, batch)
-
+    devices = fingerprint_all(devices)
     analyze_all(devices)
     devices = filter_devices(devices)
     devices = sort_devices(devices)
-
-    print_table(devices, batch=batch)
-    save_report(devices, batch=batch)
-
-    return devices, batch
+    print_table(devices)
+    save_report(devices)
+    return devices
 
 
 __all__ = [
