@@ -34,6 +34,7 @@ from ..normalization.models import Observation
 # и автоматически регистрирует их в PassiveRegistry
 from .dns import DNSCollector
 from .mdns import MDNSCollector
+from .llmnr import LLMNRCollector  # ES-1.8.4: LLMNR Passive Collector
 
 # ==============================================================================
 # Инициализация Passive Framework
@@ -79,4 +80,5 @@ __all__ = [
     "Observation",  # ES-1.8.3: из normalization.models
     "DNSCollector",
     "MDNSCollector",
+    "LLMNRCollector",  # ES-1.8.4
 ]

@@ -190,6 +190,25 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("collector.banners.timeout", float, 1.0, "Collector", "Banner grab timeout", min_value=0.1)
     registry.register("collector.banners.workers", int, 64, "Collector", "Banner grab concurrent workers", min_value=1)
 
+    # ==============================================================================
+    # Fingerprint Passive Collectors (ES-1.8.4 - LLMNR)
+    # ==============================================================================
+    # DNS Collector (passive reverse lookup)
+    registry.register("fingerprint.collectors.dns.enabled", bool, True, "Fingerprint DNS", "Enable DNS passive collector")
+    registry.register("fingerprint.collectors.dns.workers", int, 32, "Fingerprint DNS", "DNS concurrent workers", min_value=1, max_value=128)
+    
+    # mDNS Collector
+    registry.register("fingerprint.collectors.mdns.enabled", bool, True, "Fingerprint mDNS", "Enable mDNS passive collector")
+    registry.register("fingerprint.collectors.mdns.timeout", float, 2.0, "Fingerprint mDNS", "mDNS listen timeout", min_value=0.5, max_value=10.0)
+    
+    # LLMNR Collector (ES-1.8.4)
+    registry.register("fingerprint.collectors.llmnr.enabled", bool, True, "Fingerprint LLMNR", "Enable LLMNR passive collector")
+    registry.register("fingerprint.collectors.llmnr.timeout", float, 0.5, "Fingerprint LLMNR", "LLMNR socket timeout in seconds", min_value=0.1, max_value=5.0)
+    registry.register("fingerprint.collectors.llmnr.operation_timeout", float, 2.0, "Fingerprint LLMNR", "LLMNR total operation timeout", min_value=0.5, max_value=10.0)
+    registry.register("fingerprint.collectors.llmnr.workers", int, 32, "Fingerprint LLMNR", "LLMNR concurrent workers", min_value=1, max_value=128)
+    registry.register("fingerprint.collectors.llmnr.port", int, 5355, "Fingerprint LLMNR", "LLMNR UDP port")
+    registry.register("fingerprint.collectors.llmnr.multicast", bool, True, "Fingerprint LLMNR", "Enable LLMNR multicast listening")
+
     # TTL / Ping / Scapy
     registry.register("collector.ttl.timeout", float, 1.0, "Collector", "Ping timeout", min_value=0.1)
     registry.register("collector.ttl.count", int, 1, "Collector", "Ping packet count", min_value=1)
