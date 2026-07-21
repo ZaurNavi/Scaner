@@ -3,10 +3,11 @@
 Repeater Monitor
 report.py
 
-ES-1.8.5: Архитектурная чистка.
+ES-1.8.6: Исправление регрессии — hostname/model/device_type из Omada.
 - ObservationExtractor работает только с атрибутами, не знает о collector_id
 - Vendor heuristics вынесены в fingerprint.identity.vendor
 - Убраны hardcoded приоритеты источников — выбор по confidence
+- Omada данные извлекаются через атрибут omada_info (dict)
 """
 
 from __future__ import annotations
@@ -104,7 +105,7 @@ def _guess_os_from_device_type(device_type: str) -> str:
 
 class ObservationExtractor:
     """
-    ES-1.8.5: Извлекает данные из UnifiedObservationBatch по IP.
+    ES-1.8.6: Извлекает данные из UnifiedObservationBatch по IP.
     
     Работает только с атрибутами — не знает о collector_id.
     Выбор значения происходит по confidence (объективный критерий).
@@ -155,7 +156,10 @@ class ObservationExtractor:
         return self._get_best_value(ip, "device_type", "")
     
     def omada_info(self, ip: str) -> dict:
-        """Извлекает omada_info (dict) из любого источника."""
+        """
+        Извлекает omada_info (dict) из любого источника.
+        Omada API возвращает весь объект клиента/устройства как dict.
+        """
         values = self._get_values(ip, "omada_info")
         if not values:
             return {}
@@ -246,31 +250,49 @@ def build_devices(
 
 def enrich_device_metadata(devices: list[Device], batch: UnifiedObservationBatch) -> None:
     """
-    ES-1.8.5: Заполняет пустые поля Device данными из UnifiedObservationBatch.
+    ES-1.8.6: Заполняет пустые поля Device данными из UnifiedObservationBatch.
     
     Использует ObservationExtractor для извлечения (без hardcoded приоритетов)
     и guess_vendor_from_name для эвристик vendor (вынесено в отдельный модуль).
+    
+    Omada данные извлекаются через атрибут omada_info (dict), потому что
+    Omada API возвращает весь объект клиента/устройства как единый dict.
     """
     extractor = ObservationExtractor(batch)
     
     for device in devices:
+        omada_info = extractor.omada_info(device.ip)
+        
         # 1. Hostname: из любого источника, если не MAC-адрес
         if not device.hostname or device.hostname == "Unknown":
             hostname = extractor.hostname(device.ip)
             if hostname and not _is_mac_like(hostname, device.mac):
                 device.hostname = hostname
+            # Fallback: Omada hostName или name
+            elif omada_info.get("hostName") and not _is_mac_like(omada_info["hostName"], device.mac):
+                device.hostname = omada_info["hostName"]
+            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
+                device.hostname = omada_info["name"]
         
         # 2. Model: из любого источника, если не MAC-адрес
         if not device.model or device.model == "Unknown":
             model = extractor.model(device.ip)
             if model and not _is_mac_like(model, device.mac):
                 device.model = model
+            # Fallback: Omada name или systemName
+            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
+                device.model = omada_info["name"]
+            elif omada_info.get("systemName") and not _is_mac_like(omada_info["systemName"], device.mac):
+                device.model = omada_info["systemName"]
         
         # 3. Device Type: из любого источника, игнорируем "unknown"
         if not device.device_type or device.device_type == "Unknown":
             device_type = extractor.device_type(device.ip)
             if device_type and device_type.lower() != "unknown":
                 device.device_type = device_type
+            # Fallback: Omada deviceType
+            elif omada_info.get("deviceType") and omada_info["deviceType"].lower() != "unknown":
+                device.device_type = omada_info["deviceType"]
 
         # 4. OS: из device_type (если ещё не заполнено)
         if not device.os or device.os == "Unknown":
@@ -529,7 +551,7 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
 
 def render_evidence(devices: list[Device], batch: UnifiedObservationBatch) -> list[str]:
     """
-    ES-1.8.5: Рендерит evidence из UnifiedObservationBatch.
+    ES-1.8.6: Рендерит evidence из UnifiedObservationBatch.
     """
     lines = []
     extractor = ObservationExtractor(batch)
@@ -780,7 +802,7 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
 
 def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
     """
-    DEPRECATED: ES-1.8.5 — Legacy entry point.
+    DEPRECATED: ES-1.8.6 — Legacy entry point.
     
     В monitor.py этот путь не используется — там свой пайплайн через FingerprintService.
     Не использовать для нового кода.
