@@ -21,6 +21,29 @@ from storage.schema import (
 )
 
 
+# ==============================================================================
+# Helper-функции для безопасного извлечения значений
+# ==============================================================================
+
+def _get_obs_value(obs) -> any:
+    """
+    Безопасно извлекает значение из Observation или UnifiedObservation.
+    UnifiedObservation имеет normalized_value, Observation — только value.
+    """
+    return getattr(obs, 'normalized_value', None) or getattr(obs, 'value', None)
+
+
+def _get_obs_confidence(obs) -> float:
+    """
+    Безопасно извлекает confidence из Observation или UnifiedObservation.
+    """
+    return getattr(obs, 'confidence', 0.5)
+
+
+# ==============================================================================
+# Основная функция
+# ==============================================================================
+
 def build_snapshot_bundle(
     device: Device,
     scan: Scan,
@@ -121,63 +144,66 @@ def _build_observations(snapshot_id: str, ip: str, batch: UnifiedObservationBatc
         # Маппим collector_id в Source enum
         source_enum = _map_collector_to_source(obs.collector_id)
         
+        # Безопасно извлекаем значение и confidence
+        value = _get_obs_value(obs)
+        confidence = _get_obs_confidence(obs)
+        
         # Маппим attribute в ObservationType
-        obs_type = _map_attribute_to_type(obs.attribute, obs.normalized_value)
+        obs_type = _map_attribute_to_type(obs.attribute, value)
         
         # Преобразуем значение в строку
-        value = _format_value(obs.normalized_value)
+        value_str = _format_value(value)
         
         observations.append(Observation(
             snapshot_id=snapshot_id,
             source=source_enum,
             key=obs.attribute,
-            value=value,
+            value=value_str,
             obs_type=obs_type,
-            confidence=int(obs.confidence * 100),  # Преобразуем float в int
+            confidence=int(confidence * 100),  # Преобразуем float в int
         ))
     
     return observations
 
 
 def _map_collector_to_source(collector_id: str) -> Source:
-    """Маппит collector_id в Enum Source."""
+    """
+    Маппит collector_id в Enum Source.
+    
+    ES-1.8.3: Используем только существующие значения Enum Source:
+    ARP, DNS, MDNS, TTL, TCP, HTTP, SSDP, SNMP, PING, NETFLOW, OUI, MANUAL, IMPORT, UNKNOWN
+    
+    Для новых коллекторов (ssh, smb, wsd, etc.) мапим на Source.UNKNOWN.
+    """
     mapping = {
+        # Существующие значения Enum Source
         "dns": Source.DNS,
         "mdns": Source.MDNS,
+        "ttl": Source.TTL,
         "tcp": Source.TCP,
         "http": Source.HTTP,
-        "ssh": Source.SSH,
-        "smb": Source.SMB,
-        "snmp": Source.SNMP,
         "ssdp": Source.SSDP,
-        "wsd": Source.WSD,
-        "netbios": Source.NETBIOS,
-        "dns_sd": Source.DNS_SD,
-        "ttl": Source.TTL,
-        "scapy_fp": Source.SCAY_FP,
-        "banners": Source.BANNERS,
-        "https_cert": Source.HTTPS_CERT,
-        "favicon": Source.FAVICON,
-        "ntp": Source.NTP,
-        "lldp_cdp": Source.LLDP_CDP,
-        "dhcp_cisco": Source.DHCP_CISCO,
-        "switch_port": Source.SWITCH_PORT,
+        "snmp": Source.SNMP,
         "traffic": Source.NETFLOW,
-        "omada": Source.OMADA,
+        "omada": Source.NETFLOW,  # Omada — сетевой трафик
+        "vendor": Source.OUI,
     }
+    # Все остальные коллекторы (ssh, smb, wsd, netbios, dns_sd, banners,
+    # https_cert, favicon, ntp, lldp_cdp, dhcp_cisco, switch_port, scapy_fp)
+    # мапятся на Source.UNKNOWN через mapping.get(..., Source.UNKNOWN)
     return mapping.get(collector_id.lower(), Source.UNKNOWN)
 
 
 def _map_attribute_to_type(attribute: str, value: any) -> ObservationType:
     """Маппит attribute и value в ObservationType."""
-    if isinstance(value, str):
+    if isinstance(value, bool):  # bool проверяем ДО int, т.к. bool — подкласс int
+        return ObservationType.BOOLEAN
+    elif isinstance(value, str):
         return ObservationType.STRING
     elif isinstance(value, int):
         return ObservationType.INTEGER
     elif isinstance(value, float):
         return ObservationType.FLOAT
-    elif isinstance(value, bool):
-        return ObservationType.BOOLEAN
     elif isinstance(value, (list, dict)):
         return ObservationType.JSON
     else:
@@ -186,6 +212,8 @@ def _map_attribute_to_type(attribute: str, value: any) -> ObservationType:
 
 def _format_value(value: any) -> str:
     """Форматирует значение в строку для хранения."""
+    if value is None:
+        return ""
     if isinstance(value, (list, dict)):
         return json.dumps(value, ensure_ascii=False)
     else:
