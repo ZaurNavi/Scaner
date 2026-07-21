@@ -36,6 +36,7 @@ from fingerprint.pipeline.batch import UnifiedObservationBatchBuilder
 from fingerprint.normalization import ObservationFactory
 from fingerprint.normalization.models import ObservationMetadata, ObservationCategory
 from fingerprint.controllers.registry import get_controller_collectors
+from fingerprint.collectors import PassiveCollectorFactory, PassiveRegistry  # ES-1.8.4: Passive Collectors
 from storage.history import enrich
 from storage.device_db import save_state
 
@@ -434,8 +435,16 @@ def main() -> int:
 
     # ==============================================================================
     # ES-1.8.3: Fingerprint Pipeline (единственный путь выполнения)
+    # ES-1.8.4: Passive Collectors Integration (DNS, mDNS, LLMNR)
     # ==============================================================================
     print("\n  [FINGERPRINT] Executing Fingerprint Pipeline...")
+    
+    # ES-1.8.4: Display registered Passive Collectors
+    print("  [PASSIVE] Registered collectors:")
+    for descriptor in PassiveRegistry.get_sorted_descriptors():
+        status = "enabled" if descriptor.enabled_by_default else "disabled"
+        print(f"         • [{descriptor.priority}] {descriptor.name} ({descriptor.protocol}) - {status}")
+    
     fingerprint_batch = None
     try:
         fingerprint_service = FingerprintService(configuration=config)
@@ -451,6 +460,13 @@ def main() -> int:
             
             service_observations = fingerprint_batch.by_category(ObservationCategory.SERVICE)
             print(f"         • SERVICE category: {service_observations.count()} observations")
+            
+            # ES-1.8.4: Show LLMNR observations specifically
+            llmnr_obs = fingerprint_batch.by_collector("llmnr")
+            if llmnr_obs.count() > 0:
+                print(f"         • LLMNR Collector: {llmnr_obs.count()} observations found")
+                for obs in llmnr_obs.query().all()[:3]:
+                    print(f"              → {obs.attribute} = {obs.normalized_value} (from {obs.ip})")
             
             print("         • Sample observations:")
             for i, obs in enumerate(fingerprint_batch.query().all()[:3], 1):
