@@ -2,7 +2,6 @@
 """
 CollectorExecutor.
 ES-1.8.3: Ожидает List[Observation] от всех коллекторов.
-Включает Passive, Active и Composite executors.
 """
 
 from __future__ import annotations
@@ -39,10 +38,9 @@ class PassiveCollectorExecutor(CollectorExecutor):
 
         for descriptor in enabled_descriptors:
             collector = PassiveCollectorFactory.create(descriptor, configuration)
-            # ES-1.8.3: observe() возвращает Dict[str, Observation], конвертируем в List
-            observations_dict = collector.observe(ips, context={})
-            for ip, obs in observations_dict.items():
-                all_observations.append(obs)
+            # ES-1.8.3: observe() возвращает List[Observation]
+            observations = collector.observe(ips, context={})
+            all_observations.extend(observations)
 
         return all_observations
 
@@ -54,7 +52,6 @@ class PassiveCollectorExecutor(CollectorExecutor):
 class ActiveCollectorExecutor(CollectorExecutor):
     """
     ES-1.8.3: Запускает Active Collectors и собирает List[Observation].
-    Коллекторы уже возвращают List[Observation] — адаптер не нужен.
     """
 
     def run(self, ips: List[str], configuration: ConfigurationManager, devices: List[Device] = None) -> List[Observation]:
@@ -66,7 +63,7 @@ class ActiveCollectorExecutor(CollectorExecutor):
 
         for collector in collectors:
             try:
-                # ES-1.8.3: scan() возвращает List[Observation]
+                # scan() возвращает List[Observation]
                 observations = collector.scan(devices, context={})
                 all_observations.extend(observations)
             except Exception as e:
