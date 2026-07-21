@@ -44,6 +44,25 @@ MAX_VENDOR_WIDTH = 18
 
 
 # ---------------------------------------------------------
+# Helper: безопасное извлечение значения из Observation/UnifiedObservation
+# ---------------------------------------------------------
+
+def _get_obs_value(obs) -> any:
+    """
+    ES-1.8.3: Безопасно извлекает значение из Observation или UnifiedObservation.
+    UnifiedObservation имеет normalized_value, Observation — только value.
+    """
+    return getattr(obs, 'normalized_value', None) or obs.value
+
+
+def _get_obs_confidence(obs) -> float:
+    """
+    ES-1.8.3: Безопасно извлекает confidence из Observation или UnifiedObservation.
+    """
+    return getattr(obs, 'confidence', 0.5)
+
+
+# ---------------------------------------------------------
 # Observation Extractor — извлечение данных из Batch
 # ---------------------------------------------------------
 
@@ -63,7 +82,7 @@ class ObservationExtractor:
             lambda obs: obs.metadata.ip == ip
         ).first()
         if hostname_obs:
-            return hostname_obs.normalized_value or ""
+            return _get_obs_value(hostname_obs) or ""
         return ""
     
     def get_mdns_info(self, ip: str) -> dict:
@@ -80,21 +99,25 @@ class ObservationExtractor:
         
         result = {}
         for obs in mdns_batch:
+            value = _get_obs_value(obs)
             if obs.attribute == "hostname":
-                result["hostname"] = obs.normalized_value
+                result["hostname"] = value
             elif obs.attribute == "model":
-                result["model"] = obs.normalized_value
+                result["model"] = value
             elif obs.attribute == "device_type":
-                result["device_type"] = obs.normalized_value
+                result["device_type"] = value
             elif obs.attribute == "services":
-                result["services"] = obs.normalized_value
+                result["services"] = value
         
         return result
     
     def get_omada_info(self, ip: str) -> dict:
         """Извлекает Omada информацию из batch для IP."""
-        # Omada пока не мигрирована, возвращаем пустой dict
-        # В будущем здесь будет извлечение из batch
+        omada_obs = self.batch.by_collector("omada").by_attribute("omada_info").filter(
+            lambda obs: obs.metadata.ip == ip
+        ).first()
+        if omada_obs:
+            return _get_obs_value(omada_obs) or {}
         return {}
     
     def get_all_sources(self, ip: str) -> dict:
@@ -113,8 +136,8 @@ class ObservationExtractor:
                 "observations": [
                     {
                         "attribute": obs.attribute,
-                        "value": obs.normalized_value,
-                        "confidence": obs.confidence,
+                        "value": _get_obs_value(obs),
+                        "confidence": _get_obs_confidence(obs),
                     }
                     for obs in collector_obs
                 ]
