@@ -3,8 +3,10 @@
 Repeater Monitor
 report.py
 
-ES-1.8.4: Полная миграция на UnifiedObservationBatch + интеграция Omada-данных.
-Удалены зависимости от CollectedData и FingerprintResult.
+ES-1.8.5: Архитектурная чистка.
+- ObservationExtractor работает только с атрибутами, не знает о collector_id
+- Vendor heuristics вынесены в fingerprint.identity.vendor
+- Убраны hardcoded приоритеты источников — выбор по confidence
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ from models import Device
 from vendors import get_vendor
 from fingerprint.vendor_normalizer import normalize_vendor
 from fingerprint import fingerprint_all, UnifiedObservationBatch
-from fingerprint.normalization.models import ObservationCategory
+from fingerprint.identity.vendor import guess_vendor_from_name
 
 
 # ---------------------------------------------------------
@@ -50,7 +52,6 @@ MAX_VENDOR_WIDTH = 18
 def _get_obs_value(obs) -> any:
     """
     ES-1.8.3: Безопасно извлекает значение из Observation или UnifiedObservation.
-    UnifiedObservation имеет normalized_value, Observation — только value.
     """
     return getattr(obs, 'normalized_value', None) or obs.value
 
@@ -74,17 +75,14 @@ def _normalize_mac(mac: str) -> str:
 
 
 def _is_mac_like(value: str, device_mac: str) -> bool:
-    """
-    Проверяет, является ли строка MAC-адресом устройства
-    (в любом формате: с двоеточиями, дефисами или без).
-    """
+    """Проверяет, является ли строка MAC-адресом устройства."""
     if not value:
         return False
     return _normalize_mac(value) == _normalize_mac(device_mac)
 
 
 def _guess_os_from_device_type(device_type: str) -> str:
-    """Преобразует Omada deviceType в читаемое название ОС."""
+    """Преобразует device_type в читаемое название ОС."""
     dt = (device_type or "").lower()
     if "android" in dt:
         return "Android"
@@ -106,80 +104,81 @@ def _guess_os_from_device_type(device_type: str) -> str:
 
 class ObservationExtractor:
     """
-    ES-1.8.3: Извлекает данные из UnifiedObservationBatch по IP.
-    Заменяет legacy CollectedData.
+    ES-1.8.5: Извлекает данные из UnifiedObservationBatch по IP.
+    
+    Работает только с атрибутами — не знает о collector_id.
+    Выбор значения происходит по confidence (объективный критерий).
+    Не содержит бизнес-логики, эвристик или приоритетов источников.
     """
     
     def __init__(self, batch: UnifiedObservationBatch):
         self.batch = batch
     
-    def get_hostname(self, ip: str) -> str:
-        """Извлекает hostname из batch для IP (только DNS)."""
-        hostname_obs = self.batch.by_attribute("hostname").by_collector("dns").filter(
-            lambda obs: obs.metadata.ip == ip
-        ).first()
-        if hostname_obs:
-            return _get_obs_value(hostname_obs) or ""
-        return ""
-    
-    def get_mdns_info(self, ip: str) -> dict:
-        """Извлекает mDNS информацию из batch для IP."""
-        mdns_obs = self.batch.by_attribute("model").by_collector("mdns").filter(
-            lambda obs: obs.metadata.ip == ip
-        ).first()
-        
-        if not mdns_obs:
-            return {}
-        
-        # Извлекаем все mDNS атрибуты для этого IP
-        mdns_batch = self.batch.by_collector("mdns").filter(lambda obs: obs.metadata.ip == ip)
-        
-        result = {}
-        for obs in mdns_batch:
-            value = _get_obs_value(obs)
-            if obs.attribute == "hostname":
-                result["hostname"] = value
-            elif obs.attribute == "model":
-                result["model"] = value
-            elif obs.attribute == "device_type":
-                result["device_type"] = value
-            elif obs.attribute == "services":
-                result["services"] = value
-        
-        return result
-    
-    def get_omada_info(self, ip: str) -> dict:
-        """Извлекает Omada информацию из batch для IP."""
-        omada_obs = self.batch.by_collector("omada").by_attribute("omada_info").filter(
-            lambda obs: obs.metadata.ip == ip
-        ).first()
-        if omada_obs:
-            return _get_obs_value(omada_obs) or {}
-        return {}
-    
-    def get_all_sources(self, ip: str) -> dict:
-        """Извлекает все источники из batch для IP."""
-        sources = {}
-        
-        # Группируем по collector_id
-        collectors = set(obs.collector_id for obs in self.batch if obs.metadata.ip == ip)
-        
-        for collector_id in collectors:
-            collector_obs = self.batch.by_collector(collector_id).filter(
+    def _get_values(self, ip: str, attribute: str) -> list[dict]:
+        """
+        Возвращает все значения атрибута для IP из всех коллекторов.
+        Каждый элемент: {"value": ..., "confidence": ..., "source": collector_id}
+        """
+        values = []
+        try:
+            observations = self.batch.by_attribute(attribute).filter(
                 lambda obs: obs.metadata.ip == ip
             )
-            
-            sources[collector_id] = {
-                "observations": [
-                    {
-                        "attribute": obs.attribute,
-                        "value": _get_obs_value(obs),
-                        "confidence": _get_obs_confidence(obs),
-                    }
-                    for obs in collector_obs
-                ]
-            }
-        
+            for obs in observations:
+                values.append({
+                    "value": _get_obs_value(obs),
+                    "confidence": _get_obs_confidence(obs),
+                    "source": obs.collector_id,
+                })
+        except Exception:
+            pass
+        return values
+    
+    def _get_best_value(self, ip: str, attribute: str, default=None):
+        """Возвращает значение с наивысшим confidence."""
+        values = self._get_values(ip, attribute)
+        if not values:
+            return default
+        best = max(values, key=lambda v: v["confidence"])
+        return best["value"] if best["value"] is not None else default
+    
+    def hostname(self, ip: str) -> str:
+        """Извлекает hostname (из любого источника)."""
+        return self._get_best_value(ip, "hostname", "")
+    
+    def model(self, ip: str) -> str:
+        """Извлекает model (из любого источника)."""
+        return self._get_best_value(ip, "model", "")
+    
+    def device_type(self, ip: str) -> str:
+        """Извлекает device_type (из любого источника)."""
+        return self._get_best_value(ip, "device_type", "")
+    
+    def omada_info(self, ip: str) -> dict:
+        """Извлекает omada_info (dict) из любого источника."""
+        values = self._get_values(ip, "omada_info")
+        if not values:
+            return {}
+        best = max(values, key=lambda v: v["confidence"])
+        return best["value"] if isinstance(best["value"], dict) else {}
+    
+    def all_sources(self, ip: str) -> dict:
+        """
+        Возвращает все observations для IP, сгруппированные по source.
+        Используется только для Evidence Explorer (отображение).
+        """
+        sources = {}
+        for obs in self.batch:
+            if getattr(obs.metadata, "ip", None) != ip:
+                continue
+            source = obs.collector_id
+            if source not in sources:
+                sources[source] = {"observations": []}
+            sources[source]["observations"].append({
+                "attribute": obs.attribute,
+                "value": _get_obs_value(obs),
+                "confidence": _get_obs_confidence(obs),
+            })
         return sources
 
 
@@ -247,65 +246,45 @@ def build_devices(
 
 def enrich_device_metadata(devices: list[Device], batch: UnifiedObservationBatch) -> None:
     """
-    ES-1.8.4: Заполняет пустые поля Device данными из UnifiedObservationBatch.
-    Приоритет источников: DNS > mDNS > Omada.
+    ES-1.8.5: Заполняет пустые поля Device данными из UnifiedObservationBatch.
+    
+    Использует ObservationExtractor для извлечения (без hardcoded приоритетов)
+    и guess_vendor_from_name для эвристик vendor (вынесено в отдельный модуль).
     """
     extractor = ObservationExtractor(batch)
     
     for device in devices:
-        omada_info = extractor.get_omada_info(device.ip)
-        mdns_info = extractor.get_mdns_info(device.ip)
-        
-        # 1. Hostname: DNS > mDNS > Omada (hostName или name)
+        # 1. Hostname: из любого источника, если не MAC-адрес
         if not device.hostname or device.hostname == "Unknown":
-            hostname = extractor.get_hostname(device.ip)
-            if hostname:
+            hostname = extractor.hostname(device.ip)
+            if hostname and not _is_mac_like(hostname, device.mac):
                 device.hostname = hostname
-            elif mdns_info.get("hostname"):
-                device.hostname = mdns_info["hostname"]
-            elif omada_info.get("hostName"):
-                device.hostname = omada_info["hostName"]
-            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
-                device.hostname = omada_info["name"]
         
-        # 2. Model: mDNS > Omada (name, если не MAC) > hostname heuristic
+        # 2. Model: из любого источника, если не MAC-адрес
         if not device.model or device.model == "Unknown":
-            if mdns_info.get("model"):
-                device.model = mdns_info["model"]
-            elif omada_info.get("name") and not _is_mac_like(omada_info["name"], device.mac):
-                device.model = omada_info["name"]
-            elif device.hostname and any(
-                x in device.hostname.lower()
-                for x in ["redmi", "galaxy", "iphone", "ipad", "macbook", "note", "honor"]
-            ):
-                device.model = device.hostname
-
-        # 3. Device Type: mDNS > Omada
+            model = extractor.model(device.ip)
+            if model and not _is_mac_like(model, device.mac):
+                device.model = model
+        
+        # 3. Device Type: из любого источника, игнорируем "unknown"
         if not device.device_type or device.device_type == "Unknown":
-            if mdns_info.get("device_type"):
-                device.device_type = mdns_info["device_type"]
-            elif omada_info.get("deviceType"):
-                device.device_type = omada_info["deviceType"]
+            device_type = extractor.device_type(device.ip)
+            if device_type and device_type.lower() != "unknown":
+                device.device_type = device_type
 
-        # 4. OS: из Omada deviceType (если ещё не заполнено)
+        # 4. OS: из device_type (если ещё не заполнено)
         if not device.os or device.os == "Unknown":
-            guessed_os = _guess_os_from_device_type(omada_info.get("deviceType", ""))
+            guessed_os = _guess_os_from_device_type(device.device_type or "")
             if guessed_os:
                 device.os = guessed_os
 
-        # 5. Vendor: Если MAC рандомизирован и OUI не сработал, пробуем угадать по имени
+        # 5. Vendor: эвристика по hostname/model (вынесено в отдельный модуль)
         if device.vendor == "Unknown":
-            name_to_check = (device.hostname or "").lower()
-            if "samsung" in name_to_check or "galaxy" in name_to_check:
-                device.vendor = "Samsung"
-            elif "xiaomi" in name_to_check or "redmi" in name_to_check:
-                device.vendor = "Xiaomi"
-            elif "apple" in name_to_check or "iphone" in name_to_check or "ipad" in name_to_check:
-                device.vendor = "Apple"
-            elif "honor" in name_to_check or "huawei" in name_to_check:
-                device.vendor = "Honor/Huawei"
-            elif "lenovo" in name_to_check or "thinkpad" in name_to_check:
-                device.vendor = "Lenovo"
+            guessed = guess_vendor_from_name(device.hostname or "")
+            if guessed is None:
+                guessed = guess_vendor_from_name(device.model or "")
+            if guessed is not None:
+                device.vendor = guessed
 
 
 # ---------------------------------------------------------
@@ -550,13 +529,13 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
 
 def render_evidence(devices: list[Device], batch: UnifiedObservationBatch) -> list[str]:
     """
-    ES-1.8.3: Рендерит evidence из UnifiedObservationBatch.
+    ES-1.8.5: Рендерит evidence из UnifiedObservationBatch.
     """
     lines = []
     extractor = ObservationExtractor(batch)
     
     for d in devices:
-        sources = extractor.get_all_sources(d.ip)
+        sources = extractor.all_sources(d.ip)
         
         if not sources:
             continue
@@ -723,7 +702,7 @@ def save_json(devices: list[Device], batch: UnifiedObservationBatch | None = Non
         device_dict = asdict(d)
         
         if extractor:
-            sources = extractor.get_all_sources(d.ip)
+            sources = extractor.all_sources(d.ip)
             device_dict["sources"] = sources
         
         devices_data.append(device_dict)
@@ -764,17 +743,8 @@ def save_debug_json(devices: list[Device], batch: UnifiedObservationBatch) -> Pa
         }
 
         # Извлекаем все источники из batch
-        sources = extractor.get_all_sources(device.ip)
+        sources = extractor.all_sources(device.ip)
         device_data["sources"] = sources
-
-        # Извлекаем hostname и mDNS
-        hostname = extractor.get_hostname(device.ip)
-        if hostname:
-            device_data["sources"]["dns"] = {"hostname": hostname}
-
-        mdns_info = extractor.get_mdns_info(device.ip)
-        if mdns_info:
-            device_data["sources"]["mdns"] = mdns_info
 
         data["devices"].append(device_data)
 
@@ -804,14 +774,16 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
 
 
 # ---------------------------------------------------------
-# Главный вход (legacy — не используется monitor.py, но оставлен для совместимости)
+# Главный вход (DEPRECATED — не используется monitor.py)
 # ---------------------------------------------------------
 
 
 def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
     """
-    ES-1.8.4: Legacy entry point.
+    DEPRECATED: ES-1.8.5 — Legacy entry point.
+    
     В monitor.py этот путь не используется — там свой пайплайн через FingerprintService.
+    Не использовать для нового кода.
     """
     devices = build_devices(arp, netflow)
     devices = fingerprint_all(devices)
