@@ -3,9 +3,9 @@
 Repeater Monitor
 report.py
 
-ES-1.8.7: Исправление выравнивания таблиц.
-- Убраны эмодзи из таблиц (ломают выравнивание в терминале)
-- Статусы обрезаны до фиксированной ширины
+ES-1.8.8: Правильное выравнивание таблиц с эмодзи.
+- Эмодзи сохранены для эстетики
+- Визуальная ширина считается вручную (эмодзи = 2 символа)
 - Все колонки выровнены симметрично
 """
 
@@ -43,7 +43,53 @@ from fingerprint.identity.vendor import guess_vendor_from_name
 # ---------------------------------------------------------
 
 MAX_VENDOR_WIDTH = 18
-MAX_STATUS_WIDTH = 14
+STATUS_COL_WIDTH = 20  # Визуальная ширина колонки статуса (с учётом эмодзи)
+
+
+# ---------------------------------------------------------
+# Helper: визуальная ширина строки (эмодзи = 2 символа)
+# ---------------------------------------------------------
+
+def _visual_width(s: str) -> int:
+    """Считает визуальную ширину строки в терминале."""
+    if not s:
+        return 0
+    width = 0
+    for char in s:
+        # Эмодзи и другие широкие символы (Unicode > U+1F000)
+        if ord(char) > 0x1F000:
+            width += 2
+        else:
+            width += 1
+    return width
+
+
+def _pad_to_width(s: str, target_width: int) -> str:
+    """Добавляет пробелы до целевой визуальной ширины."""
+    if not s:
+        return " " * target_width
+    current = _visual_width(s)
+    if current >= target_width:
+        return s
+    return s + " " * (target_width - current)
+
+
+def _truncate_visual(s: str, max_width: int) -> str:
+    """Обрезает строку до max_width визуальных символов, добавляя '..'."""
+    if not s:
+        return ""
+    if _visual_width(s) <= max_width:
+        return s
+    # Обрезаем по символам, пока не достигнем max_width - 2
+    result = ""
+    current_width = 0
+    for char in s:
+        char_width = 2 if ord(char) > 0x1F000 else 1
+        if current_width + char_width > max_width - 2:
+            break
+        result += char
+        current_width += char_width
+    return result + ".."
 
 
 # ---------------------------------------------------------
@@ -96,15 +142,6 @@ def _guess_os_from_device_type(device_type: str) -> str:
     if "macos" in dt or "mac" in dt:
         return "macOS"
     return ""
-
-
-def _truncate(value: str, max_len: int) -> str:
-    """Обрезает строку до max_len, добавляя '..' если нужно."""
-    if not value:
-        return ""
-    if len(value) <= max_len:
-        return value
-    return value[:max_len - 2] + ".."
 
 
 # ---------------------------------------------------------
@@ -451,7 +488,7 @@ def render_table_compact(devices: list[Device]) -> list[str]:
         return lines
 
     header = (
-        f"{'Статус':<{MAX_STATUS_WIDTH + 2}}"
+        f"{'Статус':<20}"
         f"{'IP':<16}"
         f"{'MAC':<20}"
         f"{'Vendor':<{MAX_VENDOR_WIDTH + 2}}"
@@ -465,12 +502,11 @@ def render_table_compact(devices: list[Device]) -> list[str]:
     lines.append("-" * TABLE_WIDTH)
 
     for d in devices:
-        status = _truncate(d.status, MAX_STATUS_WIDTH)
         line = (
-            f"{status:<{MAX_STATUS_WIDTH + 2}}"
+            f"{_pad_to_width(d.status, STATUS_COL_WIDTH)}"
             f"{d.ip:<16}"
             f"{d.mac:<20}"
-            f"{_truncate(d.vendor, MAX_VENDOR_WIDTH):<{MAX_VENDOR_WIDTH + 2}}"
+            f"{_truncate_visual(d.vendor, MAX_VENDOR_WIDTH):<{MAX_VENDOR_WIDTH + 2}}"
             f"{d.flows:>7}"
             f"{d.megabytes:>8.2f}"
             f"{d.mb_per_hour:>8.2f}"
@@ -483,9 +519,9 @@ def render_table_compact(devices: list[Device]) -> list[str]:
     stats = calculate_statistics(devices)
     lines.append(
         f"Всего: {stats['total']} | "
-        f"Подозрительных: {stats['suspects']} | "
-        f"Неопределённых: {stats['warnings']} | "
-        f"Нормальных: {stats['normal']}"
+        f"🔴 Подозрительных: {stats['suspects']} | "
+        f"🟡 Неопределённых: {stats['warnings']} | "
+        f"🟢 Нормальных: {stats['normal']}"
     )
     return lines
 
@@ -502,7 +538,7 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
         return lines
 
     header = (
-        f"{'Статус':<{MAX_STATUS_WIDTH + 2}}"
+        f"{'Статус':<20}"
         f"{'IP':<16}"
         f"{'MAC':<20}"
         f"{'Vendor':<20}"
@@ -521,15 +557,14 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
     lines.append("-" * actual_width)
 
     for d in devices:
-        status = _truncate(d.status, MAX_STATUS_WIDTH)
-        vendor = _truncate(d.vendor, 18)
-        hostname = _truncate(d.hostname, 16)
-        model = _truncate(d.model, 14)
-        os_val = _truncate(d.os, 10)
-        dev_type = _truncate(d.device_type, 13)
+        vendor = _truncate_visual(d.vendor, 18)
+        hostname = _truncate_visual(d.hostname, 16)
+        model = _truncate_visual(d.model, 14)
+        os_val = _truncate_visual(d.os, 10)
+        dev_type = _truncate_visual(d.device_type, 13)
 
         line = (
-            f"{status:<{MAX_STATUS_WIDTH + 2}}"
+            f"{_pad_to_width(d.status, STATUS_COL_WIDTH)}"
             f"{d.ip:<16}"
             f"{d.mac:<20}"
             f"{vendor:<20}"
@@ -548,9 +583,9 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
     stats = calculate_statistics(devices)
     lines.append(
         f"Всего: {stats['total']} | "
-        f"Подозрительных: {stats['suspects']} | "
-        f"Неопределённых: {stats['warnings']} | "
-        f"Нормальных: {stats['normal']}"
+        f"🔴 Подозрительных: {stats['suspects']} | "
+        f"🟡 Неопределённых: {stats['warnings']} | "
+        f"🟢 Нормальных: {stats['normal']}"
     )
     return lines
 
@@ -562,7 +597,7 @@ def render_table_verbose(devices: list[Device]) -> list[str]:
 
 def render_evidence(devices: list[Device], batch: UnifiedObservationBatch) -> list[str]:
     """
-    ES-1.8.7: Рендерит evidence из UnifiedObservationBatch.
+    ES-1.8.8: Рендерит evidence из UnifiedObservationBatch.
     """
     lines = []
     extractor = ObservationExtractor(batch)
@@ -573,12 +608,12 @@ def render_evidence(devices: list[Device], batch: UnifiedObservationBatch) -> li
         if not sources:
             continue
         
-        lines.append(f"  [{d.ip}] ({d.mac}) — {d.os or 'Unknown'} {d.device_type or ''} [{d.confidence}]")
+        lines.append(f"  📋 {d.ip} ({d.mac}) — {d.os or 'Unknown'} {d.device_type or ''} [{d.confidence}]")
         
         for source_name, source_data in sources.items():
             for obs in source_data["observations"]:
                 if obs["confidence"] > 0:
-                    lines.append(f"     + {source_name}.{obs['attribute']} = {obs['value']} [confidence: {obs['confidence']:.2f}]")
+                    lines.append(f"     ✔ {source_name}.{obs['attribute']} = {obs['value']} [confidence: {obs['confidence']:.2f}]")
         
         lines.append("")
     
@@ -604,7 +639,7 @@ def render_table(devices: list[Device], verbose: bool = False) -> list[str]:
 def print_table(devices: list[Device], batch: UnifiedObservationBatch | None = None) -> None:
     if App.VERBOSE:
         header = (
-            f"{'Статус':<{MAX_STATUS_WIDTH + 2}}"
+            f"{'Статус':<20}"
             f"{'IP':<16}"
             f"{'MAC':<20}"
             f"{'Vendor':<20}"
@@ -636,7 +671,7 @@ def print_table(devices: list[Device], batch: UnifiedObservationBatch | None = N
     if App.VERBOSE and batch:
         evidence_lines = render_evidence(devices, batch)
         if evidence_lines:
-            print("  Evidence Explorer:")
+            print("  🔍 Evidence Explorer:")
             print()
             for line in evidence_lines:
                 print(line)
@@ -655,7 +690,7 @@ def save_txt(devices: list[Device], batch: UnifiedObservationBatch | None = None
 
     if App.VERBOSE:
         header = (
-            f"{'Статус':<{MAX_STATUS_WIDTH + 2}}"
+            f"{'Статус':<20}"
             f"{'IP':<16}"
             f"{'MAC':<20}"
             f"{'Vendor':<20}"
@@ -686,7 +721,7 @@ def save_txt(devices: list[Device], batch: UnifiedObservationBatch | None = None
     if App.VERBOSE and batch:
         evidence_lines = render_evidence(devices, batch)
         if evidence_lines:
-            lines.append("  Evidence Explorer:")
+            lines.append("  🔍 Evidence Explorer:")
             lines.append("")
             lines.extend(evidence_lines)
 
@@ -800,7 +835,7 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
         saved_paths.append(("JSON", save_json(devices, batch)))
 
     if saved_paths:
-        print(f"  Отчёты сохранены:")
+        print(f"  📄  Отчёты сохранены:")
         for fmt, path in saved_paths:
             print(f"      {fmt:<4} : {path}")
         print()
@@ -813,7 +848,7 @@ def save_report(devices: list[Device], batch: UnifiedObservationBatch | None = N
 
 def generate_report(arp: dict[str, str], netflow: dict[str, dict]) -> list[Device]:
     """
-    DEPRECATED: ES-1.8.7 — Legacy entry point.
+    DEPRECATED: ES-1.8.8 — Legacy entry point.
     
     В monitor.py этот путь не используется — там свой пайплайн через FingerprintService.
     Не использовать для нового кода.
