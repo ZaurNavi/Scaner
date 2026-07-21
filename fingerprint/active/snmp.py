@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeoutError  # ← ДОБАВЛЕНО
 from models import Device
 from .base import ActiveCollector
 from configuration import ConfigurationManager
@@ -48,7 +49,6 @@ class SNMPCollector(ActiveCollector):
         if not self.is_available(device):
             return []
 
-        # Проверка ping из context
         if self.skip_if_no_ping:
             context = getattr(self, "_context", {})
             ttl_result = context.get("ttl", {}).get(device.ip)
@@ -88,7 +88,7 @@ class SNMPCollector(ActiveCollector):
                             return result
                     except Exception:
                         continue
-            except TimeoutError:
+            except FuturesTimeoutError:  # ← ИСПРАВЛЕНО
                 pass
         return None
 
