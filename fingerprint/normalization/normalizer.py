@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 """
 Normalizer — преобразование Observation в UnifiedObservation.
-ES-1.8.1: Чистая архитектура без угадывания категории.
-
-Архитектурные принципы:
-- Normalizer не знает о протоколах (DNS, mDNS и т.д.)
-- Категория определяется RuleDescriptor
-- Batch API: normalize(), normalize_many(), normalize_stream()
-- Dependency Injection через ConfigurationManager
+ES-1.8.3: Rule выбирается ТОЛЬКО по attribute.
 """
 
 from __future__ import annotations
@@ -28,17 +22,9 @@ from .registry import RuleRegistry
 class Normalizer:
     """
     Преобразует Observation в UnifiedObservation.
-    
-    ES-1.8.1:
-    - НЕ угадывает категорию (пункт 2)
-    - Категория из RuleDescriptor
-    - Batch API: normalize(), normalize_many(), normalize_stream()
     """
     
     def __init__(self, configuration: ConfigurationManager):
-        """
-        v1.8.1: Dependency Injection через ConfigurationManager.
-        """
         self.config = configuration
         self.unknown_policy = self.config.get(
             "fingerprint.normalization.unknown_policy",
@@ -52,31 +38,17 @@ class Normalizer:
     ) -> Optional[UnifiedObservation]:
         """
         Нормализует одну Observation.
-        
-        ES-1.8.1 (пункт 2): Категория передаётся явно,
-        Normalizer не угадывает её.
-        
-        Args:
-            observation: Сырая Observation
-            category: Категория (из RuleDescriptor или Collector)
-        
-        Returns:
-            UnifiedObservation или None (если unknown_policy == "drop")
+        ES-1.8.3: Правило выбирается ТОЛЬКО по attribute.
         """
-        # Ищем правило для этой категории и атрибута
-        rule = RuleRegistry.get_rule(
-            category=category,
-            attribute=observation.attribute,
-            protocol=observation.protocol
-        )
+        # ES-1.8.3: Ищем правило ТОЛЬКО по attribute
+        rule = RuleRegistry.get_rule(attribute=observation.attribute)
         
         if rule is None:
             # Unknown policy
             if self.unknown_policy == "drop":
                 return None
             elif self.unknown_policy == "log":
-                print(f"      [NORMALIZER] ⚠️ No rule for {category.value}.{observation.attribute} (protocol={observation.protocol})")
-                # Используем значение как есть
+                print(f"      [NORMALIZER] ⚠️ No rule for {category.value}.{observation.attribute}")
                 normalized_value = observation.value
                 confidence = 0.5
                 warnings = ("no_rule",)
@@ -118,15 +90,6 @@ class Normalizer:
     ) -> List[UnifiedObservation]:
         """
         Нормализует множество Observation (Batch API).
-        
-        ES-1.8.1 (пункт 7): Для больших пакетов.
-        
-        Args:
-            observations: Список сырых Observation
-            category_map: Опциональный маппинг collector_id → category
-        
-        Returns:
-            Список UnifiedObservation
         """
         results = []
         for obs in observations:
@@ -148,17 +111,7 @@ class Normalizer:
         category_map: dict[str, ObservationCategory] = None
     ) -> Iterator[UnifiedObservation]:
         """
-        Потоковая нормализация (пункт 7).
-        
-        ES-1.8.1: yield UnifiedObservation для потоковой обработки.
-        Пригодится, когда Passive станет большим.
-        
-        Args:
-            observations: Итератор сырых Observation
-            category_map: Опциональный маппинг collector_id → category
-        
-        Yields:
-            UnifiedObservation
+        Потоковая нормализация.
         """
         for obs in observations:
             if category_map and obs.collector_id in category_map:
