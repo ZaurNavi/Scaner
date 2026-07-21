@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Активные коллекторы fingerprint.
-v1.7.1: Экспорт всех коллекторов и get_collectors (без устаревшего COLLECTORS).
+ES-1.8.3: FingerprintResult удалён. Все коллекторы возвращают List[Observation].
 """
 
-from .base import ActiveCollector, FingerprintResult
+from .base import ActiveCollector
 from .scapy_fp import ScapyFPCollector
 from .ttl import TTLCollector
 from .tcp import TCPCollector, CORE_PORTS, OPTIONAL_PORTS, ALL_PORTS
@@ -28,7 +28,6 @@ from .dns_sd import DnsSdCollector
 
 __all__ = [
     "ActiveCollector",
-    "FingerprintResult",
     "ScapyFPCollector",
     "TTLCollector",
     "TCPCollector",
