@@ -12,6 +12,9 @@ from .normalizer import Normalizer
 from .registry import RuleRegistry, AttributeRegistry, AttributeDescriptor, normalization_rule
 from .factory import ObservationFactory
 
+# ES-1.8.3: Импорт правил запускает декораторы @normalization_rule
+from . import rules
+
 # ==============================================================================
 # ES-1.8.3: Регистрация доменных атрибутов
 # ==============================================================================
@@ -120,4 +123,5 @@ __all__ = [
     "AttributeDescriptor",
     "ObservationFactory",
     "normalization_rule",
+    "rules",
 ]
