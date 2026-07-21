@@ -261,18 +261,6 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("correlation.enabled", bool, False, "Correlation", "Enable Correlation Engine")
     
     # ==============================================================================
-    # Passive Framework (ES-1.8.0)
-    # ==============================================================================
-    
-    # DNS Collector
-    registry.register("fingerprint.collectors.dns.enabled", bool, True, "Fingerprint", "Enable DNS collector")
-    registry.register("fingerprint.collectors.dns.workers", int, 32, "Fingerprint", "DNS concurrent workers", min_value=1, max_value=128)
-    
-    # mDNS Collector
-    registry.register("fingerprint.collectors.mdns.enabled", bool, True, "Fingerprint", "Enable mDNS collector")
-    registry.register("fingerprint.collectors.mdns.timeout", float, 2.0, "Fingerprint", "mDNS scan timeout in seconds", min_value=0.5, max_value=10.0)
-    
-    # ==============================================================================
     # Normalization Layer (ES-1.8.1)
     # ==============================================================================
     registry.register("fingerprint.normalization.enabled", bool, True, "Fingerprint", "Enable normalization layer")
