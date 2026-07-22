@@ -35,7 +35,7 @@ from ..normalization.models import Observation
 from .dns import DNSCollector
 from .mdns import MDNSCollector
 from .llmnr import LLMNRCollector  # ES-1.8.4: LLMNR Passive Collector
-
+from .nbns import NBNSCollector  # <-- Добавлено
 # ==============================================================================
 # Инициализация Passive Framework
 # ==============================================================================
@@ -81,4 +81,5 @@ __all__ = [
     "DNSCollector",
     "MDNSCollector",
     "LLMNRCollector",  # ES-1.8.4
+    "NBNSCollector"
 ]
