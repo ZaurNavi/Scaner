@@ -266,3 +266,8 @@ def register_defaults(registry: ConfigRegistry):
     registry.register("fingerprint.normalization.enabled", bool, True, "Fingerprint", "Enable normalization layer")
     registry.register("fingerprint.normalization.unknown_policy", str, "log", "Fingerprint", "Policy for unknown observations: keep, drop, log")
     registry.register("fingerprint.normalization.batch_size", int, 1000, "Fingerprint", "Batch size for normalize_many()", min_value=1)
+    # NBNS Collector (ES-1.8.5)
+    registry.register("fingerprint.collectors.nbns.enabled", bool, True, "Fingerprint NBNS", "Enable NBNS passive collector")
+    registry.register("fingerprint.collectors.nbns.timeout", float, 0.5, "Fingerprint NBNS", "NBNS socket timeout in seconds", min_value=0.1, max_value=5.0)
+    registry.register("fingerprint.collectors.nbns.workers", int, 32, "Fingerprint NBNS", "NBNS workers (reserved)", min_value=1, max_value=128)
+    registry.register("fingerprint.collectors.nbns.learn_from_queries", bool, False, "Fingerprint NBNS", "Learn hostnames from Query packets (low confidence)")
