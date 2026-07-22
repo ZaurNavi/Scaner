@@ -291,7 +291,7 @@ class NBNSCollector(BasePassiveCollector):
     def capabilities(self) -> List[str]:
         return ["hostname_discovery", "nbns_resolution"]
 
-    def observe(self, target_ips: List[str], interface: Optional[str] = None) -> List[Observation]:
+    def observe(self, target_ips: List[str], interface: Optional[str] = None, context: Optional[Dict] = None) -> List[Observation]:
         if not self._enabled:
             return []
         if not IMPACKET_AVAILABLE:
