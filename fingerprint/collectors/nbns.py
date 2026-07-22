@@ -377,10 +377,6 @@ class NBNSCollector(BasePassiveCollector):
     version="ES-1.8.5",
     priority=40,
     protocol="NBNS",
-    transport="UDP",
-    mode="passive",
-    schema_version=1,
-    display_name="NBNS Collector",
     capabilities=["hostname_discovery", "nbns_resolution"],
     enabled_by_default=True
 )
