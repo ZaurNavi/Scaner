@@ -10,22 +10,22 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 from dataclasses import dataclass
 
+# Проверка наличия impacket
 try:
     from impacket.nmb import NBNSPacket, NetBIOSTimeout, NetBIOSError
-    IMPACKET_AVAILABLE=True
+    IMPACKET_AVAILABLE = True
 except ImportError:
-    IMPACKET_AVAILABLE=False
-    NBNSPacket=None
-    class NetBIOSTimeout(Exception):
-        pass
-    class NetBIOSError(Exception):
-        pass
+    IMPACKET_AVAILABLE = False
+    NBNSPacket = None
+    class NetBIOSTimeout(Exception): pass
+    class NetBIOSError(Exception): pass
 
-from .base import BasePassiveCollector
-from .registry import passive_collector
-from ..normalization.models import Observation, ObservationMetadata
-from ..normalization.factory import ObservationFactory
-from ...configuration.manager import ConfigurationManager
+# Абсолютные импорты для гарантии работы вне зависимости от точки входа
+from fingerprint.collectors.base import BasePassiveCollector
+from fingerprint.collectors.registry import passive_collector
+from fingerprint.normalization.models import Observation, ObservationMetadata
+from fingerprint.normalization.factory import ObservationFactory
+from configuration.manager import ConfigurationManager
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ IGNORED_GROUP_SUFFIXES = {
     0x1D,  # Local Master Browser
     0x1E,  # Browser Service Elections
     0x01,  # Master Browser
-    0x03,  # Messenger Service (often user-specific, but sometimes noisy)
+    0x03,  # Messenger Service
     0x06,  # RAS Server Service
 }
 
@@ -73,7 +73,6 @@ class _BaseWrapper:
 
     @staticmethod
     def _extract_suffix_from_name(name_str: str) -> int:
-        """Extract suffix byte from NetBIOS name string if present."""
         return 0
 
 class _ImpacketAnswerWrapper(_BaseWrapper):
@@ -103,6 +102,8 @@ class _ImpacketNodeStatusWrapper(_BaseWrapper):
     
     def extract_data(self) -> List[Dict[str, Any]]:
         records = []
+        # WARNING: impacket does not expose public API for NBSTAT Name Table.
+        # We intentionally access internal fields here.
         name_table = getattr(self._entry, 'nbns_names', [])
         
         if not name_table and hasattr(self._entry, 'entry'):
